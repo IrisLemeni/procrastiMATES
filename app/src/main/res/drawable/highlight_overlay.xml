@@ -1,0 +1,12 @@
+<!-- res/drawable/highlight_overlay.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Primul strat: imaginea de fundal -->
+    <item android:drawable="@android:color/transparent" />
+
+    <!-- Al doilea strat: suprapunerea mov -->
+    <item>
+        <shape>
+            <solid android:color="#66A369ED" /> <!-- Mov translucid -->
+        </shape>
+    </item>
+</layer-list>
