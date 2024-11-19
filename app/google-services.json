@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "255688117764",
+    "project_id": "procrastimate-cc91b",
+    "storage_bucket": "procrastimate-cc91b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:255688117764:android:abb63bbfb3b9c7dd9a6f51",
+        "android_client_info": {
+          "package_name": "com.example.procrastimates"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-SCZL9TRiauh6emWerCn6fzTple3svTc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
