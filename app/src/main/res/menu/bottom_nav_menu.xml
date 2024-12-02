@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:title="Home"
+        android:id="@+id/nav_home"
+        android:icon="@drawable/baseline_home_24"
+         />
+    <item
+        android:title="Tasks"
+        android:id="@+id/nav_tasks"
+        android:icon="@drawable/baseline_calendar_month_24"
+         />
+    <item
+        android:title="Pomodoro"
+        android:id="@+id/nav_pomodoro"
+        android:icon="@drawable/baseline_timer_24"
+         />
+    <item
+        android:title="Friends"
+        android:id="@+id/nav_friends"
+        android:icon="@drawable/baseline_supervised_user_circle_24"
+        />
+</menu>
+
+

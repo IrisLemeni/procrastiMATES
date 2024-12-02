@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.procrastimates.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -26,6 +27,12 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getWindow().setEnterTransition(null);
+        getWindow().setExitTransition(null);
+
+        getWindow().setBackgroundDrawableResource(R.drawable.login_background);
+
         setContentView(R.layout.activity_login);
 
         // Inițializare Firebase Auth

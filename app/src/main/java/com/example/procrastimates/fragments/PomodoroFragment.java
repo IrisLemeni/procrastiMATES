@@ -1,19 +1,25 @@
-package com.example.procrastimates;
+package com.example.procrastimates.fragments;
 
-import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
-public class PomodoroActivity extends AppCompatActivity {
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+
+import com.example.procrastimates.R;
+
+public class PomodoroFragment extends Fragment {
 
     private Button selectDurationButton25, selectDurationButton50;
     private Button selectBackgroundButton, sessionButton;
@@ -25,26 +31,27 @@ public class PomodoroActivity extends AppCompatActivity {
     private int sessionDuration, breakDuration;
     private CountDownTimer countDownTimer;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pomodoro);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // Inflate layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_pomodoro, container, false);
 
-        workingTime = findViewById(R.id.workingTime);
-        breakTime = findViewById(R.id.breakTime);
+        workingTime = view.findViewById(R.id.workingTime);
+        breakTime = view.findViewById(R.id.breakTime);
+        linearLayoutDuration = view.findViewById(R.id.linearLayoutDuration);
+        linearLayoutBackground = view.findViewById(R.id.linearLayoutBackground);
+        linearLayoutTimer = view.findViewById(R.id.linearLayoutTimer);
 
-        FrameLayout frameLayout = findViewById(R.id.frameLayout);
-        linearLayoutDuration = findViewById(R.id.linearLayoutDuration);
-        linearLayoutBackground = findViewById(R.id.linearLayoutBackground);
-        linearLayoutTimer = findViewById(R.id.linearLayoutTimer);
+        backgroundOption1 = view.findViewById(R.id.backgroundOption1);
+        backgroundOption2 = view.findViewById(R.id.backgroundOption2);
+        backgroundOption3 = view.findViewById(R.id.backgroundOption3);
+        selectBackgroundButton = view.findViewById(R.id.selectBackgroundButton);
 
-        LinearLayout linearLayoutBackground = findViewById(R.id.linearLayoutBackground);
-        LinearLayout linearLayoutTimer = findViewById(R.id.linearLayoutTimer);
-
-        backgroundOption1 = findViewById(R.id.backgroundOption1);
-        backgroundOption2 = findViewById(R.id.backgroundOption2);
-        backgroundOption3 = findViewById(R.id.backgroundOption3);
-        selectBackgroundButton = findViewById(R.id.selectBackgroundButton);
+        selectDurationButton25 = view.findViewById(R.id.selectDurationButton25);
+        selectDurationButton50 = view.findViewById(R.id.selectDurationButton50);
+        sessionButton = view.findViewById(R.id.startTimerButton);
+        timerText = view.findViewById(R.id.timerText);
 
         backgroundOption1.setOnClickListener(v -> selectBackground(1));
         backgroundOption2.setOnClickListener(v -> selectBackground(2));
@@ -52,42 +59,28 @@ public class PomodoroActivity extends AppCompatActivity {
 
         selectBackgroundButton.setOnClickListener(v -> {
             if (selectedBackground != -1) {
-                // Proceed to the timer session if background confirmed
                 linearLayoutBackground.setVisibility(View.GONE);
                 linearLayoutTimer.setVisibility(View.VISIBLE);
             } else {
-                Toast.makeText(this, "Please select a background first.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Please select a background first.", Toast.LENGTH_SHORT).show();
             }
         });
 
-        timerText = findViewById(R.id.timerText);
-        sessionButton = findViewById(R.id.startTimerButton);
-
-        selectDurationButton25 = findViewById(R.id.selectDurationButton25);
-        selectDurationButton50 = findViewById(R.id.selectDurationButton50);
-
-
-        // Set duration based on button clicked
         selectDurationButton25.setOnClickListener(v -> {
-            sessionDuration = 1 * 60 * 1000; // 25 minutes in milliseconds
-            breakDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
+            sessionDuration = 25 * 60 * 1000; // 25 minutes
+            breakDuration = 5 * 60 * 1000; // 5 minutes
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
         });
 
         selectDurationButton50.setOnClickListener(v -> {
-            sessionDuration = 50 * 60 * 1000; // 50 minutes in milliseconds
-            breakDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
+            sessionDuration = 50 * 60 * 1000; // 50 minutes
+            breakDuration = 10 * 60 * 1000; // 10 minutes
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
         });
 
-        selectBackgroundButton.setOnClickListener(v -> {
-            linearLayoutBackground.setVisibility(View.GONE);
-            linearLayoutTimer.setVisibility(View.VISIBLE);
-        });
-
-        // Start or Stop Session based on button state
+        // Start or stop session
         sessionButton.setOnClickListener(v -> {
             if (isSessionRunning) {
                 stopSession();
@@ -95,34 +88,35 @@ public class PomodoroActivity extends AppCompatActivity {
                 startSession();
             }
         });
+
+        return view;
     }
+
     private void selectBackground(int option) {
         resetBackgroundSelection();
         selectedBackground = option;
 
         switch (option) {
             case 1:
-                backgroundOption1.setForeground(getDrawable(R.drawable.highlight_overlay));
+                backgroundOption1.setForeground(requireContext().getDrawable(R.drawable.highlight_overlay));
                 linearLayoutTimer.setBackgroundResource(R.drawable.photo1);
                 break;
             case 2:
-                backgroundOption2.setForeground(getDrawable(R.drawable.highlight_overlay));
+                backgroundOption2.setForeground(requireContext().getDrawable(R.drawable.highlight_overlay));
                 linearLayoutTimer.setBackgroundResource(R.drawable.photo2);
                 break;
             case 3:
-                backgroundOption3.setForeground(getDrawable(R.drawable.highlight_overlay));
+                backgroundOption3.setForeground(requireContext().getDrawable(R.drawable.highlight_overlay));
                 linearLayoutTimer.setBackgroundResource(R.drawable.photo3);
                 break;
         }
     }
 
-    // Removes any highlight from previously selected backgrounds
     private void resetBackgroundSelection() {
         backgroundOption1.setForeground(null);
         backgroundOption2.setForeground(null);
         backgroundOption3.setForeground(null);
     }
-
 
     private void startSession() {
         isSessionRunning = true;
@@ -137,9 +131,10 @@ public class PomodoroActivity extends AppCompatActivity {
         isSessionRunning = false;
         sessionButton.setText("Start Timer");
         timerText.setText("00:00");
-        Intent intent = new Intent(PomodoroActivity.this, MainActivity.class);
-        startActivity(intent);
-        finish();
+
+        linearLayoutTimer.setVisibility(View.GONE);
+        linearLayoutBackground.setVisibility(View.GONE);
+        linearLayoutDuration.setVisibility(View.VISIBLE);
     }
 
     private void startTimer(long duration, boolean isWorkSession) {
@@ -152,22 +147,44 @@ public class PomodoroActivity extends AppCompatActivity {
 
             public void onFinish() {
                 if (isWorkSession) {
-                    showBreakTimePopup();
+                    showCustomAlert("break");
                     breakTime.setVisibility(View.VISIBLE);
                     workingTime.setVisibility(View.GONE);
-                    startTimer(breakDuration, false); // Start break timer
+                    startTimer(breakDuration, false);
                 } else {
-                    startTimer(sessionDuration, true); // Restart work session
+                    showCustomAlert("work");
+                    breakTime.setVisibility(View.GONE);
+                    workingTime.setVisibility(View.VISIBLE);
+                    startTimer(sessionDuration, true);
                 }
             }
         }.start();
     }
 
-    private void showBreakTimePopup() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Break Time!")
-                .setMessage("Enjoy your break before the next session.")
-                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                .show();
+    private void showCustomAlert(String type) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View customView;
+
+        if (type.equals("break")) {
+            customView = getLayoutInflater().inflate(R.layout.custom_alert_breaktime, null);
+            playSound(R.raw.positive);
+        } else {
+            customView = getLayoutInflater().inflate(R.layout.custom_alert_worktime, null);
+            playSound(R.raw.positive);
+        }
+
+        builder.setView(customView);
+        AlertDialog dialog = builder.create();
+
+        Button btnClose = customView.findViewById(R.id.btnClose);
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    private void playSound(int soundResId) {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getContext(), soundResId);
+        mediaPlayer.setOnCompletionListener(mp -> mp.release());
+        mediaPlayer.start();
     }
 }
