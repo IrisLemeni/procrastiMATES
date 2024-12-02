@@ -1,60 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/profile_background"
-    tools:context=".MainActivity">
+    tools:context=".activities.MainActivity">
 
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/welcomeText"
-        android:layout_width="267dp"
-        android:layout_height="59dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="37dp"
-        android:text="Hello, User"
-        android:textColor="#000000"
-        android:textSize="30dp" />
+    </FrameLayout>
 
-    <ImageView
-        android:id="@+id/userImage"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="27dp"
-        android:layout_marginEnd="34dp"
-        android:clipToOutline="true"
-        android:contentDescription="User Profile Picture"
-        android:src="@drawable/default_user_image" />
-
-    <TextView
-        android:id="@+id/quoteText"
-        android:layout_width="352dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/welcomeText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="204dp"
-        android:text="A random motivational quote will appear here."
-        android:textColor="#2C2B2B"
-        android:textSize="20dp" />
-
-    <Button
-        android:id="@+id/startPomodoroButton"
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/quoteText"
-        android:layout_marginTop="32dp"
-        android:layout_marginHorizontal="30dp"
-        android:padding="10dp"
-        android:backgroundTint="#673AB7"
-        android:text="Start Pomodoro Session"
-        android:textSize="18dp"/>
+        android:layout_height="70dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:menu="@menu/bottom_nav_menu"
+        android:paddingEnd="20dp"
+        />
 
+</androidx.constraintlayout.widget.ConstraintLayout>
 
-</RelativeLayout>
