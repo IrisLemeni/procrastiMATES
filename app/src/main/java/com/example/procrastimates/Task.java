@@ -9,7 +9,7 @@ public class Task {
 
     public Task() {}
 
-    public Task(String taskId, String title, String description, boolean isCompleted, long dueDate, String userId) {
+    public Task(String taskId, String title,  boolean isCompleted, long dueDate, String userId) {
         this.taskId = taskId;
         this.title = title;
         this.isCompleted = isCompleted;
@@ -56,4 +56,5 @@ public class Task {
     public void setDueDate(long dueDate) {
         this.dueDate = dueDate;
     }
+
 }

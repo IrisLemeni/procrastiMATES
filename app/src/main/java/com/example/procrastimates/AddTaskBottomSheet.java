@@ -17,6 +17,15 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
     private EditText taskEditText;
     private Button saveButton;
     private TaskViewModel taskViewModel;
+    private OnTaskAddedListener onTaskAddedListener;
+
+    public interface OnTaskAddedListener {
+        void onTaskAdded(Task newTask);
+    }
+
+    public void setOnTaskAddedListener(OnTaskAddedListener listener) {
+        this.onTaskAddedListener = listener;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,6 +49,10 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             task.setTitle(taskTitle);
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             taskViewModel.addTask(task, userId);
+            if (onTaskAddedListener != null) {
+                onTaskAddedListener.onTaskAdded(task);
+            }
+
             dismiss();
         } else {
             taskEditText.setError("Please enter a task title");
