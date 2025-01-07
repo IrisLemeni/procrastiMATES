@@ -16,9 +16,10 @@ public class TaskService {
     }
 
     // Modifică un task
-    public void updateTask(Task task, TaskRepository.OnTaskActionListener listener) {
-        taskRepository.updateTask(task, listener);
+    public void updateTask(String taskId, Task task, TaskRepository.OnTaskActionListener listener) {
+        taskRepository.updateTask(taskId, task, listener);
     }
+
 
     // Șterge un task
     public void deleteTask(String taskId, TaskRepository.OnTaskActionListener listener) {
