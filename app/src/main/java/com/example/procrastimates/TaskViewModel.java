@@ -10,13 +10,16 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.example.procrastimates.service.TaskService;
+import com.example.procrastimates.Priority;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaskViewModel extends AndroidViewModel {
 
     private MutableLiveData<List<Task>> tasksLiveData;
     private TaskService taskService;
+    private List<Task> originalTasks = new ArrayList<>();
 
     public TaskViewModel(Application application) {
         super(application);
@@ -32,7 +35,12 @@ public class TaskViewModel extends AndroidViewModel {
         taskService.getUserTasks(userId, new TaskRepository.OnTaskActionListener() {
             @Override
             public void onSuccess(Object result) {
-                tasksLiveData.setValue((List<Task>) result);
+                List<Task> tasks = (List<Task>) result;
+
+                if (tasks != null) {
+                    originalTasks = tasks;
+                    tasksLiveData.setValue(tasks);
+                }
             }
 
             @Override
@@ -40,6 +48,20 @@ public class TaskViewModel extends AndroidViewModel {
                 tasksLiveData.setValue(null);
             }
         });
+    }
+
+    public void filterTasksByPriority(Priority priority) {
+        List<Task> filteredTasks = new ArrayList<>();
+        for (Task task : originalTasks) {
+            if (task.getPriority() == priority) {
+                filteredTasks.add(task);
+            }
+        }
+        tasksLiveData.setValue(filteredTasks); // Setează task-urile filtrate
+    }
+
+    public void resetFilters() {
+        tasksLiveData.setValue(originalTasks);
     }
 
     public void addTask(Task task, String userId) {
