@@ -17,10 +17,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.procrastimates.TaskViewModel;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.Timestamp;
 
-import java.time.LocalDateTime;
 import java.util.Calendar;
-import java.util.Date;
 
 public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
@@ -30,9 +29,8 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
     private OnTaskAddedListener onTaskAddedListener;
     private RadioGroup dateSelectionGroup;
     private RadioButton todayButton, tomorrowButton, pickDateButton;
-    private Date selectedDate;
+    private Timestamp selectedTimestamp;
     private Spinner prioritySpinner;
-
 
     public interface OnTaskAddedListener {
         void onTaskAdded(Task newTask);
@@ -60,9 +58,9 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
         dateSelectionGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.todayButton) {
-                selectedDate = getTodayDate();
+                selectedTimestamp = getTodayTimestamp();
             } else if (checkedId == R.id.tomorrowButton) {
-                selectedDate = getTomorrowDate();
+                selectedTimestamp = getTomorrowTimestamp();
             } else if (checkedId == R.id.pickDateButton) {
                 showDatePickerDialog();
             }
@@ -76,17 +74,16 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         return view;
     }
 
-    private Date getTodayDate() {
+    private Timestamp getTodayTimestamp() {
         Calendar calendar = Calendar.getInstance();
-        return calendar.getTime();  // Returnează un obiect Date cu data curentă
+        return new Timestamp(calendar.getTime());  // Returnează un Timestamp cu data curentă
     }
 
-    private Date getTomorrowDate() {
+    private Timestamp getTomorrowTimestamp() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
-        return calendar.getTime();  // Returnează un obiect Date cu data de mâine
+        return new Timestamp(calendar.getTime());  // Returnează un Timestamp cu data de mâine
     }
-
 
     private void showDatePickerDialog() {
         Calendar calendar = Calendar.getInstance();
@@ -94,7 +91,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
                 getActivity(),
                 (view, year, month, dayOfMonth) -> {
                     calendar.set(year, month, dayOfMonth);
-                    selectedDate = calendar.getTime();
+                    selectedTimestamp = new Timestamp(calendar.getTime());
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
@@ -111,7 +108,8 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             task.setTitle(taskTitle);
             task.setPriority(getSelectedPriority());
 
-            task.setDueDate(getDueDate());
+            // Folosim Timestamp direct pentru data limită
+            task.setDueDate(getDueDateAsTimestamp());
 
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             task.setUserId(userId);
@@ -127,15 +125,16 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    private Date getDueDate() {
+    // Metoda direct cu Timestamp
+    private Timestamp getDueDateAsTimestamp() {
         if (todayButton.isChecked()) {
-            return getTodayDate();
+            return getTodayTimestamp();
         } else if (tomorrowButton.isChecked()) {
-            return getTomorrowDate();
+            return getTomorrowTimestamp();
         } else if (pickDateButton.isChecked()) {
-            return selectedDate;
+            return selectedTimestamp;
         }
-        return getTodayDate();
+        return getTodayTimestamp();  // Default to today if no date selected
     }
 
     private Priority getSelectedPriority() {
@@ -150,5 +149,4 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         }
         return Priority.LOW;  // Default
     }
-
 }

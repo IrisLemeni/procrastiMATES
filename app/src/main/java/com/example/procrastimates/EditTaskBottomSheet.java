@@ -16,9 +16,9 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.firebase.Timestamp;
 
 import java.util.Calendar;
-import java.util.Date;
 
 public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
@@ -27,7 +27,7 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
     private Task task;
     private RadioGroup dateSelectionGroup;
     private RadioButton todayButton, tomorrowButton, pickDateButton;
-    private Date selectedDate;
+    private Timestamp selectedDate;
     private Spinner prioritySpinner;
 
     private OnTaskUpdatedListener onTaskUpdatedListener;
@@ -94,9 +94,9 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
         dateSelectionGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.todayButton) {
-                selectedDate = getTodayDate();
+                selectedDate = getTodayTimestamp();
             } else if (checkedId == R.id.tomorrowButton) {
-                selectedDate = getTomorrowDate();
+                selectedDate = getTomorrowTimestamp();
             } else if (checkedId == R.id.pickDateButton) {
                 showDatePickerDialog();
             }
@@ -105,9 +105,9 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
         return view;
     }
 
-    private boolean isToday(Date date) {
+    private boolean isToday(Timestamp timestamp) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+        calendar.setTimeInMillis(timestamp.getSeconds() * 1000);
         int day = calendar.get(Calendar.DAY_OF_YEAR);
         int year = calendar.get(Calendar.YEAR);
 
@@ -115,22 +115,22 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
         return today.get(Calendar.YEAR) == year && today.get(Calendar.DAY_OF_YEAR) == day;
     }
 
-    private boolean isTomorrow(Date date) {
+    private boolean isTomorrow(Timestamp timestamp) {
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+        calendar.setTimeInMillis(timestamp.getSeconds() * 1000);
         calendar.add(Calendar.DAY_OF_YEAR, 1);
-        return isToday(calendar.getTime());
+        return isToday(new Timestamp(calendar.getTime()));
     }
 
-    private Date getTodayDate() {
+    private Timestamp getTodayTimestamp() {
         Calendar calendar = Calendar.getInstance();
-        return calendar.getTime();  // Returnează un obiect Date cu data curentă
+        return new Timestamp(calendar.getTime());
     }
 
-    private Date getTomorrowDate() {
+    private Timestamp getTomorrowTimestamp() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
-        return calendar.getTime();  // Returnează un obiect Date cu data de mâine
+        return new Timestamp(calendar.getTime());
     }
 
     private void showDatePickerDialog() {
@@ -140,7 +140,7 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
                 (view, year, month, dayOfMonth) -> {
                     // Setăm valoarea pentru data selectată
                     calendar.set(year, month, dayOfMonth);
-                    selectedDate = calendar.getTime();
+                    selectedDate = new Timestamp(calendar.getTime());
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),

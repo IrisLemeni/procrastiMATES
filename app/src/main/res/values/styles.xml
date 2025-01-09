@@ -4,5 +4,10 @@
         <item name="android:textSize">10sp</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
+    <style name="CalendarDateText" parent="TextAppearance.AppCompat.Medium">
+        <!-- Personalizează stilul textului -->
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textSize">16sp</item>
+    </style>
 
 </resources>

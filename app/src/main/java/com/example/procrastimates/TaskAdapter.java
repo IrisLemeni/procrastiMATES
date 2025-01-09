@@ -68,6 +68,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         notifyDataSetChanged();
     }
 
+    public void updateTasks(List<Task> newTasks) {
+        this.taskList.clear();
+        this.taskList.addAll(newTasks);
+        notifyDataSetChanged();
+    }
+
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
         CheckBox checkBox;
