@@ -34,18 +34,16 @@ public class TaskRepository {
 
         CollectionReference tasksRef = db.collection("tasks");
 
-        // Creați documentul și obțineți ID-ul generat automat
-        DocumentReference newTaskRef = tasksRef.document(); // Aceasta va genera un ID automat
-        task.setTaskId(newTaskRef.getId()); // Setează taskId-ul cu ID-ul generat de Firestore
-        task.setUserId(userId); // Asociază userId-ul la task
+        DocumentReference newTaskRef = tasksRef.document();
+        task.setTaskId(newTaskRef.getId());
+        task.setUserId(userId);
 
-        // Adăugați task-ul în Firestore
         newTaskRef.set(task)
                 .addOnSuccessListener(aVoid -> {
-                    listener.onSuccess(task);  // Răspunde cu task-ul adăugat
+                    listener.onSuccess(task);
                 })
                 .addOnFailureListener(e -> {
-                    listener.onFailure(e);  // Răspunde cu eroarea, dacă există
+                    listener.onFailure(e);
                 });
     }
 

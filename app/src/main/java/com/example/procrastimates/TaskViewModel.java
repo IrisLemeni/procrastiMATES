@@ -13,6 +13,8 @@ import com.example.procrastimates.service.TaskService;
 import com.example.procrastimates.Priority;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class TaskViewModel extends AndroidViewModel {
@@ -29,6 +31,25 @@ public class TaskViewModel extends AndroidViewModel {
 
     public LiveData<List<Task>> getTasksLiveData() {
         return tasksLiveData;
+    }
+
+    public void loadTodayTasks(String userId) {
+        taskService.getUserTasks(userId, new TaskRepository.OnTaskActionListener() {
+            @Override
+            public void onSuccess(Object result) {
+                List<Task> tasks = (List<Task>) result;
+                if (tasks != null) {
+                    List<Task> todayTasks = filterTasksForToday(tasks);
+                    originalTasks = todayTasks;
+                    tasksLiveData.setValue(todayTasks);
+                }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                tasksLiveData.setValue(null);
+            }
+        });
     }
 
     public void loadTasks(String userId) {
@@ -50,6 +71,30 @@ public class TaskViewModel extends AndroidViewModel {
         });
     }
 
+    private List<Task> filterTasksForToday(List<Task> tasks) {
+        List<Task> todayTasks = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Date startOfDay = calendar.getTime();
+
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        Date endOfDay = calendar.getTime();
+
+        for (Task task : tasks) {
+            if (task.getDueDate() != null) {
+                Date taskDate = task.getDueDate().toDate(); // Convertim Timestamp în Date
+                if (taskDate.after(startOfDay) && taskDate.before(endOfDay)) {
+                    todayTasks.add(task);
+                }
+            }
+        }
+        return todayTasks;
+    }
+
+
     public void filterTasksByPriority(Priority priority) {
         List<Task> filteredTasks = new ArrayList<>();
         for (Task task : originalTasks) {
@@ -68,7 +113,7 @@ public class TaskViewModel extends AndroidViewModel {
         taskService.addTask(task, userId, new TaskRepository.OnTaskActionListener() {
             @Override
             public void onSuccess(Object result) {
-                loadTasks(userId);
+                loadTodayTasks(userId);
             }
 
             @Override
@@ -88,7 +133,7 @@ public class TaskViewModel extends AndroidViewModel {
             public void onSuccess(Object result) {
                 // Notifică UI-ul că task-ul a fost actualizat cu succes
                 Log.d("TaskViewModel", "Task updated successfully");
-                loadTasks(task.getUserId());
+                loadTodayTasks(task.getUserId());
             }
 
             @Override
@@ -105,7 +150,7 @@ public class TaskViewModel extends AndroidViewModel {
             @Override
             public void onSuccess(Object result) {
                 // Task șters cu succes
-                loadTasks(task.getUserId());
+                loadTodayTasks(task.getUserId());
             }
 
             @Override
