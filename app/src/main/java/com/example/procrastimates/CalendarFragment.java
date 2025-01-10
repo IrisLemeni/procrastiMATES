@@ -69,13 +69,12 @@ public class CalendarFragment extends Fragment {
     }
 
     private void getTasksForWeek(CalendarDay selectedDay) {
-        // Obține începutul și sfârșitul săptămânii pentru ziua selectată
         Calendar calendar = Calendar.getInstance();
         calendar.set(selectedDay.getYear(), selectedDay.getMonth() - 1, selectedDay.getDay());
         calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
         long startOfWeekMillis = calendar.getTimeInMillis();
 
-        calendar.add(Calendar.DAY_OF_YEAR, 6); // Setează ultima zi a săptămânii
+        calendar.add(Calendar.DAY_OF_YEAR, 6);
         long endOfWeekMillis = calendar.getTimeInMillis();
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -88,10 +87,12 @@ public class CalendarFragment extends Fragment {
                     if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             Task task = document.toObject(Task.class);
-                            tasksForWeek.add(task);
+                            if (!task.isCompleted()) {
+                                tasksForWeek.add(task);
+                            }
                         }
                     }
-                    showTasksForWeek(tasksForWeek); // Trimite lista de task-uri pentru săptămâna respectivă
+                    showTasksForWeek(tasksForWeek);
                 })
                 .addOnFailureListener(e -> Log.e("CalendarFragment", "Error getting tasks for week", e));
     }
@@ -134,7 +135,9 @@ public class CalendarFragment extends Fragment {
                     if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
                         for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                             Task task = document.toObject(Task.class);
-                            tasksForSelectedDay.add(task);
+                            if (!task.isCompleted()) {
+                                tasksForSelectedDay.add(task);
+                            }
                         }
                     }
                     showTasksForDay(tasksForSelectedDay);
