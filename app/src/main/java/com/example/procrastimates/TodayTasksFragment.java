@@ -15,6 +15,7 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
@@ -66,6 +67,18 @@ public class TodayTasksFragment extends Fragment {
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new RecyclerItemTouchHelper(taskAdapter));
         itemTouchHelper.attachToRecyclerView(tasksRecyclerView);
+
+        // Inside TodayTasksFragment
+        taskAdapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
+            if (isChecked) {
+                taskViewModel.completeTask(task);
+
+                Snackbar.make(tasksRecyclerView, "Task marked as completed", Snackbar.LENGTH_LONG)
+                        .setAction("Undo", v -> taskViewModel.undoCompleteTask())
+                        .show();
+            }
+        });
+
 
         return view;
     }

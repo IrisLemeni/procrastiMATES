@@ -29,6 +29,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         this.onEditTaskListener = listener;
     }
 
+    public interface OnTaskCheckedChangeListener {
+        void onTaskChecked(Task task, boolean isChecked);
+    }
+
+    private OnTaskCheckedChangeListener onTaskCheckedChangeListener;
+
+    public void setOnTaskCheckedChangeListener(OnTaskCheckedChangeListener listener) {
+        this.onTaskCheckedChangeListener = listener;
+    }
+
     @Override
     public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.task_layout, parent, false);
@@ -40,6 +50,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         Task task = taskList.get(position);
         holder.titleTextView.setText(task.getTitle());
         holder.checkBox.setChecked(task.isCompleted());
+
+        holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (onTaskCheckedChangeListener != null) {
+                onTaskCheckedChangeListener.onTaskChecked(task, isChecked);
+            }
+        });
 
         holder.editTask.setOnClickListener(v -> {
             if (onEditTaskListener != null) {
@@ -65,12 +81,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     public void setTasks(List<Task> taskList) {
         this.taskList = taskList;
-        notifyDataSetChanged();
-    }
-
-    public void updateTasks(List<Task> newTasks) {
-        this.taskList.clear();
-        this.taskList.addAll(newTasks);
         notifyDataSetChanged();
     }
 

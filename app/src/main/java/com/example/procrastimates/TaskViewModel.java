@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Stack;
 
 public class TaskViewModel extends AndroidViewModel {
 
@@ -40,8 +41,14 @@ public class TaskViewModel extends AndroidViewModel {
                 List<Task> tasks = (List<Task>) result;
                 if (tasks != null) {
                     List<Task> todayTasks = filterTasksForToday(tasks);
-                    originalTasks = todayTasks;
-                    tasksLiveData.setValue(todayTasks);
+                    List<Task> incompleteTasks = new ArrayList<>();
+                    for (Task task : todayTasks) {
+                        if (!task.isCompleted()) {  // Verificăm dacă task-ul nu este completat
+                            incompleteTasks.add(task);
+                        }
+                    }
+                    originalTasks = incompleteTasks;
+                    tasksLiveData.setValue(incompleteTasks);
                 }
             }
 
@@ -160,4 +167,41 @@ public class TaskViewModel extends AndroidViewModel {
             }
         });
     }
+
+    private final Stack<Task> recentlyCompletedTasks = new Stack<>();
+
+    public void completeTask(Task task) {
+        task.setCompleted(true);
+        taskService.updateTask(task.getTaskId(), task, new TaskRepository.OnTaskActionListener() {
+            @Override
+            public void onSuccess(Object result) {
+                recentlyCompletedTasks.push(task);
+                loadTodayTasks(task.getUserId()); // Refresh tasks
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("TaskViewModel", "Failed to complete task: " + e.getMessage());
+            }
+        });
+    }
+
+    public void undoCompleteTask() {
+        if (!recentlyCompletedTasks.isEmpty()) {
+            Task task = recentlyCompletedTasks.pop();
+            task.setCompleted(false);
+            taskService.updateTask(task.getTaskId(), task, new TaskRepository.OnTaskActionListener() {
+                @Override
+                public void onSuccess(Object result) {
+                    loadTodayTasks(task.getUserId()); // Refresh tasks
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    Log.e("TaskViewModel", "Failed to undo task completion: " + e.getMessage());
+                }
+            });
+        }
+    }
+
 }
