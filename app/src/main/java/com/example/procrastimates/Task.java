@@ -2,7 +2,6 @@ package com.example.procrastimates;
 
 import com.google.firebase.Timestamp;
 
-import java.util.Date;
 
 public class Task {
     private String taskId;
