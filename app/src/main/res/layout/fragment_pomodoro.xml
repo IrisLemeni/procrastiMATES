@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background"
+    android:background="@drawable/altceva"
     android:gravity="center">
 
     <!-- Layout pentru selectarea duratei -->
@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:padding="10dp"
             android:textAlignment="center"
-            android:textColor="@color/white" />
+            android:textColor="@color/ic_launcher_background" />
         <Button
             android:id="@+id/selectDurationButton25"
             android:text="25 minutes"
@@ -57,7 +57,7 @@
             android:padding="10dp"
             android:layout_marginHorizontal="20dp"
             android:textAlignment="center"
-            android:textColor="@color/white" />
+            android:textColor="@color/ic_launcher_background" />
 
         <HorizontalScrollView
             android:layout_width="match_parent"
