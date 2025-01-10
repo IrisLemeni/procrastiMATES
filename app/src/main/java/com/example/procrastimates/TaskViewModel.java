@@ -43,7 +43,7 @@ public class TaskViewModel extends AndroidViewModel {
                     List<Task> todayTasks = filterTasksForToday(tasks);
                     List<Task> incompleteTasks = new ArrayList<>();
                     for (Task task : todayTasks) {
-                        if (!task.isCompleted()) {  // Verificăm dacă task-ul nu este completat
+                        if (!task.isCompleted()) {
                             incompleteTasks.add(task);
                         }
                     }
@@ -92,7 +92,7 @@ public class TaskViewModel extends AndroidViewModel {
 
         for (Task task : tasks) {
             if (task.getDueDate() != null) {
-                Date taskDate = task.getDueDate().toDate(); // Convertim Timestamp în Date
+                Date taskDate = task.getDueDate().toDate();
                 if (taskDate.after(startOfDay) && taskDate.before(endOfDay)) {
                     todayTasks.add(task);
                 }
@@ -109,7 +109,7 @@ public class TaskViewModel extends AndroidViewModel {
                 filteredTasks.add(task);
             }
         }
-        tasksLiveData.setValue(filteredTasks); // Setează task-urile filtrate
+        tasksLiveData.setValue(filteredTasks); // Taskurile filtrate
     }
 
     public void resetFilters() {
@@ -130,7 +130,6 @@ public class TaskViewModel extends AndroidViewModel {
         });
     }
 
-    // Actualizează un task
     public void updateTask(String taskId, Task task) {
         if(taskId == null || task == null){
             return;
@@ -138,31 +137,26 @@ public class TaskViewModel extends AndroidViewModel {
         taskService.updateTask(taskId, task, new TaskRepository.OnTaskActionListener() {
             @Override
             public void onSuccess(Object result) {
-                // Notifică UI-ul că task-ul a fost actualizat cu succes
                 Log.d("TaskViewModel", "Task updated successfully");
                 loadTodayTasks(task.getUserId());
             }
 
             @Override
             public void onFailure(Exception e) {
-                // Notifică UI-ul că a avut loc o eroare
                 Log.e("TaskViewModel", "Failed to update task: " + e.getMessage());
             }
         });
     }
 
-    // Șterge un task
     public void deleteTask(Task task) {
         taskService.deleteTask(task.getTaskId(), new TaskRepository.OnTaskActionListener() {
             @Override
             public void onSuccess(Object result) {
-                // Task șters cu succes
                 loadTodayTasks(task.getUserId());
             }
 
             @Override
             public void onFailure(Exception e) {
-                // Eroare la ștergere
                 Toast.makeText(getApplication(), "Failed to delete task.", Toast.LENGTH_SHORT).show();
             }
         });
