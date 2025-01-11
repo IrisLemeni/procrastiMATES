@@ -82,7 +82,7 @@ public class PomodoroFragment extends Fragment {
         });
 
         selectDurationButton25.setOnClickListener(v -> {
-            sessionDuration = 1 * 60 * 1000; // 25 minutes
+            sessionDuration = 25 * 60 * 1000; // 25 minutes
             breakDuration = 5 * 60 * 1000; // 5 minutes
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);

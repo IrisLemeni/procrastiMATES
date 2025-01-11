@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
@@ -19,6 +20,7 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -38,12 +40,14 @@ public class HomeFragment extends Fragment {
 
     private TextView welcomeText;
     private ImageView userImage;
-    private TextView quoteText;
+    private TextView quoteText, progressText;
     private BarChart barChart;
+    private ProgressBar dailyProgressBar;
+    private FirebaseFirestore db;
+
 
 
     public HomeFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -52,6 +56,11 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        dailyProgressBar = view.findViewById(R.id.dailyProgressBar);
+        progressText = view.findViewById(R.id.progressText);
+        db = FirebaseFirestore.getInstance();
+        fetchTaskProgress();
+        
         welcomeText = view.findViewById(R.id.welcomeText);
         userImage = view.findViewById(R.id.userImage);
         quoteText = view.findViewById(R.id.quoteText);
@@ -81,17 +90,78 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    private void fetchTaskProgress() {
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+
+            // Obține începutul și sfârșitul zilei curente
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            Timestamp startOfDay = new Timestamp(calendar.getTime());
+
+            calendar.set(Calendar.HOUR_OF_DAY, 23);
+            calendar.set(Calendar.MINUTE, 59);
+            calendar.set(Calendar.SECOND, 59);
+            calendar.set(Calendar.MILLISECOND, 999);
+            Timestamp endOfDay = new Timestamp(calendar.getTime());
+
+            db.collection("tasks")
+                    .whereEqualTo("userId", userId)
+                    .whereGreaterThanOrEqualTo("dueDate", startOfDay)  // Compară cu Timestamp
+                    .whereLessThanOrEqualTo("dueDate", endOfDay)  // Compară cu Timestamp
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        int totalTasks = queryDocumentSnapshots.size();
+                        long completedTasks = queryDocumentSnapshots.getDocuments().stream()
+                                .filter(doc -> Boolean.TRUE.equals(doc.getBoolean("completed")))
+                                .count();
+
+                        updateProgressBar((int) completedTasks, totalTasks);
+                    })
+                    .addOnFailureListener(e -> {
+                        progressText.setText("Error loading tasks");
+                        Log.e("FirestoreError", "Error loading tasks: ", e);
+                    });
+        } else {
+            progressText.setText("User not logged in");
+        }
+    }
+
+    private void updateProgressBar(int completedTasks, int totalTasks) {
+        if (totalTasks > 0) {
+            // Calculează progresul ca procentaj
+            int progress = (int) ((completedTasks / (float) totalTasks) * 100);
+            dailyProgressBar.setProgress(progress);
+            progressText.setText(completedTasks + "/" + totalTasks + " tasks completed");
+        } else {
+            progressText.setText("No tasks for today");
+            dailyProgressBar.setProgress(0); // Setează progresul la 0 când nu sunt task-uri
+        }
+    }
+
+
+    private String getTodayDate() {
+        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+        return dateFormat.format(java.util.Calendar.getInstance().getTime());
+    }
+
     private int getDaysInCurrentMonth() {
         Calendar calendar = Calendar.getInstance();
         return calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
     }
 
     private void fetchPomodoroSessions() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance();
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         String userId = mAuth.getCurrentUser().getUid();
 
-        int daysInMonth = getDaysInCurrentMonth(); // Numărul exact de zile din luna curentă
+        int daysInMonth = getDaysInCurrentMonth();
         List<String> daysOfMonth = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar calendar = Calendar.getInstance();
@@ -99,7 +169,7 @@ public class HomeFragment extends Fragment {
             calendar.set(Calendar.DAY_OF_MONTH, i);
             daysOfMonth.add(sdf.format(calendar.getTime()));
         }
-        // Obține sesiunile Pomodoro pentru utilizatorul curent
+        // Obtine sesiunile Pomodoro pentru utilizatorul curent
         db.collection("pomodoro_sessions")
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("type", "work")
@@ -125,7 +195,7 @@ public class HomeFragment extends Fragment {
 
         // Inițializează zilele cu 0 sesiuni
         for (int i = 1; i <= maxDays; i++) {
-            entries.add(new BarEntry(i, 0)); // Fiecare zi începe cu 0 sesiuni
+            entries.add(new BarEntry(i, 0));
         }
 
         // Parcurge sesiunile din Firestore
@@ -156,10 +226,11 @@ public class HomeFragment extends Fragment {
         // Configurare descriere
         String monthYear = new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(new Date());
         barChart.getDescription().setEnabled(true);
-        barChart.getDescription().setText("Pomodoro Sessions - " + monthYear);
+        barChart.getDescription().setText("Pomodoro - " + monthYear);
         barChart.getDescription().setTextSize(14f);
         barChart.getDescription().setTextColor(Color.BLACK);
-        barChart.getDescription().setPosition(500f, 20f); // Ajustează poziția descrierii
+        barChart.getDescription().setPosition(barChart.getWidth() / 2f, 50f);
+        barChart.setExtraOffsets(0, 20, 0, 0);// Ajustează poziția descrierii
 
         // Centrare pe ziua curentă
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
@@ -185,7 +256,7 @@ public class HomeFragment extends Fragment {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1f);
         xAxis.setLabelCount(7);
-        xAxis.setTextSize(14f); // Dimensiunea textului axei X
+        xAxis.setTextSize(14f);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter((value, axis) -> {
             int day = (int) value;
@@ -195,21 +266,17 @@ public class HomeFragment extends Fragment {
         YAxis leftAxis = barChart.getAxisLeft();
         leftAxis.setAxisMinimum(0f);
         leftAxis.setGranularity(1f);
-        leftAxis.setTextSize(14f); // Dimensiunea textului axei Y
+        leftAxis.setTextSize(14f);
         leftAxis.setDrawGridLines(true);
 
         barChart.getAxisRight().setEnabled(false);
         barChart.setFitBars(true);
         barChart.animateY(1000);
 
-        // Mută vizualizarea pe ziua curentă
         Calendar calendar = Calendar.getInstance();
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-        barChart.moveViewToX(currentDay - 4); // Centrare pe ziua curentă
+        barChart.moveViewToX(currentDay - 4);
     }
-
-
-
 
     private void loadUserData(String userId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -219,7 +286,7 @@ public class HomeFragment extends Fragment {
                     if (documentSnapshot.exists()) {
                         String username = documentSnapshot.getString("username");
                         if (username != null) {
-                            welcomeText.setText("Hello, " + username);
+                            welcomeText.setText("Hello, " + username + "!");
                         } else {
                             welcomeText.setText("Hello, User!");
                         }
