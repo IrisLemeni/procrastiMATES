@@ -3,6 +3,7 @@ package com.example.procrastimates.repositories;
 import android.util.Log;
 
 import com.example.procrastimates.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -90,6 +91,24 @@ public class TaskRepository {
                 })
                 .addOnFailureListener(e -> listener.onFailure(e));
     }
+
+    public void getUserTasksForToday(String userId, Timestamp startOfDay, Timestamp endOfDay, OnTaskActionListener listener) {
+        db.collection("tasks")
+                .whereEqualTo("userId", userId)
+                .whereGreaterThanOrEqualTo("dueDate", startOfDay)
+                .whereLessThanOrEqualTo("dueDate", endOfDay)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Task> tasks = new ArrayList<>();
+                    for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                        Task task = documentSnapshot.toObject(Task.class);
+                        tasks.add(task);
+                    }
+                    listener.onSuccess(tasks);
+                })
+                .addOnFailureListener(listener::onFailure);
+    }
+
 
     public interface OnTaskActionListener {
         void onSuccess(Object result);
