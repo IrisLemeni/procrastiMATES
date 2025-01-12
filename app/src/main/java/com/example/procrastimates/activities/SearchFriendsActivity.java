@@ -119,7 +119,7 @@ public class SearchFriendsActivity extends AppCompatActivity {
                         // Obține valoarea timestamp din document
                         Object timestampValue = documentSnapshot.get("timestamp");
                         Invitation newInvitation = new Invitation();
-                        newInvitation.setId(documentReference.getId());
+                        newInvitation.setInvitationId(documentReference.getId());
                         newInvitation.setFrom(currentUserId);
                         newInvitation.setTo(friendId);
                         newInvitation.setStatus("PENDING");

@@ -17,15 +17,22 @@ import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.example.procrastimates.Circle;
+import com.example.procrastimates.Friend;
 import com.example.procrastimates.FriendsAdapter;
 import com.example.procrastimates.Invitation;
 import com.example.procrastimates.InvitationStatus;
 import com.example.procrastimates.R;
+import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.NotificationsActivity;
 import com.example.procrastimates.activities.SearchFriendsActivity;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FriendsFragment extends Fragment {
     private Button btnAddFriend;
@@ -33,6 +40,9 @@ public class FriendsFragment extends Fragment {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private String currentUserId;
+    private RecyclerView recyclerView;
+    private FriendsAdapter friendsAdapter;
+    private List<Friend> friendsList = new ArrayList<>();
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -46,11 +56,12 @@ public class FriendsFragment extends Fragment {
 
         btnNotifications = view.findViewById(R.id.btnNotifications);
         btnAddFriend = view.findViewById(R.id.btnAddFriend);
-        RecyclerView friendsRecyclerView = view.findViewById(R.id.friendsRecyclerView);
-        FriendsAdapter adapter = new FriendsAdapter(friendsList);
-        friendsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        friendsRecyclerView.setAdapter(adapter);
 
+        // Inițializează RecyclerView-ul și adapter-ul
+        recyclerView = view.findViewById(R.id.friendsRecyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        friendsAdapter = new FriendsAdapter(friendsList);
+        recyclerView.setAdapter(friendsAdapter); // Setează adapter-ul pentru RecyclerView
 
         btnAddFriend.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), SearchFriendsActivity.class);
@@ -58,8 +69,76 @@ public class FriendsFragment extends Fragment {
         });
 
         btnNotifications.setOnClickListener(v -> showNotifications());
+        loadFriendsProgress(); // Încarcă progresul prietenilor
 
         return view;
+    }
+
+    public void loadFriendsProgress() {
+        // Obține cercul curent al utilizatorului
+        db.collection("circles")
+                .whereEqualTo("userId", currentUserId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
+                        Circle circle = circleDoc.toObject(Circle.class);
+                        if (circle != null) {
+                            List<String> members = circle.getMembers();
+                            loadProgressForFriends(members);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to get circle", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    public void loadProgressForFriends(List<String> members) {
+        for (String friendId : members) {
+            if (friendId.equals(mAuth.getCurrentUser().getUid())) continue;
+
+            // Obține numele prietenului din Firestore
+            db.collection("users")
+                    .document(friendId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String friendName = documentSnapshot.getString("name"); // Asigură-te că acest câmp există în Firestore
+
+                            // Apoi, obține task-urile prietenului
+                            db.collection("tasks")
+                                    .whereEqualTo("userId", friendId)
+                                    .get()
+                                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                                        int completedTasks = 0;
+                                        int totalTasks = 0;
+
+                                        for (DocumentSnapshot taskDoc : queryDocumentSnapshots) {
+                                            Task task = taskDoc.toObject(Task.class);
+                                            if (task != null) {
+                                                totalTasks++;
+                                                if (task.isCompleted()) {
+                                                    completedTasks++;
+                                                }
+                                            }
+                                        }
+
+                                        // Adaugă prietenul și numele său în lista de prieteni
+                                        friendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
+
+                                        // Actualizează adapter-ul
+                                        friendsAdapter.notifyDataSetChanged(); // Actualizează RecyclerView-ul
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(getContext(), "Failed to load tasks for friend", Toast.LENGTH_SHORT).show();
+                                    });
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to get friend name", Toast.LENGTH_SHORT).show();
+                    });
+        }
     }
 
     private void showNotifications() {

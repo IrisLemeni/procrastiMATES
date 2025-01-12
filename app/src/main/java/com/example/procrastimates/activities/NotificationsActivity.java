@@ -68,7 +68,7 @@ public class NotificationsActivity extends AppCompatActivity {
                                             .addOnSuccessListener(userDoc -> {
                                                 String senderUsername = userDoc.getString("username"); // Folosim "username" în loc de "name"
                                                 invitation.setSenderName(senderUsername);
-                                                invitation.setId(doc.getId());  // Setează ID-ul documentului invitației
+                                                invitation.setInvitationId(doc.getId());  // Setează ID-ul documentului invitației
                                                 invitationList.add(invitation);
                                                 adapter.notifyDataSetChanged();
                                             });
@@ -120,16 +120,26 @@ public class NotificationsActivity extends AppCompatActivity {
                         db.collection("circles")
                                 .add(newCircle)
                                 .addOnSuccessListener(documentReference -> {
-                                    // După ce cercul a fost creat, șterge invitația
-                                    deleteInvitation(invitation);
+                                    // După ce cercul a fost creat, adăugăm circleId
+                                    newCircle.setCircleId(documentReference.getId());
+
+                                    // Actualizează documentul cu circleId
+                                    db.collection("circles")
+                                            .document(documentReference.getId())
+                                            .update("circleId", newCircle.getCircleId())
+                                            .addOnSuccessListener(aVoid -> {
+                                                // După ce cercul a fost creat, șterge invitația
+                                                deleteInvitation(invitation);
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Toast.makeText(NotificationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
+                                            });
                                 })
                                 .addOnFailureListener(e -> {
                                     Toast.makeText(NotificationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
                                 });
+
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(NotificationsActivity.this, "Error getting circle", Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -140,7 +150,7 @@ public class NotificationsActivity extends AppCompatActivity {
 
     private void deleteInvitation(Invitation invitation) {
         db.collection("invitations")
-                .document(invitation.getId()) // Folosim ID-ul invitației pentru a o șterge
+                .document(invitation.getInvitationId()) // Folosim ID-ul invitației pentru a o șterge
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     // După ce invitația a fost ștearsă, actualizează lista de invitații
