@@ -4,22 +4,23 @@ import com.google.firebase.Timestamp;
 import java.util.Date;
 
 public class Invitation {
-    private String id;
+    private String invitationId;
     private String from;
     private String to;
     private String status;
     private Timestamp timestamp;
     private String senderName; // Acest câmp este adăugat manual
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
     // Getteri și setteri
+
+    public String getInvitationId() {
+        return invitationId;
+    }
+
+    public void setInvitationId(String invitationId) {
+        this.invitationId = invitationId;
+    }
+
     public String getFrom() {
         return from;
     }

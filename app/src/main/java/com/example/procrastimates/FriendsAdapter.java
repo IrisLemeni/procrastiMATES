@@ -28,8 +28,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
     @Override
     public void onBindViewHolder(@NonNull FriendViewHolder holder, int position) {
         Friend friend = friendsList.get(position);
-        holder.friendNameTextView.setText(friend.getName());
-        holder.progressBar.setProgress(friend.getTaskProgress());
+        holder.friendName.setText(friend.getName());
+        holder.friendTaskProgress.setProgress(friend.getProgress());
+        holder.progressText.setText(friend.getCompletedTasks() + "/" + friend.getTotalTasks() + " tasks completed");
     }
 
     @Override
@@ -38,14 +39,17 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
     }
 
     public static class FriendViewHolder extends RecyclerView.ViewHolder {
-        TextView friendNameTextView;
-        ProgressBar progressBar;
+        TextView friendName, progressText;
+        ProgressBar friendTaskProgress;
 
-        public FriendViewHolder(@NonNull View itemView) {
+        public FriendViewHolder(View itemView) {
             super(itemView);
-            friendNameTextView = itemView.findViewById(R.id.friendName);
-            progressBar = itemView.findViewById(R.id.friendTaskProgress);
+            friendName = itemView.findViewById(R.id.friendName);
+            friendTaskProgress = itemView.findViewById(R.id.friendTaskProgress);
+            progressText = itemView.findViewById(R.id.progressText);
         }
     }
 }
+
+
 
