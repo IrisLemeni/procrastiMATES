@@ -13,9 +13,14 @@
         android:theme="@style/Theme.ProcrastiMATES"
         tools:targetApi="31">
         <activity
+            android:name=".activities.SearchFriendsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.NotificationsActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.SplashActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true" />
         <activity
             android:name=".activities.ForgotPasswordActivity"
             android:exported="false" />
