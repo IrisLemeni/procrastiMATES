@@ -16,8 +16,27 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private List<Task> taskList;
     private OnEditTaskListener onEditTaskListener;
 
+
     public TaskAdapter(List<Task> taskList) {
         this.taskList = taskList;
+    }
+
+    public interface OnEditTaskListener {
+        void onEditTask(Task task);
+    }
+
+    public void setOnEditTaskListener(OnEditTaskListener listener) {
+        this.onEditTaskListener = listener;
+    }
+
+    public interface OnTaskCheckedChangeListener {
+        void onTaskChecked(Task task, boolean isChecked);
+    }
+
+    private OnTaskCheckedChangeListener onTaskCheckedChangeListener;
+
+    public void setOnTaskCheckedChangeListener(OnTaskCheckedChangeListener listener) {
+        this.onTaskCheckedChangeListener = listener;
     }
 
     @Override
@@ -32,6 +51,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.titleTextView.setText(task.getTitle());
         holder.checkBox.setChecked(task.isCompleted());
 
+        holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (onTaskCheckedChangeListener != null) {
+                onTaskCheckedChangeListener.onTaskChecked(task, isChecked);
+            }
+        });
+
         holder.editTask.setOnClickListener(v -> {
             if (onEditTaskListener != null) {
                 onEditTaskListener.onEditTask(task);
@@ -40,17 +65,23 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     }
 
-    public void setOnEditTaskListener(OnEditTaskListener listener) {
-        this.onEditTaskListener = listener;
-    }
-
-    public interface OnEditTaskListener {
-        void onEditTask(Task task);
-    }
-
     @Override
     public int getItemCount() {
         return taskList.size();
+    }
+
+    public void removeTask(int position) {
+        taskList.remove(position);
+        notifyItemRemoved(position);
+    }
+
+    public Task getTaskAt(int position) {
+        return taskList.get(position);
+    }
+
+    public void setTasks(List<Task> taskList) {
+        this.taskList = taskList;
+        notifyDataSetChanged();
     }
 
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
@@ -66,8 +97,4 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
     }
 
-    public void setTasks(List<Task> taskList) {
-        this.taskList = taskList;
-        notifyDataSetChanged();
-    }
 }

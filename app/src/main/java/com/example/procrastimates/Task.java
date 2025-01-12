@@ -1,20 +1,25 @@
 package com.example.procrastimates;
 
+import com.google.firebase.Timestamp;
+
+
 public class Task {
     private String taskId;
     private String title;
     private boolean isCompleted;
-    private long dueDate;
+    private Timestamp dueDate;
     private String userId;
+    private Priority priority;
 
     public Task() {}
 
-    public Task(String taskId, String title, String description, boolean isCompleted, long dueDate, String userId) {
+    public Task(String taskId, String title,  boolean isCompleted, Timestamp dueDate, String userId, Priority priority) {
         this.taskId = taskId;
         this.title = title;
         this.isCompleted = isCompleted;
         this.dueDate = dueDate;
         this.userId = userId;
+        this.priority = priority;
     }
 
     public String getUserId() {
@@ -49,11 +54,20 @@ public class Task {
         isCompleted = completed;
     }
 
-    public long getDueDate() {
+    public Timestamp getDueDate() {
         return dueDate;
     }
 
-    public void setDueDate(long dueDate) {
+    public void setDueDate(Timestamp dueDate) {
         this.dueDate = dueDate;
     }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
 }

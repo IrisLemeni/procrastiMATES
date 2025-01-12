@@ -3,6 +3,7 @@ package com.example.procrastimates.fragments;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,18 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.procrastimates.R;
+import com.example.procrastimates.repositories.TaskRepository;
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class PomodoroFragment extends Fragment {
 
@@ -36,6 +49,8 @@ public class PomodoroFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate layout for this fragment
         View view = inflater.inflate(R.layout.fragment_pomodoro, container, false);
+
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         workingTime = view.findViewById(R.id.workingTime);
         breakTime = view.findViewById(R.id.breakTime);
@@ -147,11 +162,13 @@ public class PomodoroFragment extends Fragment {
 
             public void onFinish() {
                 if (isWorkSession) {
+                    saveSessionToFirestore(true);
                     showCustomAlert("break");
                     breakTime.setVisibility(View.VISIBLE);
                     workingTime.setVisibility(View.GONE);
                     startTimer(breakDuration, false);
                 } else {
+                    saveSessionToFirestore(false);
                     showCustomAlert("work");
                     breakTime.setVisibility(View.GONE);
                     workingTime.setVisibility(View.VISIBLE);
@@ -159,6 +176,55 @@ public class PomodoroFragment extends Fragment {
                 }
             }
         }.start();
+    }
+
+    private void saveSessionToFirestore(boolean isWorkSession) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        Date currentDate = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String dayString = sdf.format(currentDate); // Formatăm data ca "yyyy-MM-dd" pentru a salva o sesiune zilnică
+
+        Map<String, Object> sessionData = new HashMap<>();
+        sessionData.put("userId", userId);
+        sessionData.put("timestamp", new Timestamp(currentDate));
+        sessionData.put("type", isWorkSession ? "work" : "break");
+        sessionData.put("duration", isWorkSession ? sessionDuration / 60000 : breakDuration / 60000); // Durata în minute
+
+        // Salvăm sesiunea în colecția "pomodoro_sessions"
+        db.collection("pomodoro_sessions")
+                .add(sessionData)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("PomodoroFragment", "Session saved successfully! ID: " + documentReference.getId());
+
+                    // După salvarea sesiunii, actualizăm contorul de sesiuni pe ziua respectivă
+                    updateDailySessionCounter(dayString, userId);
+                })
+                .addOnFailureListener(e -> Log.e("PomodoroFragment", "Error saving session", e));
+    }
+
+    // Actualizăm contorul de sesiuni pentru ziua respectivă
+    private void updateDailySessionCounter(String dayString, String userId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // Verificăm dacă există deja un document pentru ziua respectivă
+        DocumentReference dailySessionRef = db.collection("daily_sessions")
+                .document(userId)
+                .collection("sessions_by_day")
+                .document(dayString);
+
+        dailySessionRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                // Dacă documentul există, incrementăm contorul sesiunilor
+                long currentCount = documentSnapshot.getLong("sessionCount") != null ? documentSnapshot.getLong("sessionCount") : 0;
+                dailySessionRef.update("sessionCount", currentCount + 1);
+            } else {
+                // Dacă documentul nu există, îl creăm cu un contor de 1 sesiune
+                Map<String, Object> dailyData = new HashMap<>();
+                dailyData.put("sessionCount", 1);
+                dailySessionRef.set(dailyData);
+            }
+        });
     }
 
     private void showCustomAlert(String type) {
@@ -187,4 +253,5 @@ public class PomodoroFragment extends Fragment {
         mediaPlayer.setOnCompletionListener(mp -> mp.release());
         mediaPlayer.start();
     }
+
 }
