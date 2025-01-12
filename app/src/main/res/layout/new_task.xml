@@ -14,12 +14,57 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textSize="20dp" />
 
+
+    <RadioGroup
+        android:id="@+id/dateSelectionGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/newTaskText"
+        android:orientation="horizontal"
+        android:layout_centerHorizontal="true">
+
+        <!-- Buton pentru Today -->
+        <RadioButton
+            android:id="@+id/todayButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Today"
+            android:checked="true"
+            android:layout_marginHorizontal="5dp"/>
+
+        <!-- Buton pentru Tomorrow -->
+        <RadioButton
+            android:id="@+id/tomorrowButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tomorrow"
+            android:layout_marginHorizontal="5dp"/>
+
+        <!-- Buton pentru Pick Date -->
+        <RadioButton
+            android:id="@+id/pickDateButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick Date"
+            android:layout_marginHorizontal="5dp"/>
+    </RadioGroup>
+
+    <Spinner
+        android:id="@+id/prioritySpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dateSelectionGroup"
+        android:layout_centerHorizontal="true"
+        android:layout_marginHorizontal="110dp"
+        android:padding="10dp"
+        />
+
     <Button
         android:id="@+id/saveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/newTaskText"
         android:layout_alignParentEnd="true"
+        android:layout_below="@+id/dateSelectionGroup"
         android:textSize="16dp"
         android:text="Save" />
 
