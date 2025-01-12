@@ -7,12 +7,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 import com.example.procrastimates.R;
+import com.example.procrastimates.Task;
+import com.example.procrastimates.activities.LoginActivity;
+import com.example.procrastimates.repositories.TaskRepository;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -44,6 +48,8 @@ public class HomeFragment extends Fragment {
     private BarChart barChart;
     private ProgressBar dailyProgressBar;
     private FirebaseFirestore db;
+    private FirebaseAuth auth;
+    private ImageButton logoutButtton;
 
 
 
@@ -63,6 +69,7 @@ public class HomeFragment extends Fragment {
         
         welcomeText = view.findViewById(R.id.welcomeText);
         userImage = view.findViewById(R.id.userImage);
+        logoutButtton = view.findViewById(R.id.logoutButton);
         quoteText = view.findViewById(R.id.quoteText);
         barChart = view.findViewById(R.id.barChart);
         barChart.setDrawBarShadow(false);
@@ -87,17 +94,23 @@ public class HomeFragment extends Fragment {
         String randomQuote = quotes[rand.nextInt(quotes.length)];
         quoteText.setText(randomQuote);
 
+        logoutButtton.setOnClickListener(v -> {
+            FirebaseAuth.getInstance().signOut();
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+
         return view;
     }
 
     private void fetchTaskProgress() {
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
         if (currentUser != null) {
             String userId = currentUser.getUid();
 
-            // Obține începutul și sfârșitul zilei curente
+            // Calculează începutul și sfârșitul zilei curente
             Calendar calendar = Calendar.getInstance();
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 0);
@@ -111,23 +124,27 @@ public class HomeFragment extends Fragment {
             calendar.set(Calendar.MILLISECOND, 999);
             Timestamp endOfDay = new Timestamp(calendar.getTime());
 
-            db.collection("tasks")
-                    .whereEqualTo("userId", userId)
-                    .whereGreaterThanOrEqualTo("dueDate", startOfDay)  // Compară cu Timestamp
-                    .whereLessThanOrEqualTo("dueDate", endOfDay)  // Compară cu Timestamp
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        int totalTasks = queryDocumentSnapshots.size();
-                        long completedTasks = queryDocumentSnapshots.getDocuments().stream()
-                                .filter(doc -> Boolean.TRUE.equals(doc.getBoolean("completed")))
-                                .count();
+            // Folosește TaskRepository
+            TaskRepository.getInstance().getUserTasksForToday(userId, startOfDay, endOfDay, new TaskRepository.OnTaskActionListener() {
+                @Override
+                public void onSuccess(Object result) {
+                    List<Task> tasks = (List<Task>) result;
+                    Log.d("fetchTaskProgress", "Fetched " + tasks.size() + " tasks");
+                    if (tasks.isEmpty()) {
+                        Log.d("fetchTaskProgress", "No tasks found for today");
+                    }
+                    int totalTasks = tasks.size();
+                    int completedTasks = (int) tasks.stream().filter(Task::isCompleted).count();
+                    updateProgressBar(completedTasks, totalTasks);
+                }
 
-                        updateProgressBar((int) completedTasks, totalTasks);
-                    })
-                    .addOnFailureListener(e -> {
-                        progressText.setText("Error loading tasks");
-                        Log.e("FirestoreError", "Error loading tasks: ", e);
-                    });
+                @Override
+                public void onFailure(Exception e) {
+                    Log.e("fetchTaskProgress", "Error fetching tasks: " + e.getMessage(), e);
+                    progressText.setText("Error loading tasks");
+                }
+            });
+
         } else {
             progressText.setText("User not logged in");
         }
@@ -143,12 +160,6 @@ public class HomeFragment extends Fragment {
             progressText.setText("No tasks for today");
             dailyProgressBar.setProgress(0); // Setează progresul la 0 când nu sunt task-uri
         }
-    }
-
-
-    private String getTodayDate() {
-        java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
-        return dateFormat.format(java.util.Calendar.getInstance().getTime());
     }
 
     private int getDaysInCurrentMonth() {
