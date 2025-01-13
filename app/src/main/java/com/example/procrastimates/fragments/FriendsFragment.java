@@ -98,13 +98,12 @@ public class FriendsFragment extends Fragment {
         for (String friendId : members) {
             if (friendId.equals(mAuth.getCurrentUser().getUid())) continue;
 
-            // Obține numele prietenului din Firestore
             db.collection("users")
                     .document(friendId)
                     .get()
                     .addOnSuccessListener(documentSnapshot -> {
                         if (documentSnapshot.exists()) {
-                            String friendName = documentSnapshot.getString("name"); // Asigură-te că acest câmp există în Firestore
+                            String friendName = documentSnapshot.getString("username");
 
                             // Apoi, obține task-urile prietenului
                             db.collection("tasks")
