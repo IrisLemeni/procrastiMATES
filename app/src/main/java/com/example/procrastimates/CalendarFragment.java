@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -30,6 +31,8 @@ public class CalendarFragment extends Fragment {
 
     private MaterialCalendarView calendarView;
     private TaskViewModel taskViewModel;
+    String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
 
     public CalendarFragment() {
     }
@@ -79,6 +82,7 @@ public class CalendarFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("tasks")
+                .whereEqualTo("userId", currentUserId)
                 .whereGreaterThanOrEqualTo("dueDate", new Timestamp(new Date(startOfWeekMillis)))
                 .whereLessThanOrEqualTo("dueDate", new Timestamp(new Date(endOfWeekMillis)))
                 .get()
@@ -127,6 +131,7 @@ public class CalendarFragment extends Fragment {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("tasks")
+                .whereEqualTo("userId", currentUserId)
                 .whereGreaterThanOrEqualTo("dueDate", new Timestamp(new Date(startOfDayMillis)))
                 .whereLessThanOrEqualTo("dueDate", new Timestamp(new Date(endOfDayMillis)))
                 .get()
@@ -152,7 +157,7 @@ public class CalendarFragment extends Fragment {
                                         allTasks.add(taskFromDb);
                                     }
                                 }
-                                updateDayDecorators(allTasks);
+                                updateDayDecorators(allTasks, currentUserId);
                             });
                 })
                 .addOnFailureListener(e -> Log.e("CalendarFragment", "Error getting tasks for day", e));
@@ -234,17 +239,18 @@ public class CalendarFragment extends Fragment {
                                         allTasks.add(taskFromDb);
                                     }
                                 }
-                                updateDayDecorators(allTasks);
+                                updateDayDecorators(allTasks, currentUserId);
                             });
                 })
                 .addOnFailureListener(e -> Log.e("CalendarFragment", "Error deleting task", e));
     }
 
-    private void updateDayDecorators(List<Task> tasks) {
+    private void updateDayDecorators(List<Task> tasks, String currentUserId) {
         HashSet<CalendarDay> daysWithTasks = new HashSet<>();
 
         for (Task task : tasks) {
-            if (task.getDueDate() != null) {
+            // Filtrare task-uri pentru utilizatorul curent
+            if (task.getUserId().equals(currentUserId) && task.getDueDate() != null) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTimeInMillis(task.getDueDate().getSeconds() * 1000);
                 CalendarDay day = CalendarDay.from(
@@ -255,7 +261,8 @@ public class CalendarFragment extends Fragment {
                 daysWithTasks.add(day);
             }
         }
-        //Curata decoratorii vechi si aplica unii noi
+
+        // Curăță decoratorii vechi și aplică unii noi
         calendarView.removeDecorators();
         if (!daysWithTasks.isEmpty()) {
             calendarView.addDecorator(new TaskDayDecorator(Color.MAGENTA, daysWithTasks));
