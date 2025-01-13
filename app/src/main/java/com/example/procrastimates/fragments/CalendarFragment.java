@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.fragments;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,12 +12,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.procrastimates.AddTaskBottomSheet;
+import com.example.procrastimates.CalendarTaskAdapter;
+import com.example.procrastimates.EditTaskBottomSheet;
+import com.example.procrastimates.R;
+import com.example.procrastimates.Task;
+import com.example.procrastimates.TaskDayDecorator;
+import com.example.procrastimates.TaskViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
-import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 import com.google.firebase.Timestamp;
 
@@ -67,6 +73,15 @@ public class CalendarFragment extends Fragment {
             recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
             recyclerView.setAdapter(adapter);
         }
+
+        view.findViewById(R.id.addTaskButton).setOnClickListener(v -> {
+            CalendarDay selectedDay = calendarView.getSelectedDate();
+            if (selectedDay != null) {
+                showAddTaskBottomSheet(selectedDay);
+            } else {
+                Toast.makeText(getContext(), "Select a day first!", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return view;
     }
@@ -220,6 +235,35 @@ public class CalendarFragment extends Fragment {
                     .addOnFailureListener(e -> Log.e("CalendarFragment", "Error updating task", e));
         });
         bottomSheet.show(getChildFragmentManager(), "EditTaskBottomSheet");
+    }
+    private void showAddTaskBottomSheet(CalendarDay selectedDay) {
+        AddTaskBottomSheet addTaskBottomSheet = new AddTaskBottomSheet();
+
+        // Setăm listener-ul pentru adăugarea unei sarcini noi
+        addTaskBottomSheet.setOnTaskAddedListener(newTask -> {
+            // Convertim ziua selectată într-un Timestamp corespunzător
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(selectedDay.getYear(), selectedDay.getMonth() - 1, selectedDay.getDay()); // CalendarDay folosește o lună bazată pe 1
+            newTask.setDueDate(new com.google.firebase.Timestamp(calendar.getTime())); // Setăm data aleasă
+
+            FirebaseFirestore.getInstance()
+                    .collection("tasks")
+                    .add(newTask) // Adaugă task-ul nou în Firestore
+                    .addOnSuccessListener(documentReference -> {
+                        newTask.setTaskId(documentReference.getId()); // Setează ID-ul documentului generat
+                        FirebaseFirestore.getInstance()
+                                .collection("tasks")
+                                .document(newTask.getTaskId())
+                                .set(newTask) // Actualizează cu ID-ul documentului
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(getContext(), "Task added for " + selectedDay.getDate(), Toast.LENGTH_SHORT).show();
+                                    getTasksForDay(selectedDay); // Reîncarcă sarcinile pentru ziua selectată
+                                });
+                    })
+                    .addOnFailureListener(e -> Log.e("CalendarFragment", "Error adding task", e));
+        });
+
+        addTaskBottomSheet.show(getChildFragmentManager(), "AddTaskBottomSheet");
     }
 
     private void deleteTask(Task task) {
