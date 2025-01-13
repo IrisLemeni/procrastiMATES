@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.procrastimates.Circle;
@@ -41,6 +42,7 @@ public class FriendsFragment extends Fragment {
     private FirebaseFirestore db;
     private String currentUserId;
     private RecyclerView recyclerView;
+    private TextView userName;
     private FriendsAdapter friendsAdapter;
     private List<Friend> friendsList = new ArrayList<>();
 
@@ -52,7 +54,9 @@ public class FriendsFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        currentUserId = mAuth.getCurrentUser().getUid(); // Get the current user's ID
+        currentUserId = mAuth.getCurrentUser().getUid();
+        userName = view.findViewById(R.id.userName);
+        loadUserData(currentUserId);
 
         btnNotifications = view.findViewById(R.id.btnNotifications);
         btnAddFriend = view.findViewById(R.id.btnAddFriend);
@@ -143,5 +147,21 @@ public class FriendsFragment extends Fragment {
     private void showNotifications() {
         Intent intent = new Intent(getActivity(), NotificationsActivity.class);
         startActivity(intent);
+    }
+
+    private void loadUserData(String userId) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users").document(userId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String username = documentSnapshot.getString("username");
+                        if (username != null) {
+                            userName.setText(username);
+                        } else {
+                            userName.setText("Your username");
+                        }
+                    }
+                });
     }
 }
