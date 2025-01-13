@@ -27,12 +27,14 @@ import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.NotificationsActivity;
 import com.example.procrastimates.activities.SearchFriendsActivity;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 public class FriendsFragment extends Fragment {
@@ -98,6 +100,20 @@ public class FriendsFragment extends Fragment {
     }
 
     public void loadProgressForFriends(List<String> members) {
+        // Obține începutul și sfârșitul zilei curente
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        long startOfDay = calendar.getTimeInMillis();
+
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        long endOfDay = calendar.getTimeInMillis();
+
         for (String friendId : members) {
             db.collection("users")
                     .document(friendId)
@@ -106,9 +122,11 @@ public class FriendsFragment extends Fragment {
                         if (documentSnapshot.exists()) {
                             String friendName = documentSnapshot.getString("username");
 
-                            // Obține task-urile pentru fiecare membru
+                            // Filtrează task-urile din ziua curentă
                             db.collection("tasks")
                                     .whereEqualTo("userId", friendId)
+                                    .whereGreaterThanOrEqualTo("dueDate", new Timestamp(startOfDay / 1000, 0))
+                                    .whereLessThanOrEqualTo("dueDate", new Timestamp(endOfDay / 1000, 0))
                                     .get()
                                     .addOnSuccessListener(queryDocumentSnapshots -> {
                                         int completedTasks = 0;
@@ -140,6 +158,7 @@ public class FriendsFragment extends Fragment {
                     });
         }
     }
+
 
 
     private void showNotifications() {
