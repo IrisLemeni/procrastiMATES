@@ -79,9 +79,8 @@ public class FriendsFragment extends Fragment {
     }
 
     public void loadFriendsProgress() {
-        // Obține cercul curent al utilizatorului
         db.collection("circles")
-                .whereEqualTo("userId", currentUserId)
+                .whereArrayContains("members", currentUserId) // Verifică dacă utilizatorul curent este în cerc
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
@@ -89,7 +88,7 @@ public class FriendsFragment extends Fragment {
                         Circle circle = circleDoc.toObject(Circle.class);
                         if (circle != null) {
                             List<String> members = circle.getMembers();
-                            loadProgressForFriends(members);
+                            loadProgressForFriends(members); // Încarcă progresul tuturor membrilor
                         }
                     }
                 })
@@ -100,8 +99,6 @@ public class FriendsFragment extends Fragment {
 
     public void loadProgressForFriends(List<String> members) {
         for (String friendId : members) {
-            if (friendId.equals(mAuth.getCurrentUser().getUid())) continue;
-
             db.collection("users")
                     .document(friendId)
                     .get()
@@ -109,7 +106,7 @@ public class FriendsFragment extends Fragment {
                         if (documentSnapshot.exists()) {
                             String friendName = documentSnapshot.getString("username");
 
-                            // Apoi, obține task-urile prietenului
+                            // Obține task-urile pentru fiecare membru
                             db.collection("tasks")
                                     .whereEqualTo("userId", friendId)
                                     .get()
@@ -127,11 +124,11 @@ public class FriendsFragment extends Fragment {
                                             }
                                         }
 
-                                        // Adaugă prietenul și numele său în lista de prieteni
+                                        // Adaugă prietenul în lista de prieteni
                                         friendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
 
-                                        // Actualizează adapter-ul
-                                        friendsAdapter.notifyDataSetChanged(); // Actualizează RecyclerView-ul
+                                        // Actualizează RecyclerView-ul
+                                        friendsAdapter.notifyDataSetChanged();
                                     })
                                     .addOnFailureListener(e -> {
                                         Toast.makeText(getContext(), "Failed to load tasks for friend", Toast.LENGTH_SHORT).show();
@@ -143,6 +140,7 @@ public class FriendsFragment extends Fragment {
                     });
         }
     }
+
 
     private void showNotifications() {
         Intent intent = new Intent(getActivity(), NotificationsActivity.class);

@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+import com.example.procrastimates.fragments.CalendarFragment;
 import com.example.procrastimates.fragments.TasksFragment;
 
 public class ViewPagerAdapter extends FragmentStateAdapter {
