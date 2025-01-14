@@ -114,6 +114,9 @@ public class FriendsFragment extends Fragment {
         calendar.set(Calendar.MILLISECOND, 999);
         long endOfDay = calendar.getTimeInMillis();
 
+        // Folosește o listă temporară pentru a adăuga toți prietenii
+        List<Friend> updatedFriendsList = new ArrayList<>();
+
         for (String friendId : members) {
             db.collection("users")
                     .document(friendId)
@@ -158,6 +161,7 @@ public class FriendsFragment extends Fragment {
                     });
         }
     }
+
 
 
 

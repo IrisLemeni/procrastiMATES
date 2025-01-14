@@ -1,5 +1,6 @@
 package com.example.procrastimates.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -85,67 +86,99 @@ public class NotificationsActivity extends AppCompatActivity {
     public void acceptInvitation(Invitation invitation) {
         String currentUserId = auth.getCurrentUser().getUid();
 
-        // Adaugă utilizatorul în cercul sender-ului
+        // Căutăm cercul care aparține utilizatorului care a trimis invitația
         db.collection("circles")
                 .whereEqualTo("userId", invitation.getFrom())
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
-                        // Dacă cercul există deja, adaugă utilizatorul în lista de membri
                         DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
                         Circle circle = circleDoc.toObject(Circle.class);
 
                         if (circle != null && !circle.getMembers().contains(currentUserId)) {
-                            circle.getMembers().add(currentUserId);
-                            // Actualizează cercul în baza de date
-                            db.collection("circles")
-                                    .document(circleDoc.getId())
-                                    .update("members", circle.getMembers())
-                                    .addOnSuccessListener(aVoid -> {
-                                        // După ce utilizatorul a fost adăugat în cerc, șterge invitația
-                                        deleteInvitation(invitation);
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Toast.makeText(NotificationsActivity.this, "Failed to update circle", Toast.LENGTH_SHORT).show();
-                                    });
+                            addUserToCircle(circle, circleDoc.getId(), currentUserId, invitation);
                         }
                     } else {
-                        // Dacă cercul nu există, creează unul nou cu utilizatorul adăugat
-                        Circle newCircle = new Circle();
-                        newCircle.setUserId(invitation.getFrom());
-                        List<String> members = new ArrayList<>();
-                        members.add(currentUserId);
-                        newCircle.setMembers(members);
-
-                        db.collection("circles")
-                                .add(newCircle)
-                                .addOnSuccessListener(documentReference -> {
-                                    // După ce cercul a fost creat, adăugăm circleId
-                                    newCircle.setCircleId(documentReference.getId());
-
-                                    // Actualizează documentul cu circleId
-                                    db.collection("circles")
-                                            .document(documentReference.getId())
-                                            .update("circleId", newCircle.getCircleId())
-                                            .addOnSuccessListener(aVoid -> {
-                                                // După ce cercul a fost creat, șterge invitația
-                                                deleteInvitation(invitation);
-                                            })
-                                            .addOnFailureListener(e -> {
-                                                Toast.makeText(NotificationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
-                                            });
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(NotificationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
-                                });
-
+                        // Dacă cercul nu există, creăm unul nou
+                        createCircle(invitation, currentUserId);
                     }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(NotificationsActivity.this, "Failed to get circle", Toast.LENGTH_SHORT).show();
                 });
     }
+    private void addUserToCircle(Circle circle, String circleId, String currentUserId, Invitation invitation) {
+        // Dacă utilizatorul curent nu este deja în cerc, îl adăugăm
+        if (!circle.getMembers().contains(currentUserId)) {
+            circle.getMembers().add(currentUserId);
+
+            // Verificăm dacă creatorul cercului este în lista de membri, altfel îl adăugăm
+            if (!circle.getMembers().contains(invitation.getFrom())) {
+                circle.getMembers().add(invitation.getFrom());
+            }
+
+            // Actualizăm cercul în baza de date
+            db.collection("circles")
+                    .document(circleId)
+                    .update("members", circle.getMembers())
+                    .addOnSuccessListener(aVoid -> {
+                        // După ce utilizatorul a fost adăugat în cerc, ștergem invitația
+                        deleteInvitation(invitation);
+                        Intent intent = new Intent(NotificationsActivity.this, NotificationsActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Dacă activitatea este deja în stack, o va aduce în față
+                        startActivity(intent);
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(NotificationsActivity.this, "Failed to update circle", Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
+
+    private void createCircle(Invitation invitation, String currentUserId) {
+        // Creăm un cerc nou
+        Circle newCircle = new Circle();
+        newCircle.setUserId(invitation.getFrom()); // ID-ul creatorului cercului
+        List<String> members = new ArrayList<>();
+
+        // Adăugăm utilizatorul creator al cercului în lista de membri
+        members.add(invitation.getFrom());  // ID-ul creatorului cercului
+        members.add(currentUserId);         // Adăugăm utilizatorul curent ca membru
+        newCircle.setMembers(members);
+
+        // Adăugăm cercul în baza de date
+        db.collection("circles")
+                .add(newCircle)
+                .addOnSuccessListener(documentReference -> {
+                    // După ce cercul a fost creat, adăugăm circleId
+                    newCircle.setCircleId(documentReference.getId());
+
+                    // Actualizăm documentul cu circleId
+                    db.collection("circles")
+                            .document(documentReference.getId())
+                            .update("circleId", newCircle.getCircleId())
+                            .addOnSuccessListener(aVoid -> {
+                                // După ce cercul a fost creat, ștergem invitația
+                                deleteInvitation(invitation);
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(NotificationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(NotificationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
+                });
+    }
+
 
     public void declineInvitation(Invitation invitation) {
         // Șterge invitația
         deleteInvitation(invitation);
+        Intent intent = new Intent(NotificationsActivity.this, NotificationsActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Dacă activitatea este deja în stack, o va aduce în față
+        startActivity(intent);
+        finish();
     }
 
     private void deleteInvitation(Invitation invitation) {
