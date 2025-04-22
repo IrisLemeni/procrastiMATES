@@ -107,18 +107,16 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             Task task = new Task();
             task.setTitle(taskTitle);
             task.setPriority(getSelectedPriority());
-
-            // Folosim Timestamp direct pentru data limită
             task.setDueDate(getDueDateAsTimestamp());
+            task.setUserId(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            task.setUserId(userId);
+            // ❌ Elimină apelul către ViewModel
+            // taskViewModel.addTask(task, userId);
 
-            taskViewModel.addTask(task, userId);
+            // ✔️ Trimite task-ul doar prin listener
             if (onTaskAddedListener != null) {
                 onTaskAddedListener.onTaskAdded(task);
             }
-
             dismiss();
         } else {
             taskEditText.setError("Please enter a task title");

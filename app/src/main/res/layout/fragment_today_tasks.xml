@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".TodayTasksFragment">
+    tools:context=".fragments.TodayTasksFragment">
 
     <!-- RecyclerView pentru afișarea task-urilor -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

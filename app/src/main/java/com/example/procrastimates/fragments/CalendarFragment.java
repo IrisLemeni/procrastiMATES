@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -53,6 +54,7 @@ public class CalendarFragment extends Fragment {
 
         CalendarDay today = CalendarDay.today();
         calendarView.setSelectedDate(today);
+        taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
         getTasksForWeek(today);
 
@@ -239,32 +241,22 @@ public class CalendarFragment extends Fragment {
     private void showAddTaskBottomSheet(CalendarDay selectedDay) {
         AddTaskBottomSheet addTaskBottomSheet = new AddTaskBottomSheet();
 
-        // Setăm listener-ul pentru adăugarea unei sarcini noi
         addTaskBottomSheet.setOnTaskAddedListener(newTask -> {
-            // Convertim ziua selectată într-un Timestamp corespunzător
+            // Setează data
             Calendar calendar = Calendar.getInstance();
-            calendar.set(selectedDay.getYear(), selectedDay.getMonth() - 1, selectedDay.getDay()); // CalendarDay folosește o lună bazată pe 1
-            newTask.setDueDate(new com.google.firebase.Timestamp(calendar.getTime())); // Setăm data aleasă
+            calendar.set(selectedDay.getYear(), selectedDay.getMonth() - 1, selectedDay.getDay());
+            newTask.setDueDate(new Timestamp(calendar.getTime()));
 
-            FirebaseFirestore.getInstance()
-                    .collection("tasks")
-                    .add(newTask) // Adaugă task-ul nou în Firestore
-                    .addOnSuccessListener(documentReference -> {
-                        newTask.setTaskId(documentReference.getId()); // Setează ID-ul documentului generat
-                        FirebaseFirestore.getInstance()
-                                .collection("tasks")
-                                .document(newTask.getTaskId())
-                                .set(newTask) // Actualizează cu ID-ul documentului
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(getContext(), "Task added for " + selectedDay.getDate(), Toast.LENGTH_SHORT).show();
-                                    getTasksForDay(selectedDay); // Reîncarcă sarcinile pentru ziua selectată
-                                });
-                    })
-                    .addOnFailureListener(e -> Log.e("CalendarFragment", "Error adding task", e));
+            // ✔️ Folosește ViewModel pentru salvare (care la rândul lui folosește Repository)
+            taskViewModel.addTask(newTask, currentUserId);
+
+            Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
+            getTasksForDay(selectedDay);
         });
 
         addTaskBottomSheet.show(getChildFragmentManager(), "AddTaskBottomSheet");
     }
+
 
     private void deleteTask(Task task) {
         FirebaseFirestore.getInstance()
