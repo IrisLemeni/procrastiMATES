@@ -1,5 +1,6 @@
-package com.example.procrastimates;
+package com.example.procrastimates.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -11,9 +12,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import com.example.procrastimates.AddTaskBottomSheet;
+import com.example.procrastimates.EditTaskBottomSheet;
+import com.example.procrastimates.Priority;
+import com.example.procrastimates.R;
+import com.example.procrastimates.RecyclerItemTouchHelper;
+import com.example.procrastimates.Task;
+import com.example.procrastimates.TaskAdapter;
+import com.example.procrastimates.TaskViewModel;
+import com.example.procrastimates.activities.AskAiActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -24,6 +35,7 @@ import java.util.Map;
 
 public class TodayTasksFragment extends Fragment {
 
+    private Button askAiButton;
     private RecyclerView tasksRecyclerView;
     private TaskAdapter taskAdapter;
     private TaskViewModel taskViewModel;
@@ -43,6 +55,7 @@ public class TodayTasksFragment extends Fragment {
         fabSortTasks = view.findViewById(R.id.fabSortTasks);
         tasksRecyclerView = view.findViewById(R.id.tasksRecyclerView);
         tasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        askAiButton = view.findViewById(R.id.askAiButton);
 
         taskAdapter = new TaskAdapter(new ArrayList<>());
         tasksRecyclerView.setAdapter(taskAdapter);
@@ -62,6 +75,12 @@ public class TodayTasksFragment extends Fragment {
 
         fabAddTask.setOnClickListener(v -> showAddTaskBottomSheet());
         fabSortTasks.setOnClickListener(this::showSortMenu);
+        askAiButton.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), AskAiActivity.class);
+            startActivity(intent);
+        });
+
+
 
         taskAdapter.setOnEditTaskListener(this::showEditTaskBottomSheet);
 

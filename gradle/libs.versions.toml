@@ -12,6 +12,7 @@ constraintlayout = "2.2.0"
 firebaseAuth = "23.1.0"
 calendarView = "2.0.3"
 mpAndroidChart = "v3.0.3"
+firebaseConfig = "22.1.0"
 
 
 [libraries]
@@ -28,6 +29,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 material-calendar-view = { group = "com.github.mhiew", name = "material-calendarview", version.ref = "calendarView" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpAndroidChart" }
+firebase-config = { group = "com.google.firebase", name = "firebase-config", version.ref = "firebaseConfig" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
