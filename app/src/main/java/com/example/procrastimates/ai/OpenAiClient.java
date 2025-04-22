@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class OpenAiClient {
     private static final String BASE_URL = "https://api.openai.com/";
-    private static final // În OpenAiClient
+    private static final
     String apiKey = FirebaseRemoteConfig.getInstance().getString("openai_api_key");
 
     public static OpenAiService getService() {
