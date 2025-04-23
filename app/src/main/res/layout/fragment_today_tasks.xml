@@ -1,44 +1,113 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".fragments.TodayTasksFragment">
+    android:layout_height="match_parent">
 
-    <!-- RecyclerView pentru afișarea task-urilor -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabSortTasks"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:backgroundTint="#FFFFFF"
-        android:contentDescription="Sort by Priority"
-        android:src="@drawable/ic_baseline_sort_24"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <!-- Scrollable content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-    <!-- Buton pentru sortare -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/tasksRecyclerView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:nestedScrollingEnabled="true"
-        app:layout_constraintTop_toBottomOf="@id/fabSortTasks"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/fabAddTask" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <!-- Buton pentru adăugarea unui nou task -->
+            <!-- FAB Sort -->
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabSortTasks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:backgroundTint="#FFFFFF"
+                android:contentDescription="Sort by Priority"
+                android:src="@drawable/ic_baseline_sort_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Active Tasks -->
+            <TextView
+                android:id="@+id/textActiveTasks"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:padding="8dp"
+                android:text="Active Tasks"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <View
+                android:id="@+id/separatorView1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginTop="4dp"
+                android:background="#CCCCCC"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textActiveTasks" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/tasksRecyclerView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:minHeight="100dp"
+                android:nestedScrollingEnabled="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/separatorView1" />
+
+            <!-- Completed Tasks -->
+            <TextView
+                android:id="@+id/textCompletedTasks"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:padding="8dp"
+                android:text="Completed Tasks"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tasksRecyclerView" />
+
+            <View
+                android:id="@+id/separatorView"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginTop="4dp"
+                android:background="#CCCCCC"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/textCompletedTasks" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/completedTasksRecyclerView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="32dp"
+                android:nestedScrollingEnabled="false"
+                android:minHeight="100dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/separatorView" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Sticky Add FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddTask"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:backgroundTint="#835ECA"
         android:contentDescription="Add Task"
-        android:src="@drawable/baseline_add_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:src="@drawable/baseline_add_24" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

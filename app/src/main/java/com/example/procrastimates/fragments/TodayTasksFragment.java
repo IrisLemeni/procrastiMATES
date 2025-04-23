@@ -32,8 +32,8 @@ import java.util.Map;
 
 public class TodayTasksFragment extends Fragment {
 
-    private RecyclerView tasksRecyclerView;
-    private TaskAdapter taskAdapter;
+    private RecyclerView tasksRecyclerView, completedTasksRecyclerView;
+    private TaskAdapter taskAdapter, completedTaskAdapter;
     private TaskViewModel taskViewModel;
     private FloatingActionButton fabAddTask, fabSortTasks;
 
@@ -49,11 +49,18 @@ public class TodayTasksFragment extends Fragment {
 
         fabAddTask = view.findViewById(R.id.fabAddTask);
         fabSortTasks = view.findViewById(R.id.fabSortTasks);
+
         tasksRecyclerView = view.findViewById(R.id.tasksRecyclerView);
         tasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         taskAdapter = new TaskAdapter(new ArrayList<>());
         tasksRecyclerView.setAdapter(taskAdapter);
+
+        completedTasksRecyclerView = view.findViewById(R.id.completedTasksRecyclerView);
+        completedTasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        completedTaskAdapter = new TaskAdapter(new ArrayList<>());
+        completedTasksRecyclerView.setAdapter(completedTaskAdapter);
 
         // lista de task-uri
         taskViewModel.getTasksLiveData().observe(getViewLifecycleOwner(), tasks -> {
@@ -61,6 +68,12 @@ public class TodayTasksFragment extends Fragment {
                 taskAdapter.setTasks(tasks);
             } else {
                 Toast.makeText(getContext(), "Failed to load tasks.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        taskViewModel.getCompletedTasksLiveData().observe(getViewLifecycleOwner(), completedTasks -> {
+            if (completedTasks != null) {
+                completedTaskAdapter.setTasks(completedTasks);
             }
         });
 

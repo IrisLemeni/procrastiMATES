@@ -35,6 +35,12 @@ public class TaskViewModel extends AndroidViewModel {
         return tasksLiveData;
     }
 
+    private MutableLiveData<List<Task>> completedTasksLiveData = new MutableLiveData<>();
+
+    public LiveData<List<Task>> getCompletedTasksLiveData() {
+        return completedTasksLiveData;
+    }
+
     // Metoda pentru a încărca task-urile cu filtru opțional
     public void loadTasks(String userId, boolean todayOnly) {
         taskService.getUserTasks(userId, new TaskRepository.OnTaskActionListener() {
@@ -51,22 +57,28 @@ public class TaskViewModel extends AndroidViewModel {
                         filteredTasks = tasks;
                     }
 
-                    // Filtrează task-urile incomplete
-                    List<Task> incompleteTasks = new ArrayList<>();
+                    // Separate active and completed tasks
+                    List<Task> activeTasks = new ArrayList<>();
+                    List<Task> completedTasks = new ArrayList<>();
+
                     for (Task task : filteredTasks) {
-                        if (!task.isCompleted()) {
-                            incompleteTasks.add(task);
+                        if (task.isCompleted()) {
+                            completedTasks.add(task);
+                        } else {
+                            activeTasks.add(task);
                         }
                     }
 
-                    originalTasks = incompleteTasks;
-                    tasksLiveData.setValue(incompleteTasks);
+                    originalTasks = activeTasks;  // Store original active tasks for filtering
+                    tasksLiveData.setValue(activeTasks);
+                    completedTasksLiveData.setValue(completedTasks);
                 }
             }
 
             @Override
             public void onFailure(Exception e) {
                 tasksLiveData.setValue(null);
+                completedTasksLiveData.setValue(null);
             }
         });
     }
@@ -80,9 +92,6 @@ public class TaskViewModel extends AndroidViewModel {
         loadTasks(userId, false);
     }
 
-    // Add these methods to TaskViewModel.java
-
-    // Method to load tasks for a specific date range
     public void loadTasksForDateRange(String userId, Date startDate, Date endDate) {
         taskService.getTasksForDateRange(userId,
                 new Timestamp(startDate),
