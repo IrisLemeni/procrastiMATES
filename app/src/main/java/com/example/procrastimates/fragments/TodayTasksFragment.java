@@ -139,6 +139,10 @@ public class TodayTasksFragment extends Fragment {
         AddTaskBottomSheet addTaskBottomSheet = new AddTaskBottomSheet();
         addTaskBottomSheet.setOnTaskAddedListener(newTask -> {
             if (newTask != null) {
+                // Acum apelăm direct Repository pentru a salva task-ul
+                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                taskViewModel.addTask(newTask, userId);
+
                 Toast.makeText(getContext(), "Task added successfully.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Failed to add task.", Toast.LENGTH_SHORT).show();

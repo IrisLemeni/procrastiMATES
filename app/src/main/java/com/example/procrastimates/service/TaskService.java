@@ -2,6 +2,12 @@ package com.example.procrastimates.service;
 
 import com.example.procrastimates.Task;
 import com.example.procrastimates.repositories.TaskRepository;
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TaskService {
     private TaskRepository taskRepository;
@@ -28,5 +34,26 @@ public class TaskService {
     // Obține task-urile utilizatorului
     public void getUserTasks(String userId, TaskRepository.OnTaskActionListener listener) {
         taskRepository.getUserTasks(userId, listener);
+    }
+
+    // Add to TaskService.java
+    public void getTasksForDateRange(String userId, Timestamp startDate, Timestamp endDate,
+                                     TaskRepository.OnTaskActionListener listener) {
+        FirebaseFirestore.getInstance().collection("tasks")
+                .whereEqualTo("userId", userId)
+                .whereGreaterThanOrEqualTo("dueDate", startDate)
+                .whereLessThanOrEqualTo("dueDate", endDate)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    List<Task> tasks = new ArrayList<>();
+                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
+                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                            Task task = document.toObject(Task.class);
+                            tasks.add(task);
+                        }
+                    }
+                    listener.onSuccess(tasks);
+                })
+                .addOnFailureListener(e -> listener.onFailure(e));
     }
 }

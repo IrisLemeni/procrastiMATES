@@ -20,6 +20,7 @@ import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.TaskDayDecorator;
 import com.example.procrastimates.TaskViewModel;
+import com.example.procrastimates.repositories.TaskRepository;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -54,9 +55,20 @@ public class CalendarFragment extends Fragment {
 
         CalendarDay today = CalendarDay.today();
         calendarView.setSelectedDate(today);
-        taskViewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+        taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
 
         getTasksForWeek(today);
+
+        taskViewModel.getTasksLiveData().observe(getViewLifecycleOwner(), tasks -> {
+            if (tasks != null) {
+                // Filter tasks for the selected day
+                CalendarDay selectedDay = calendarView.getSelectedDate();
+                if (selectedDay != null) {
+                    List<Task> tasksForSelectedDay = filterTasksForDay(tasks, selectedDay);
+                    showTasksForDay(tasksForSelectedDay);
+                }
+            }
+        });
 
         // Ascultă modificările de dată
         calendarView.setOnDateChangedListener((widget, date, selected) -> {
@@ -88,113 +100,62 @@ public class CalendarFragment extends Fragment {
         return view;
     }
 
+    private List<Task> filterTasksForDay(List<Task> allTasks, CalendarDay day) {
+        long startOfDayMillis = getStartOfDayInMillis(day);
+        long endOfDayMillis = getEndOfDayInMillis(day);
+
+        List<Task> filteredTasks = new ArrayList<>();
+        for (Task task : allTasks) {
+            if (task.getDueDate() != null) {
+                long taskTimeMillis = task.getDueDate().getSeconds() * 1000;
+                if (taskTimeMillis >= startOfDayMillis && taskTimeMillis <= endOfDayMillis) {
+                    filteredTasks.add(task);
+                }
+            }
+        }
+        return filteredTasks;
+    }
+
+    // Refactored getTasksForWeek in CalendarFragment
     private void getTasksForWeek(CalendarDay selectedDay) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(selectedDay.getYear(), selectedDay.getMonth() - 1, selectedDay.getDay());
         calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
-        long startOfWeekMillis = calendar.getTimeInMillis();
+        Date startOfWeek = calendar.getTime();
 
         calendar.add(Calendar.DAY_OF_YEAR, 6);
-        long endOfWeekMillis = calendar.getTimeInMillis();
+        Date endOfWeek = calendar.getTime();
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("tasks")
-                .whereEqualTo("userId", currentUserId)
-                .whereGreaterThanOrEqualTo("dueDate", new Timestamp(new Date(startOfWeekMillis)))
-                .whereLessThanOrEqualTo("dueDate", new Timestamp(new Date(endOfWeekMillis)))
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Task> tasksForWeek = new ArrayList<>();
-                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
-                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                            Task task = document.toObject(Task.class);
-                            if (!task.isCompleted()) {
-                                tasksForWeek.add(task);
-                            }
-                        }
-                    }
-                    showTasksForWeek(tasksForWeek);
-                })
-                .addOnFailureListener(e -> Log.e("CalendarFragment", "Error getting tasks for week", e));
+        // Use TaskViewModel to get tasks
+        taskViewModel.loadTasksForDateRange(currentUserId, startOfWeek, endOfWeek);
+
+        // The observer on taskViewModel.getTasksLiveData() will handle displaying the tasks
     }
 
-    private void showTasksForWeek(List<Task> tasksForWeek) {
-        // Curăță decoratorii anteriori din calendar
-        calendarView.removeDecorators();
-
-        // Creează un set de zile care au task-uri
-        HashSet<CalendarDay> daysWithTasks = new HashSet<>();
-        for (Task task : tasksForWeek) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(task.getDueDate().getSeconds() * 1000);
-            CalendarDay day = CalendarDay.from(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH));
-
-            daysWithTasks.add(day);
-        }
-
-        // Aplicați decoratori pentru fiecare zi cu task-uri
-        for (CalendarDay dayWithTask : daysWithTasks) {
-            int taskColor = Color.RED; // Culoarea marker-ului
-            TaskDayDecorator taskDayDecorator = new TaskDayDecorator(Color.MAGENTA, daysWithTasks);
-            calendarView.addDecorator(taskDayDecorator);
-        }
-    }
-
-
-
+    // Refactored getTasksForDay in CalendarFragment
     private void getTasksForDay(CalendarDay selectedDay) {
-        long startOfDayMillis = getStartOfDayInMillis(selectedDay);
-        long endOfDayMillis = getEndOfDayInMillis(selectedDay);
+        Date startOfDay = new Date(getStartOfDayInMillis(selectedDay));
+        Date endOfDay = new Date(getEndOfDayInMillis(selectedDay));
 
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("tasks")
-                .whereEqualTo("userId", currentUserId)
-                .whereGreaterThanOrEqualTo("dueDate", new Timestamp(new Date(startOfDayMillis)))
-                .whereLessThanOrEqualTo("dueDate", new Timestamp(new Date(endOfDayMillis)))
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Task> tasksForSelectedDay = new ArrayList<>();
-                    if (queryDocumentSnapshots != null && !queryDocumentSnapshots.isEmpty()) {
-                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                            Task task = document.toObject(Task.class);
-                            if (!task.isCompleted()) {
-                                tasksForSelectedDay.add(task);
-                            }
-                        }
-                    }
-                    showTasksForDay(tasksForSelectedDay);
+        // Use TaskViewModel to get tasks for selected day
+        taskViewModel.loadTasksForDateRange(currentUserId, startOfDay, endOfDay);
 
-                    // Actualizează decoratorii pentru toate zilele
-                    FirebaseFirestore.getInstance().collection("tasks").get()
-                            .addOnSuccessListener(querySnapshot -> {
-                                List<Task> allTasks = new ArrayList<>();
-                                for (DocumentSnapshot document : querySnapshot.getDocuments()) {
-                                    Task taskFromDb = document.toObject(Task.class);
-                                    if (taskFromDb != null) {
-                                        allTasks.add(taskFromDb);
-                                    }
-                                }
-                                updateDayDecorators(allTasks, currentUserId);
-                            });
-                })
-                .addOnFailureListener(e -> Log.e("CalendarFragment", "Error getting tasks for day", e));
+        // For updating decorators, we need all tasks
+        taskViewModel.loadAllTasks(currentUserId, new TaskRepository.OnTaskActionListener() {
+            @Override
+            public void onSuccess(Object result) {
+                List<Task> allTasks = (List<Task>) result;
+                updateDayDecorators(allTasks, currentUserId);
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.e("CalendarFragment", "Error getting all tasks for decorators", e);
+            }
+        });
     }
 
-
-    private long getStartOfDayInMillis(CalendarDay day) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(day.getYear(), day.getMonth() - 1, day.getDay(), 0, 0, 0); // Lunile încep de la 0 în Calendar
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTimeInMillis();
-    }
-
-    private long getEndOfDayInMillis(CalendarDay day) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(day.getYear(), day.getMonth() - 1, day.getDay(), 23, 59, 59); // Lunile încep de la 0 în Calendar
-        calendar.set(Calendar.MILLISECOND, 999);
-        return calendar.getTimeInMillis();
-    }
-
+    // Refactored showTasksForDay in CalendarFragment
     private void showTasksForDay(List<Task> tasksForDay) {
         RecyclerView recyclerView = getView().findViewById(R.id.tasksRecyclerView);
         if (recyclerView != null) {
@@ -219,6 +180,20 @@ public class CalendarFragment extends Fragment {
                 }
             });
         }
+    }
+
+    private long getStartOfDayInMillis(CalendarDay day) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(day.getYear(), day.getMonth() - 1, day.getDay(), 0, 0, 0); // Lunile încep de la 0 în Calendar
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTimeInMillis();
+    }
+
+    private long getEndOfDayInMillis(CalendarDay day) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(day.getYear(), day.getMonth() - 1, day.getDay(), 23, 59, 59); // Lunile încep de la 0 în Calendar
+        calendar.set(Calendar.MILLISECOND, 999);
+        return calendar.getTimeInMillis();
     }
 
     private void showEditTaskBottomSheet(Task task) {
@@ -247,7 +222,7 @@ public class CalendarFragment extends Fragment {
             calendar.set(selectedDay.getYear(), selectedDay.getMonth() - 1, selectedDay.getDay());
             newTask.setDueDate(new Timestamp(calendar.getTime()));
 
-            // ✔️ Folosește ViewModel pentru salvare (care la rândul lui folosește Repository)
+            // Acum apelăm direct Repository pentru a salva task-ul
             taskViewModel.addTask(newTask, currentUserId);
 
             Toast.makeText(getContext(), "Task added", Toast.LENGTH_SHORT).show();
@@ -257,28 +232,10 @@ public class CalendarFragment extends Fragment {
         addTaskBottomSheet.show(getChildFragmentManager(), "AddTaskBottomSheet");
     }
 
-
     private void deleteTask(Task task) {
-        FirebaseFirestore.getInstance()
-                .collection("tasks")
-                .document(task.getTaskId())
-                .delete()
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
-                    getTasksForDay(CalendarDay.today());
-                    FirebaseFirestore.getInstance().collection("tasks").get()
-                            .addOnSuccessListener(querySnapshot -> {
-                                List<Task> allTasks = new ArrayList<>();
-                                for (DocumentSnapshot document : querySnapshot.getDocuments()) {
-                                    Task taskFromDb = document.toObject(Task.class);
-                                    if (taskFromDb != null) {
-                                        allTasks.add(taskFromDb);
-                                    }
-                                }
-                                updateDayDecorators(allTasks, currentUserId);
-                            });
-                })
-                .addOnFailureListener(e -> Log.e("CalendarFragment", "Error deleting task", e));
+        taskViewModel.deleteTask(task);
+        Toast.makeText(getContext(), "Task deleted", Toast.LENGTH_SHORT).show();
+        getTasksForDay(calendarView.getSelectedDate());
     }
 
     private void updateDayDecorators(List<Task> tasks, String currentUserId) {

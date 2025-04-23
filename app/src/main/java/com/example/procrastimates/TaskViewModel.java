@@ -11,6 +11,7 @@ import com.example.procrastimates.Task;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.example.procrastimates.service.TaskService;
 import com.example.procrastimates.Priority;
+import com.google.firebase.Timestamp;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,19 +35,30 @@ public class TaskViewModel extends AndroidViewModel {
         return tasksLiveData;
     }
 
-    public void loadTodayTasks(String userId) {
+    // Metoda pentru a încărca task-urile cu filtru opțional
+    public void loadTasks(String userId, boolean todayOnly) {
         taskService.getUserTasks(userId, new TaskRepository.OnTaskActionListener() {
             @Override
             public void onSuccess(Object result) {
                 List<Task> tasks = (List<Task>) result;
+
                 if (tasks != null) {
-                    List<Task> todayTasks = filterTasksForToday(tasks);
+                    List<Task> filteredTasks;
+
+                    if (todayOnly) {
+                        filteredTasks = filterTasksForToday(tasks);
+                    } else {
+                        filteredTasks = tasks;
+                    }
+
+                    // Filtrează task-urile incomplete
                     List<Task> incompleteTasks = new ArrayList<>();
-                    for (Task task : todayTasks) {
+                    for (Task task : filteredTasks) {
                         if (!task.isCompleted()) {
                             incompleteTasks.add(task);
                         }
                     }
+
                     originalTasks = incompleteTasks;
                     tasksLiveData.setValue(incompleteTasks);
                 }
@@ -57,6 +69,54 @@ public class TaskViewModel extends AndroidViewModel {
                 tasksLiveData.setValue(null);
             }
         });
+    }
+
+    // Metode wrapper pentru compatibilitate
+    public void loadTodayTasks(String userId) {
+        loadTasks(userId, true);
+    }
+
+    public void loadAllTasks(String userId) {
+        loadTasks(userId, false);
+    }
+
+    // Add these methods to TaskViewModel.java
+
+    // Method to load tasks for a specific date range
+    public void loadTasksForDateRange(String userId, Date startDate, Date endDate) {
+        taskService.getTasksForDateRange(userId,
+                new Timestamp(startDate),
+                new Timestamp(endDate),
+                new TaskRepository.OnTaskActionListener() {
+                    @Override
+                    public void onSuccess(Object result) {
+                        List<Task> tasks = (List<Task>) result;
+
+                        if (tasks != null) {
+                            // Filter out completed tasks
+                            List<Task> incompleteTasks = new ArrayList<>();
+                            for (Task task : tasks) {
+                                if (!task.isCompleted()) {
+                                    incompleteTasks.add(task);
+                                }
+                            }
+
+                            originalTasks = incompleteTasks;
+                            tasksLiveData.setValue(incompleteTasks);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        Log.e("TaskViewModel", "Failed to load tasks for date range: " + e.getMessage());
+                        tasksLiveData.setValue(null);
+                    }
+                });
+    }
+
+    // Method to get all tasks (for decorating calendar)
+    public void loadAllTasks(String userId, TaskRepository.OnTaskActionListener listener) {
+        taskService.getUserTasks(userId, listener);
     }
 
     public void loadTasks(String userId) {
