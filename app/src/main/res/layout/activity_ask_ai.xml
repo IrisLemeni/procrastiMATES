@@ -26,4 +26,11 @@
         android:text="Răspunsul va apărea aici..."
         android:paddingTop="16dp"
         android:textSize="16sp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
 </LinearLayout>
