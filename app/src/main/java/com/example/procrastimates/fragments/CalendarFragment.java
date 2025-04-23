@@ -200,16 +200,19 @@ public class CalendarFragment extends Fragment {
         EditTaskBottomSheet bottomSheet = new EditTaskBottomSheet();
         bottomSheet.setTask(task);
         bottomSheet.setOnTaskUpdatedListener(updatedTask -> {
-            FirebaseFirestore.getInstance()
-                    .collection("tasks")
-                    .document(task.getTaskId())
-                    .set(updatedTask)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
-                        getTasksForDay(CalendarDay.today());
-                    })
+            if (updatedTask != null) {
+                // Use the TaskViewModel to handle the update
+                taskViewModel.updateTask(updatedTask.getTaskId(), updatedTask);
 
-                    .addOnFailureListener(e -> Log.e("CalendarFragment", "Error updating task", e));
+                Toast.makeText(getContext(), "Task updated", Toast.LENGTH_SHORT).show();
+
+                CalendarDay selectedDay = calendarView.getSelectedDate();
+                if (selectedDay != null) {
+                    getTasksForDay(selectedDay);
+                }
+            } else {
+                Toast.makeText(getContext(), "Failed to update task", Toast.LENGTH_SHORT).show();
+            }
         });
         bottomSheet.show(getChildFragmentManager(), "EditTaskBottomSheet");
     }
