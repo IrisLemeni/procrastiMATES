@@ -23,6 +23,7 @@ import com.example.procrastimates.Friend;
 import com.example.procrastimates.FriendsAdapter;
 import com.example.procrastimates.Invitation;
 import com.example.procrastimates.InvitationStatus;
+import com.example.procrastimates.LeaderboardAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.NotificationsActivity;
@@ -35,6 +36,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 public class FriendsFragment extends Fragment {
@@ -43,10 +45,11 @@ public class FriendsFragment extends Fragment {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private String currentUserId;
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerView, top3RecyclerView, othersRecyclerView;
     private TextView userName;
     private FriendsAdapter friendsAdapter;
     private List<Friend> friendsList = new ArrayList<>();
+    private LeaderboardAdapter top3Adapter, othersAdapter;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -68,6 +71,15 @@ public class FriendsFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         friendsAdapter = new FriendsAdapter(friendsList);
         recyclerView.setAdapter(friendsAdapter); // Setează adapter-ul pentru RecyclerView
+        top3RecyclerView = view.findViewById(R.id.top3RecyclerView);
+        othersRecyclerView = view.findViewById(R.id.othersRecyclerView);
+
+        top3RecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        othersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        top3Adapter = new LeaderboardAdapter(new ArrayList<>());
+        othersAdapter = new LeaderboardAdapter(new ArrayList<>());
+
 
         btnAddFriend.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), SearchFriendsActivity.class);
@@ -100,19 +112,20 @@ public class FriendsFragment extends Fragment {
     }
 
     public void loadProgressForFriends(List<String> members) {
-        // Obține începutul și sfârșitul zilei curente
         Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
         calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-        long startOfDay = calendar.getTimeInMillis();
+        long startOfMonth = calendar.getTimeInMillis();
 
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
         calendar.set(Calendar.HOUR_OF_DAY, 23);
         calendar.set(Calendar.MINUTE, 59);
         calendar.set(Calendar.SECOND, 59);
         calendar.set(Calendar.MILLISECOND, 999);
-        long endOfDay = calendar.getTimeInMillis();
+        long endOfMonth = calendar.getTimeInMillis();
 
         // Folosește o listă temporară pentru a adăuga toți prietenii
         List<Friend> updatedFriendsList = new ArrayList<>();
@@ -125,11 +138,11 @@ public class FriendsFragment extends Fragment {
                         if (documentSnapshot.exists()) {
                             String friendName = documentSnapshot.getString("username");
 
-                            // Filtrează task-urile din ziua curentă
+                            // Filtrează task-urile din luna curentă
                             db.collection("tasks")
                                     .whereEqualTo("userId", friendId)
-                                    .whereGreaterThanOrEqualTo("dueDate", new Timestamp(startOfDay / 1000, 0))
-                                    .whereLessThanOrEqualTo("dueDate", new Timestamp(endOfDay / 1000, 0))
+                                    .whereGreaterThanOrEqualTo("dueDate", new Timestamp(startOfMonth / 1000, 0))
+                                    .whereLessThanOrEqualTo("dueDate", new Timestamp(endOfMonth / 1000, 0))
                                     .get()
                                     .addOnSuccessListener(queryDocumentSnapshots -> {
                                         int completedTasks = 0;
@@ -146,10 +159,20 @@ public class FriendsFragment extends Fragment {
                                         }
 
                                         // Adaugă prietenul în lista de prieteni
-                                        friendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
+                                        updatedFriendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
 
-                                        // Actualizează RecyclerView-ul
-                                        friendsAdapter.notifyDataSetChanged();
+                                        // După ce s-au adăugat toți prietenii, sortează și separă
+                                        if (updatedFriendsList.size() == members.size()) {
+                                            Collections.sort(updatedFriendsList, (f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                            List<Friend> top3 = updatedFriendsList.subList(0, Math.min(3, updatedFriendsList.size()));
+                                            List<Friend> others = updatedFriendsList.size() > 3 ? updatedFriendsList.subList(3, updatedFriendsList.size()) : new ArrayList<>();
+
+                                            // Actualizează UI cu RecyclerView-uri
+                                            top3Adapter.setFriends(top3);
+                                            othersAdapter.setFriends(others);
+                                            top3RecyclerView.setAdapter(top3Adapter);
+                                            othersRecyclerView.setAdapter(othersAdapter);
+                                        }
                                     })
                                     .addOnFailureListener(e -> {
                                         Toast.makeText(getContext(), "Failed to load tasks for friend", Toast.LENGTH_SHORT).show();
@@ -161,6 +184,7 @@ public class FriendsFragment extends Fragment {
                     });
         }
     }
+
 
 
 
