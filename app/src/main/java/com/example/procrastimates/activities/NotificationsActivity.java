@@ -3,6 +3,7 @@ package com.example.procrastimates.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +29,7 @@ public class NotificationsActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private List<Invitation> invitationList;
     private InvitationAdapter adapter;
+    private ImageButton backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +38,11 @@ public class NotificationsActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recyclerViewNotifications);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        backButton = findViewById(R.id.backButtonInv);
+
+        backButton.setOnClickListener(v -> {
+            finish();
+        });
 
         invitationList = new ArrayList<>();
         // Transmite 'this' pentru a da activitatea ca parametru

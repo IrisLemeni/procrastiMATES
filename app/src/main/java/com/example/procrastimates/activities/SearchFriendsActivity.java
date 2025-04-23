@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -30,6 +31,8 @@ public class SearchFriendsActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
 
+    private ImageButton backButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,6 +40,7 @@ public class SearchFriendsActivity extends AppCompatActivity {
 
         emailEditText = findViewById(R.id.emailEditText);
         sendInvitationButton = findViewById(R.id.sendInvitationButton);
+        backButton = findViewById(R.id.backButton);
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
@@ -50,6 +54,10 @@ public class SearchFriendsActivity extends AppCompatActivity {
             }
 
             sendInvitation(friendEmail);
+        });
+
+        backButton.setOnClickListener(v -> {
+            finish();
         });
     }
 
