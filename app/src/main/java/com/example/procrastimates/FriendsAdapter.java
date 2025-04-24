@@ -18,6 +18,11 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
         this.friendsList = friendsList;
     }
 
+    public void setFriends(List<Friend> friendsList) {
+        this.friendsList = friendsList;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public FriendViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

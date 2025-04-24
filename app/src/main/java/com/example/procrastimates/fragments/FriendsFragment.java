@@ -2,27 +2,23 @@ package com.example.procrastimates.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.procrastimates.Circle;
 import com.example.procrastimates.Friend;
 import com.example.procrastimates.FriendsAdapter;
-import com.example.procrastimates.Invitation;
-import com.example.procrastimates.InvitationStatus;
 import com.example.procrastimates.LeaderboardAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
@@ -32,7 +28,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -45,10 +40,9 @@ public class FriendsFragment extends Fragment {
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
     private String currentUserId;
-    private RecyclerView recyclerView, top3RecyclerView, othersRecyclerView;
+    private RecyclerView friendsRecyclerView, top3RecyclerView, othersRecyclerView;
     private TextView userName;
     private FriendsAdapter friendsAdapter;
-    private List<Friend> friendsList = new ArrayList<>();
     private LeaderboardAdapter top3Adapter, othersAdapter;
 
     @Override
@@ -66,20 +60,26 @@ public class FriendsFragment extends Fragment {
         btnNotifications = view.findViewById(R.id.btnNotifications);
         btnAddFriend = view.findViewById(R.id.btnAddFriend);
 
-        // Inițializează RecyclerView-ul și adapter-ul
-        recyclerView = view.findViewById(R.id.friendsRecyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        friendsAdapter = new FriendsAdapter(friendsList);
-        recyclerView.setAdapter(friendsAdapter); // Setează adapter-ul pentru RecyclerView
+        // Inițializează RecyclerView-urile
+        friendsRecyclerView = view.findViewById(R.id.friendsRecyclerView);
         top3RecyclerView = view.findViewById(R.id.top3RecyclerView);
         othersRecyclerView = view.findViewById(R.id.othersRecyclerView);
 
-        top3RecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Setează layout managers
+        friendsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        // Grid cu 3 coloane pentru poziționarea celor 3 de pe podium
+        top3RecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
         othersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        top3Adapter = new LeaderboardAdapter(new ArrayList<>());
-        othersAdapter = new LeaderboardAdapter(new ArrayList<>());
+        // Inițializează adaptoarele
+        friendsAdapter = new FriendsAdapter(new ArrayList<>());
+        top3Adapter = new LeaderboardAdapter(new ArrayList<>(), true); // true pentru view-ul de podium
+        othersAdapter = new LeaderboardAdapter(new ArrayList<>(), false);
 
+        // Setează adaptoarele pentru RecyclerView-uri
+        friendsRecyclerView.setAdapter(friendsAdapter);
+        top3RecyclerView.setAdapter(top3Adapter);
+        othersRecyclerView.setAdapter(othersAdapter);
 
         btnAddFriend.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), SearchFriendsActivity.class);
@@ -87,14 +87,33 @@ public class FriendsFragment extends Fragment {
         });
 
         btnNotifications.setOnClickListener(v -> showNotifications());
-        loadFriendsProgress(); // Încarcă progresul prietenilor
+
+        // Încarcă datele
+        loadFriendsProgress();
+        loadDailyTasks();
 
         return view;
     }
 
-    public void loadFriendsProgress() {
+    private void loadDailyTasks() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        long startOfDay = calendar.getTimeInMillis();
+
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        long endOfDay = calendar.getTimeInMillis();
+
+        Timestamp startTimestamp = new Timestamp(startOfDay / 1000, 0);
+        Timestamp endTimestamp = new Timestamp(endOfDay / 1000, 0);
+
         db.collection("circles")
-                .whereArrayContains("members", currentUserId) // Verifică dacă utilizatorul curent este în cerc
+                .whereArrayContains("members", currentUserId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
@@ -102,7 +121,78 @@ public class FriendsFragment extends Fragment {
                         Circle circle = circleDoc.toObject(Circle.class);
                         if (circle != null) {
                             List<String> members = circle.getMembers();
-                            loadProgressForFriends(members); // Încarcă progresul tuturor membrilor
+                            List<Friend> dailyFriendsList = new ArrayList<>();
+
+                            for (String friendId : members) {
+                                db.collection("users")
+                                        .document(friendId)
+                                        .get()
+                                        .addOnSuccessListener(documentSnapshot -> {
+                                            if (documentSnapshot.exists()) {
+                                                String friendName = documentSnapshot.getString("username");
+
+                                                db.collection("tasks")
+                                                        .whereEqualTo("userId", friendId)
+                                                        .whereGreaterThanOrEqualTo("dueDate", startTimestamp)
+                                                        .whereLessThanOrEqualTo("dueDate", endTimestamp)
+                                                        .get()
+                                                        .addOnSuccessListener(taskSnapshots -> {
+                                                            int completedTasks = 0;
+                                                            int totalTasks = taskSnapshots.size();
+
+                                                            for (DocumentSnapshot taskDoc : taskSnapshots) {
+                                                                Task task = taskDoc.toObject(Task.class);
+                                                                if (task != null && task.isCompleted()) {
+                                                                    completedTasks++;
+                                                                }
+                                                            }
+
+                                                            dailyFriendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
+
+                                                            if (dailyFriendsList.size() == members.size()) {
+                                                                // Sortează după rata de completare (procent), apoi după numărul absolut
+                                                                Collections.sort(dailyFriendsList, (f1, f2) -> {
+                                                                    float rate1 = f1.getTotalTasks() > 0 ? (float) f1.getCompletedTasks() / f1.getTotalTasks() : 0;
+                                                                    float rate2 = f2.getTotalTasks() > 0 ? (float) f2.getCompletedTasks() / f2.getTotalTasks() : 0;
+
+                                                                    if (Float.compare(rate2, rate1) == 0) {
+                                                                        // Dacă procentele sunt egale, sortează după numărul de task-uri completate
+                                                                        return Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks());
+                                                                    }
+                                                                    return Float.compare(rate2, rate1);
+                                                                });
+
+                                                                friendsAdapter.setFriends(dailyFriendsList);
+                                                            }
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            Toast.makeText(getContext(), "Failed to load daily tasks for friend", Toast.LENGTH_SHORT).show();
+                                                        });
+                                            }
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Toast.makeText(getContext(), "Failed to get friend name", Toast.LENGTH_SHORT).show();
+                                        });
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to get circle", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    public void loadFriendsProgress() {
+        db.collection("circles")
+                .whereArrayContains("members", currentUserId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
+                        Circle circle = circleDoc.toObject(Circle.class);
+                        if (circle != null) {
+                            List<String> members = circle.getMembers();
+                            loadProgressForFriends(members);
                         }
                     }
                 })
@@ -127,7 +217,6 @@ public class FriendsFragment extends Fragment {
         calendar.set(Calendar.MILLISECOND, 999);
         long endOfMonth = calendar.getTimeInMillis();
 
-        // Folosește o listă temporară pentru a adăuga toți prietenii
         List<Friend> updatedFriendsList = new ArrayList<>();
 
         for (String friendId : members) {
@@ -138,7 +227,6 @@ public class FriendsFragment extends Fragment {
                         if (documentSnapshot.exists()) {
                             String friendName = documentSnapshot.getString("username");
 
-                            // Filtrează task-urile din luna curentă
                             db.collection("tasks")
                                     .whereEqualTo("userId", friendId)
                                     .whereGreaterThanOrEqualTo("dueDate", new Timestamp(startOfMonth / 1000, 0))
@@ -158,20 +246,18 @@ public class FriendsFragment extends Fragment {
                                             }
                                         }
 
-                                        // Adaugă prietenul în lista de prieteni
                                         updatedFriendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
 
-                                        // După ce s-au adăugat toți prietenii, sortează și separă
                                         if (updatedFriendsList.size() == members.size()) {
+                                            // Sortează lista după numărul de task-uri completate
                                             Collections.sort(updatedFriendsList, (f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
-                                            List<Friend> top3 = updatedFriendsList.subList(0, Math.min(3, updatedFriendsList.size()));
-                                            List<Friend> others = updatedFriendsList.size() > 3 ? updatedFriendsList.subList(3, updatedFriendsList.size()) : new ArrayList<>();
 
-                                            // Actualizează UI cu RecyclerView-uri
-                                            top3Adapter.setFriends(top3);
-                                            othersAdapter.setFriends(others);
-                                            top3RecyclerView.setAdapter(top3Adapter);
-                                            othersRecyclerView.setAdapter(othersAdapter);
+                                            // Actualizează lista prietenilor pentru progresul zilnic
+                                            friendsAdapter = new FriendsAdapter(updatedFriendsList);
+                                            friendsRecyclerView.setAdapter(friendsAdapter);
+
+                                            // Actualizează leaderboard-ul
+                                            updateLeaderboard(updatedFriendsList);
                                         }
                                     })
                                     .addOnFailureListener(e -> {
@@ -185,9 +271,35 @@ public class FriendsFragment extends Fragment {
         }
     }
 
+    private void updateLeaderboard(List<Friend> allFriends) {
+        if (allFriends.size() > 0) {
+            List<Friend> top3;
+            List<Friend> others;
 
+            if (allFriends.size() <= 3) {
+                top3 = new ArrayList<>(allFriends);
+                others = new ArrayList<>();
+            } else {
+                top3 = new ArrayList<>(allFriends.subList(0, 3));
+                others = new ArrayList<>(allFriends.subList(3, allFriends.size()));
+            }
 
+            // Rearanjează lista top3 în ordinea: locul 2, locul 1, locul 3
+            // dar numai dacă avem cel puțin 2 elemente
+            if (top3.size() >= 2) {
+                Friend first = top3.get(0);  // Locul 1
+                Friend second = top3.get(1); // Locul 2
 
+                // Rearanjează pentru a se potrivi cu aranjamentul vizual al podiumului
+                top3.set(0, second);  // Pune locul 2 pe prima poziție
+                top3.set(1, first);   // Pune locul 1 pe a doua poziție
+            }
+
+            // Actualizează RecyclerView-urile
+            top3Adapter.setFriends(top3);
+            othersAdapter.setFriends(others);
+        }
+    }
 
     private void showNotifications() {
         Intent intent = new Intent(getActivity(), NotificationsActivity.class);

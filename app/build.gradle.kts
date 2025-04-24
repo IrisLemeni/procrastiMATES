@@ -47,4 +47,5 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.material.calendar.view)
     implementation(libs.mpandroidchart)
+    implementation ("de.hdodenhof:circleimageview:3.1.0")
 }
