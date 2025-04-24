@@ -75,13 +75,33 @@ public class SearchFriendsActivity extends AppCompatActivity {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
                         String friendId = queryDocumentSnapshots.getDocuments().get(0).getId();
-                        checkExistingInvitation(currentUserId, friendId);
+
+                        // Verifică mai întâi dacă utilizatorul este deja în vreun cerc
+                        checkIfUserInCircle(friendId, currentUserId);
                     } else {
                         Toast.makeText(this, "User not found.", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void checkIfUserInCircle(String friendId, String currentUserId) {
+        db.collection("circles")
+                .whereArrayContains("members", friendId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        // Utilizatorul nu este în niciun cerc, putem continua cu verificarea invitațiilor existente
+                        checkExistingInvitation(currentUserId, friendId);
+                    } else {
+                        // Utilizatorul este deja într-un cerc
+                        Toast.makeText(this, "This user is already in a circle and cannot receive invitations.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Error checking user's circles: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 

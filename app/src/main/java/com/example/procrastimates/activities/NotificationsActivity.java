@@ -90,28 +90,47 @@ public class NotificationsActivity extends AppCompatActivity {
                     }
                 });
     }
+    // În NotificationsActivity.java, modifică metoda acceptInvitation:
+
     public void acceptInvitation(Invitation invitation) {
         String currentUserId = auth.getCurrentUser().getUid();
 
-        // Căutăm cercul care aparține utilizatorului care a trimis invitația
+        // Verifică mai întâi dacă utilizatorul curent nu este deja într-un cerc
         db.collection("circles")
-                .whereEqualTo("userId", invitation.getFrom())
+                .whereArrayContains("members", currentUserId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
-                        Circle circle = circleDoc.toObject(Circle.class);
-
-                        if (circle != null && !circle.getMembers().contains(currentUserId)) {
-                            addUserToCircle(circle, circleDoc.getId(), currentUserId, invitation);
-                        }
+                .addOnSuccessListener(userCircleQuerySnapshot -> {
+                    if (!userCircleQuerySnapshot.isEmpty()) {
+                        // Utilizatorul este deja într-un cerc
+                        Toast.makeText(NotificationsActivity.this, "You are already in a circle.", Toast.LENGTH_SHORT).show();
+                        // Șterge invitația deoarece nu mai este relevantă
+                        deleteInvitation(invitation);
                     } else {
-                        // Dacă cercul nu există, creăm unul nou
-                        createCircle(invitation, currentUserId);
+                        // Continuă cu adăugarea utilizatorului în cercul invitatorului
+                        // Căutăm cercul care aparține utilizatorului care a trimis invitația
+                        db.collection("circles")
+                                .whereEqualTo("userId", invitation.getFrom())
+                                .get()
+                                .addOnSuccessListener(queryDocumentSnapshots -> {
+                                    if (!queryDocumentSnapshots.isEmpty()) {
+                                        DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
+                                        Circle circle = circleDoc.toObject(Circle.class);
+
+                                        if (circle != null && !circle.getMembers().contains(currentUserId)) {
+                                            addUserToCircle(circle, circleDoc.getId(), currentUserId, invitation);
+                                        }
+                                    } else {
+                                        // Dacă cercul nu există, creăm unul nou
+                                        createCircle(invitation, currentUserId);
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(NotificationsActivity.this, "Failed to get circle", Toast.LENGTH_SHORT).show();
+                                });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(NotificationsActivity.this, "Failed to get circle", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(NotificationsActivity.this, "Error checking your circles", Toast.LENGTH_SHORT).show();
                 });
     }
     private void addUserToCircle(Circle circle, String circleId, String currentUserId, Invitation invitation) {
