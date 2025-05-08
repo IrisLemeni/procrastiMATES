@@ -32,12 +32,23 @@ public class AskAiActivity extends AppCompatActivity {
         questionInput = findViewById(R.id.questionInput);
         sendButton = findViewById(R.id.sendButton);
         responseText = findViewById(R.id.responseText);
-        progressBar = findViewById(R.id.progressBar); // Make sure to add this to your layout
+        progressBar = findViewById(R.id.progressBar);
 
         sendButton.setOnClickListener(v -> {
-            String question = questionInput.getText().toString().trim();
-            if (!question.isEmpty()) {
-                askQuestion(question);
+            String question = questionInput.getText().toString();
+
+            // Extra debug to check the raw input
+            System.out.println("Raw input from EditText: [" + question + "]");
+
+            if (question != null && !question.isEmpty()) {
+                question = question.trim(); // Trim whitespace
+                System.out.println("Trimmed question: [" + question + "]");
+
+                if (!question.isEmpty()) {
+                    askQuestion(question);
+                } else {
+                    Toast.makeText(this, "Scrie o întrebare!", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 Toast.makeText(this, "Scrie o întrebare!", Toast.LENGTH_SHORT).show();
             }
@@ -45,20 +56,23 @@ public class AskAiActivity extends AppCompatActivity {
     }
 
     private void askQuestion(String question) {
-        // Add input validation
-        if (question == null || question.trim().isEmpty()) {
+        // Add input validation with clearer error messages
+        if (question == null) {
+            Toast.makeText(this, "Question is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (question.trim().isEmpty()) {
             Toast.makeText(this, "Question cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // Show loading state
         progressBar.setVisibility(View.VISIBLE);
         sendButton.setEnabled(false);
         responseText.setText("Se generează răspunsul...");
 
-        // Add debug log
-        System.out.println("Asking question: " + question);
-
-        cloudFunctionClient.askAi(question.trim()) // Trim whitespace
+        cloudFunctionClient.askAi(question)
                 .addOnCompleteListener(task -> {
                     progressBar.setVisibility(View.GONE);
                     sendButton.setEnabled(true);
@@ -70,7 +84,10 @@ public class AskAiActivity extends AppCompatActivity {
                         Exception e = task.getException();
                         String errorMsg = "Error: " + (e != null ? e.getMessage() : "Unknown error");
                         responseText.setText(errorMsg);
-                        System.err.println("Error: " + errorMsg);
+                        System.err.println("Error calling cloud function: " + errorMsg);
+
+                        // Show a more user-friendly message
+                        Toast.makeText(this, "Could not get an answer. Please try again.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
