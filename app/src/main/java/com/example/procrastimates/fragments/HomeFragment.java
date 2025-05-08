@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
@@ -52,7 +54,6 @@ public class HomeFragment extends Fragment {
     private ImageButton logoutButtton;
 
 
-
     public HomeFragment() {
     }
 
@@ -66,7 +67,7 @@ public class HomeFragment extends Fragment {
         progressText = view.findViewById(R.id.progressText);
         db = FirebaseFirestore.getInstance();
         fetchTaskProgress();
-        
+
         welcomeText = view.findViewById(R.id.welcomeText);
         userImage = view.findViewById(R.id.userImage);
         logoutButtton = view.findViewById(R.id.logoutButton);
@@ -175,54 +176,71 @@ public class HomeFragment extends Fragment {
         int daysInMonth = getDaysInCurrentMonth();
         List<String> daysOfMonth = new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Calendar calendar = Calendar.getInstance();
-        for (int i = 1; i <= daysInMonth; i++) {
-            calendar.set(Calendar.DAY_OF_MONTH, i);
-            daysOfMonth.add(sdf.format(calendar.getTime()));
-        }
-        // Obtine sesiunile Pomodoro pentru utilizatorul curent
+
+        // Configurarea calendarului pentru începutul lunii curente
+        Calendar calendarStart = Calendar.getInstance();
+        calendarStart.set(Calendar.DAY_OF_MONTH, 1);
+        calendarStart.set(Calendar.HOUR_OF_DAY, 0);
+        calendarStart.set(Calendar.MINUTE, 0);
+        calendarStart.set(Calendar.SECOND, 0);
+        calendarStart.set(Calendar.MILLISECOND, 0);
+        Date startOfMonth = calendarStart.getTime();
+        Timestamp startTimestamp = new Timestamp(startOfMonth);
+
+        // Configurarea calendarului pentru sfârșitul lunii curente
+        Calendar calendarEnd = Calendar.getInstance();
+        calendarEnd.set(Calendar.DAY_OF_MONTH, calendarEnd.getActualMaximum(Calendar.DAY_OF_MONTH));
+        calendarEnd.set(Calendar.HOUR_OF_DAY, 23);
+        calendarEnd.set(Calendar.MINUTE, 59);
+        calendarEnd.set(Calendar.SECOND, 59);
+        calendarEnd.set(Calendar.MILLISECOND, 999);
+        Date endOfMonth = calendarEnd.getTime();
+        Timestamp endTimestamp = new Timestamp(endOfMonth);
+
+        // Logare pentru debugging
+        Log.d("HomeFragment", "Fetching pomodoro sessions from " + sdf.format(startOfMonth) + " to " + sdf.format(endOfMonth));
+
+        // Obține sesiunile Pomodoro pentru utilizatorul curent din luna curentă
         db.collection("pomodoro_sessions")
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("type", "work")
+                .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
+                .whereLessThanOrEqualTo("timestamp", endTimestamp)
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        QuerySnapshot result = task.getResult();
-                        if (result != null) {
-                            updateBarChart(result);
-                        }
+                        updateBarChart(task.getResult()); // Trimite rezultatul (chiar dacă e null)
                     } else {
                         Log.w("HomeFragment", "Error getting documents.", task.getException());
+                        updateBarChart(null); // Trimite null la eroare
                     }
                 });
     }
 
-    private void updateBarChart(QuerySnapshot sessions) {
+    private void updateBarChart(@Nullable QuerySnapshot sessions) {
         ArrayList<BarEntry> entries = new ArrayList<>();
-
-        // Calendar pentru a completa toate zilele
         Calendar calendar = Calendar.getInstance();
         int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 
-        // Inițializează zilele cu 0 sesiuni
+        // Inițializează toate zilele cu 0 sesiuni
         for (int i = 1; i <= maxDays; i++) {
             entries.add(new BarEntry(i, 0));
         }
 
-        // Parcurge sesiunile din Firestore
-        for (QueryDocumentSnapshot document : sessions) {
-            Date timestamp = document.getDate("timestamp");
-            if (timestamp != null) {
-                calendar.setTime(timestamp);
-                int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-
-                // Crește numărul de sesiuni pentru ziua respectivă
-                BarEntry entry = entries.get(dayOfMonth - 1);
-                entry.setY(entry.getY() + 1);
+        // Dacă există sesiuni, actualizează valorile
+        if (sessions != null && !sessions.isEmpty()) {
+            for (QueryDocumentSnapshot document : sessions) {
+                Date timestamp = document.getDate("timestamp");
+                if (timestamp != null) {
+                    calendar.setTime(timestamp);
+                    int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+                    BarEntry entry = entries.get(dayOfMonth - 1);
+                    entry.setY(entry.getY() + 1);
+                }
             }
         }
 
-        // Creează setul de date
+        // Crează setul de date (cod comun)
         BarDataSet dataSet = new BarDataSet(entries, "Pomodoro Sessions");
         dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
         dataSet.setValueTextSize(12f);
@@ -230,27 +248,22 @@ public class HomeFragment extends Fragment {
 
         BarData data = new BarData(dataSet);
         data.setBarWidth(0.9f);
-
-        // Setează datele în grafic
         barChart.setData(data);
 
-        // Configurare descriere
+        // Configurare grafic (cod comun)
         String monthYear = new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(new Date());
         barChart.getDescription().setEnabled(true);
         barChart.getDescription().setText("Pomodoro - " + monthYear);
         barChart.getDescription().setTextSize(14f);
         barChart.getDescription().setTextColor(Color.BLACK);
         barChart.getDescription().setPosition(barChart.getWidth() / 2f, 50f);
-        barChart.setExtraOffsets(0, 20, 0, 0);// Ajustează poziția descrierii
+        barChart.setExtraOffsets(0, 20, 0, 0);
 
         // Centrare pe ziua curentă
         int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
         barChart.moveViewToX(currentDay - 1);
 
-        // Activare scroll orizontal
-        barChart.setDragEnabled(true);
-        barChart.setVisibleXRangeMaximum(7);
-
+        // Configurare axe și animație (cod comun)
         configureBarChart();
         barChart.invalidate();
     }
