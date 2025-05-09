@@ -1,5 +1,6 @@
 package com.example.procrastimates.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -22,6 +23,7 @@ import com.example.procrastimates.RecyclerItemTouchHelper;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.TaskAdapter;
 import com.example.procrastimates.TaskViewModel;
+import com.example.procrastimates.activities.AskAiActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,7 +37,7 @@ public class TodayTasksFragment extends Fragment {
     private RecyclerView tasksRecyclerView, completedTasksRecyclerView;
     private TaskAdapter taskAdapter, completedTaskAdapter;
     private TaskViewModel taskViewModel;
-    private FloatingActionButton fabAddTask, fabSortTasks;
+    private FloatingActionButton fabAddTask, fabSortTasks, askAiButton;
 
     public TodayTasksFragment(){
     }
@@ -49,6 +51,7 @@ public class TodayTasksFragment extends Fragment {
 
         fabAddTask = view.findViewById(R.id.fabAddTask);
         fabSortTasks = view.findViewById(R.id.fabSortTasks);
+        askAiButton = view.findViewById(R.id.askAiButton);
 
         tasksRecyclerView = view.findViewById(R.id.tasksRecyclerView);
         tasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -83,6 +86,10 @@ public class TodayTasksFragment extends Fragment {
 
         fabAddTask.setOnClickListener(v -> showAddTaskBottomSheet());
         fabSortTasks.setOnClickListener(this::showSortMenu);
+        askAiButton.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), AskAiActivity.class);
+            startActivity(intent);
+        });
 
         taskAdapter.setOnEditTaskListener(this::showEditTaskBottomSheet);
 
