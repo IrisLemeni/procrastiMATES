@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.procrastimates.R;
 import com.example.procrastimates.ai.CloudFunctionClient;
 import com.google.firebase.FirebaseApp;
+import io.noties.markwon.Markwon;
 
 public class AskAiActivity extends AppCompatActivity {
     private EditText questionInput;
@@ -16,6 +17,7 @@ public class AskAiActivity extends AppCompatActivity {
     private TextView responseText;
     private ProgressBar progressBar;
     private CloudFunctionClient cloudFunctionClient;
+    private Markwon markwon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +35,8 @@ public class AskAiActivity extends AppCompatActivity {
         sendButton = findViewById(R.id.sendButton);
         responseText = findViewById(R.id.responseText);
         progressBar = findViewById(R.id.progressBar);
+
+        markwon = Markwon.create(this);
 
         sendButton.setOnClickListener(v -> {
             String question = questionInput.getText().toString();
@@ -77,7 +81,7 @@ public class AskAiActivity extends AppCompatActivity {
             public void onSuccess(String answer) {
                 progressBar.setVisibility(View.GONE);
                 sendButton.setEnabled(true);
-                responseText.setText(answer);
+                markwon.setMarkdown(responseText, answer);
             }
 
             @Override
