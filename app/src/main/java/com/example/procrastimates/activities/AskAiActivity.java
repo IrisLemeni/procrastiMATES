@@ -26,7 +26,7 @@ public class AskAiActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
 
         // Initialize the Cloud Function client
-        cloudFunctionClient = new CloudFunctionClient();
+        cloudFunctionClient = new CloudFunctionClient(this);
 
         // UI references
         questionInput = findViewById(R.id.questionInput);
@@ -72,23 +72,22 @@ public class AskAiActivity extends AppCompatActivity {
         sendButton.setEnabled(false);
         responseText.setText("Se generează răspunsul...");
 
-        cloudFunctionClient.askAi(question)
-                .addOnCompleteListener(task -> {
-                    progressBar.setVisibility(View.GONE);
-                    sendButton.setEnabled(true);
+        cloudFunctionClient.askAi(question, new CloudFunctionClient.AiCallback() {
+            @Override
+            public void onSuccess(String answer) {
+                progressBar.setVisibility(View.GONE);
+                sendButton.setEnabled(true);
+                responseText.setText(answer);
+            }
 
-                    if (task.isSuccessful()) {
-                        String answer = task.getResult();
-                        responseText.setText(answer != null ? answer : "Empty response");
-                    } else {
-                        Exception e = task.getException();
-                        String errorMsg = "Error: " + (e != null ? e.getMessage() : "Unknown error");
-                        responseText.setText(errorMsg);
-                        System.err.println("Error calling cloud function: " + errorMsg);
+            @Override
+            public void onError(String errorMessage) {
+                progressBar.setVisibility(View.GONE);
+                sendButton.setEnabled(true);
+                responseText.setText("Eroare: " + errorMessage);
+                Toast.makeText(AskAiActivity.this, "Nu am putut primi răspunsul.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
-                        // Show a more user-friendly message
-                        Toast.makeText(this, "Could not get an answer. Please try again.", Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 }
