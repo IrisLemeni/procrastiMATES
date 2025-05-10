@@ -87,6 +87,22 @@ public class PomodoroFragment extends Fragment {
         return view;
     }
 
+    public interface FocusLockListener {
+        void setBottomNavEnabled(boolean enabled);
+    }
+
+    private FocusLockListener focusLockListener;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            focusLockListener = (FocusLockListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + " trebuie să implementeze FocusLockListener");
+        }
+    }
+
     private void initViews(View view) {
         workingTime = view.findViewById(R.id.workingTime);
         breakTime = view.findViewById(R.id.breakTime);
@@ -288,6 +304,9 @@ public class PomodoroFragment extends Fragment {
         if (countDownTimer != null) {
             countDownTimer.cancel();
         }
+        if (focusLockListener != null && isSessionRunning) {
+            focusLockListener.setBottomNavEnabled(true);
+        }
     }
 
     private void selectBackground(int option) {
@@ -342,6 +361,10 @@ public class PomodoroFragment extends Fragment {
         lockIntent.putExtra(FocusLockService.EXTRA_LOCK_ACTIVE, true);
         requireContext().startService(lockIntent);
 
+        if (focusLockListener != null) {
+            focusLockListener.setBottomNavEnabled(false);
+        }
+
         isSessionRunning = true;
         workingTime.setVisibility(View.VISIBLE);
         breakTime.setVisibility(View.GONE);
@@ -350,6 +373,9 @@ public class PomodoroFragment extends Fragment {
     }
 
     private void stopSession() {
+        if (focusLockListener != null) {
+            focusLockListener.setBottomNavEnabled(true);
+        }
         if (countDownTimer != null) countDownTimer.cancel();
         isSessionRunning = false;
         sessionButton.setText("Start Timer");
@@ -387,6 +413,9 @@ public class PomodoroFragment extends Fragment {
                     showCustomAlert("break");
                     breakTime.setVisibility(View.VISIBLE);
                     workingTime.setVisibility(View.GONE);
+                    if (focusLockListener != null) {
+                        focusLockListener.setBottomNavEnabled(true);
+                    }
 
                     // Award streak and experience points
                     updateStreakAndExperience();
@@ -402,6 +431,9 @@ public class PomodoroFragment extends Fragment {
                     showCustomAlert("work");
                     breakTime.setVisibility(View.GONE);
                     workingTime.setVisibility(View.VISIBLE);
+                    if (focusLockListener != null) {
+                        focusLockListener.setBottomNavEnabled(false);
+                    }
 
                     // Start the focus lock for work session
                     Intent lockIntent = new Intent(requireContext(), FocusLockService.class);

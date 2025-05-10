@@ -2,6 +2,7 @@ package com.example.procrastimates.activities;
 
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,7 +16,7 @@ import com.example.procrastimates.fragments.PomodoroFragment;
 import com.example.procrastimates.fragments.TasksFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PomodoroFragment.FocusLockListener {
 
     private BottomNavigationView bottomNavigationView;
 
@@ -52,6 +53,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public void setBottomNavEnabled(boolean enabled) {
+        if (bottomNavigationView != null) {
+            // Dezactivează navigarea făcând elementele neclicabile
+            for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
+                bottomNavigationView.getMenu().getItem(i).setEnabled(enabled);
+            }
+
+            // Opțional: schimbă transparența pentru feedback vizual
+            bottomNavigationView.setAlpha(enabled ? 1.0f : 0.5f);
+
+            // Dacă vrei să blochezi și gesturi de swipe între fragmente (dacă folosești ViewPager):
+            // viewPager.setUserInputEnabled(enabled);
+        }
+    }
+
 
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()
