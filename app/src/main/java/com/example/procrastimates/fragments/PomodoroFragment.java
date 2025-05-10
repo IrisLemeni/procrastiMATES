@@ -143,8 +143,8 @@ public class PomodoroFragment extends Fragment {
         });
 
         selectDurationButton25.setOnClickListener(v -> {
-            sessionDuration = 25 * 60 * 1000; // 25 minutes
-            breakDuration = 5 * 60 * 1000; // 5 minutes
+            sessionDuration = 1 * 60 * 1000; // 25 minutes
+            breakDuration = 1 * 60 * 1000; // 5 minutes
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
             currentViewState = "background";
@@ -294,7 +294,6 @@ public class PomodoroFragment extends Fragment {
 
         // Save remaining time if timer is running
         if (countDownTimer != null && isSessionRunning) {
-            // We don't cancel the timer here to allow it to keep running in the background
         }
     }
 
