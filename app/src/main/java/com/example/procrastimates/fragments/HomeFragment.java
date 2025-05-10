@@ -15,11 +15,14 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.procrastimates.FocusChartAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.LoginActivity;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
@@ -27,6 +30,7 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -55,6 +59,11 @@ public class HomeFragment extends Fragment {
     private FirebaseAuth auth;
     private ImageButton logoutButtton;
 
+    private CircularProgressIndicator focusScoreIndicator;
+    private TextView focusScoreText, totalSessionsText, interruptionsText, timeOutsideText, bestFocusTimeText;
+    private LineChart focusLineChart;
+    private List<FocusChartAdapter.PomodoroSession> todaySessions = new ArrayList<>();
+
 
     public HomeFragment() {
     }
@@ -78,6 +87,15 @@ public class HomeFragment extends Fragment {
         barChart.setDrawBarShadow(false);
         barChart.setDrawValueAboveBar(true);
         fetchPomodoroSessions();
+
+        focusScoreIndicator = view.findViewById(R.id.focusScoreIndicator);
+        focusScoreText = view.findViewById(R.id.focusScoreText);
+        totalSessionsText = view.findViewById(R.id.totalSessionsText);
+        interruptionsText = view.findViewById(R.id.interruptionsText);
+        timeOutsideText = view.findViewById(R.id.timeOutsideText);
+        bestFocusTimeText = view.findViewById(R.id.bestFocusTimeText);
+        focusLineChart = view.findViewById(R.id.focusLineChart);
+        fetchTodaysFocusMetrics();
 
 
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -103,6 +121,7 @@ public class HomeFragment extends Fragment {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         });
+
 
         return view;
     }
@@ -186,109 +205,130 @@ public class HomeFragment extends Fragment {
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        updateBarChart(task.getResult()); // Trimite rezultatul
+                        // Use the adapter to update the chart
+                        FocusChartAdapter.setupMonthlySessionsBarChart(barChart, task.getResult());
                     } else {
                         Log.w("HomeFragment", "Error getting daily sessions.", task.getException());
-                        updateBarChart(null); // Trimite null la eroare
+                        FocusChartAdapter.setupMonthlySessionsBarChart(barChart, null);
                     }
                 });
     }
 
-    private void updateBarChart(@Nullable QuerySnapshot dailySessions) {
-        ArrayList<BarEntry> entries = new ArrayList<>();
+    private void fetchTodaysFocusMetrics() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+
+        String userId = currentUser.getUid();
+
+        // Calculate start and end of today
         Calendar calendar = Calendar.getInstance();
-        int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Date startOfDay = calendar.getTime();
 
-        // Inițializează toate zilele cu 0 sesiuni
-        for (int i = 1; i <= maxDays; i++) {
-            entries.add(new BarEntry(i, 0));
-        }
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        Date endOfDay = calendar.getTime();
 
-        // Dacă există înregistrări daily_sessions, actualizează valorile
-        if (dailySessions != null && !dailySessions.isEmpty()) {
-            for (QueryDocumentSnapshot document : dailySessions) {
-                try {
-                    // Extrage ziua din ID-ul documentului (format "yyyy-MM-dd")
-                    String documentId = document.getId();
-                    Date date = dayFormat.parse(documentId);
-                    calendar.setTime(date);
+        // Add debug logging
+        Log.d("HomeFragment", "Fetching focus metrics from " + startOfDay + " to " + endOfDay);
 
-                    int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-                    long sessionCount = document.getLong("sessionCount");
+        // Query today's Pomodoro sessions
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("pomodoro_sessions")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("type", "work") // Only work sessions have focus metrics
+                .whereGreaterThanOrEqualTo("timestamp", new Timestamp(startOfDay))
+                .whereLessThanOrEqualTo("timestamp", new Timestamp(endOfDay))
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.ASCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    Log.d("HomeFragment", "Retrieved " + queryDocumentSnapshots.size() + " focus sessions");
 
-                    // Actualizează intrarea pentru ziua respectivă
-                    if (dayOfMonth >= 1 && dayOfMonth <= maxDays) {
-                        entries.get(dayOfMonth - 1).setY(sessionCount);
+                    todaySessions.clear();
+
+                    if (queryDocumentSnapshots.isEmpty()) {
+                        Log.d("HomeFragment", "No focus sessions found for today");
+                        updateFocusUI();
+                        return;
                     }
-                } catch (Exception e) {
-                    Log.e("HomeFragment", "Error parsing date from document ID", e);
-                }
-            }
-        }
 
-        // Crează setul de date
-        BarDataSet dataSet = new BarDataSet(entries, "Pomodoro Sessions");
-        dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
-        dataSet.setValueTextSize(12f);
-        dataSet.setValueTextColor(Color.BLACK);
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        // Extract session data
+                        Timestamp timestamp = document.getTimestamp("timestamp");
+                        Long focusScore = document.getLong("focusScore");
+                        Long interruptionCount = document.getLong("interruptionCount");
+                        Long timeOutsideApp = document.getLong("timeOutsideApp");
+                        Long duration = document.getLong("duration");
 
-        BarData barData = new BarData(dataSet);
-        barData.setBarWidth(0.9f);
-        barChart.setData(barData);
+                        // Debug log for each document
+                        Log.d("HomeFragment", "Processing document: " + document.getId() +
+                                " timestamp: " + timestamp +
+                                " focusScore: " + focusScore);
 
-        // Configurare grafic
-        String monthYear = new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(new Date());
-        Description description = new Description();
-        description.setText("Pomodoro - " + monthYear);
-        description.setTextSize(14f);
-        description.setTextColor(Color.BLACK);
-        description.setPosition(barChart.getWidth() / 2f, 50f);
-        barChart.setDescription(description);
-        barChart.setExtraOffsets(0, 20, 0, 0);
+                        if (timestamp != null && focusScore != null &&
+                                interruptionCount != null && timeOutsideApp != null && duration != null) {
 
-        // Centrare pe ziua curentă
-        int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
-        barChart.moveViewToX(currentDay - 1);
+                            FocusChartAdapter.PomodoroSession session = new FocusChartAdapter.PomodoroSession(
+                                    timestamp.toDate(),
+                                    focusScore.intValue(),
+                                    interruptionCount.intValue(),
+                                    timeOutsideApp.intValue(),
+                                    duration.intValue()
+                            );
 
-        // Configurare axe și animație
-        configureBarChart();
-        barChart.invalidate();
+                            todaySessions.add(session);
+                            Log.d("HomeFragment", "Added session with focus score: " + focusScore);
+                        } else {
+                            Log.w("HomeFragment", "Skipping document with missing data: " + document.getId());
+                        }
+                    }
+
+                    Log.d("HomeFragment", "Total sessions to display: " + todaySessions.size());
+                    updateFocusUI();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("HomeFragment", "Error fetching focus metrics", e);
+                    todaySessions.clear();
+                    updateFocusUI();
+                });
     }
 
-    private void configureBarChart() {
-        barChart.setDrawGridBackground(false);
-        barChart.setDragEnabled(true);
-        barChart.setScaleXEnabled(true);
-        barChart.setScaleYEnabled(false);
-        barChart.setPinchZoom(false);
-        barChart.setVisibleXRangeMaximum(7);
+    private void updateFocusUI() {
+        // First log the state
+        Log.d("HomeFragment", "Updating UI with " + todaySessions.size() + " sessions");
 
-        XAxis xAxis = barChart.getXAxis();
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f);
-        xAxis.setLabelCount(7);
-        xAxis.setTextSize(14f);
-        xAxis.setDrawGridLines(false);
-        xAxis.setValueFormatter((value, axis) -> {
-            int day = (int) value;
-            return (day > 0 && day <= 31) ? String.valueOf(day) : "";
-        });
+        // Use the adapter to calculate and update UI components
+        int averageFocusScore = FocusChartAdapter.calculateAverageFocusScore(todaySessions);
+        int totalInterruptions = FocusChartAdapter.calculateTotalInterruptions(todaySessions);
+        int totalTimeOutside = FocusChartAdapter.calculateTotalTimeOutside(todaySessions);
+        String bestFocusTime = FocusChartAdapter.determineBestFocusTime(todaySessions);
 
-        YAxis leftAxis = barChart.getAxisLeft();
-        leftAxis.setAxisMinimum(0f);
-        leftAxis.setGranularity(1f);
-        leftAxis.setTextSize(14f);
-        leftAxis.setDrawGridLines(true);
+        Log.d("HomeFragment", "Calculated metrics - average: " + averageFocusScore +
+                ", interruptions: " + totalInterruptions);
 
-        barChart.getAxisRight().setEnabled(false);
-        barChart.setFitBars(true);
-        barChart.animateY(1000);
+        // Update focus score indicator
+        focusScoreIndicator.setProgress(averageFocusScore);
+        focusScoreText.setText(averageFocusScore + "%");
 
-        Calendar calendar = Calendar.getInstance();
-        int currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-        barChart.moveViewToX(currentDay - 4);
+        // Update session stats
+        int totalSessions = todaySessions.size();
+        totalSessionsText.setText(totalSessions + " sessions completed");
+        interruptionsText.setText(totalInterruptions + " interruptions");
+        timeOutsideText.setText(totalTimeOutside + " min outside app");
+        bestFocusTimeText.setText("Best focus time: " + bestFocusTime);
+
+        // Use the adapter to update the focus line chart
+        FocusChartAdapter.setupFocusLineChart(focusLineChart, todaySessions);
+
+        // Force a redraw of the chart
+        focusLineChart.invalidate();
     }
+
 
     private void loadUserData(String userId) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
