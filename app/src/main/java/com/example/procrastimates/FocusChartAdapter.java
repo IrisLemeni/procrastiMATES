@@ -2,6 +2,7 @@ package com.example.procrastimates;
 
 import android.graphics.Color;
 import android.util.Pair;
+import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -197,12 +198,15 @@ public class FocusChartAdapter {
 
         // Configurare grafic
         String monthYear = new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(new Date());
+
         Description description = new Description();
-        description.setText("Pomodoro - " + monthYear);
-        description.setTextSize(14f);
+        description.setText(monthYear);
+        description.setTextSize(20f);
         description.setTextColor(Color.BLACK);
+        description.setPosition(250f, 50f);
+
         barChart.setDescription(description);
-        barChart.setExtraOffsets(0, 20, 0, 0);
+
 
         barChart.setDrawGridBackground(false);
         barChart.setDragEnabled(true);
@@ -271,7 +275,7 @@ public class FocusChartAdapter {
         for (PomodoroSession session : sessions) {
             total += session.getTimeOutsideApp();
         }
-        return total;
+        return total / 10000;
     }
 
     public static String determineBestFocusTime(List<PomodoroSession> sessions) {
