@@ -12,6 +12,7 @@ import com.example.procrastimates.repositories.TaskRepository;
 import com.example.procrastimates.service.TaskService;
 import com.example.procrastimates.Priority;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.FieldValue;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -233,13 +234,18 @@ public class TaskViewModel extends AndroidViewModel {
 
     private final Stack<Task> recentlyCompletedTasks = new Stack<>();
 
-    public void completeTask(Task task) {
-        task.setCompleted(true);
-        taskService.updateTask(task.getTaskId(), task, new TaskRepository.OnTaskActionListener() {
+    public void completeTask(Task task, String circleId) {
+        if (task == null || task.getTaskId() == null || task.getUserId() == null || circleId == null) {
+            Log.e("TaskViewModel", "Missing task ID, user ID, or circle ID");
+            return;
+        }
+
+        taskService.completeTask(task.getTaskId(), task.getUserId(), circleId, new TaskRepository.OnTaskActionListener() {
             @Override
             public void onSuccess(Object result) {
-                recentlyCompletedTasks.push(task);
-                loadTodayTasks(task.getUserId()); // Refresh tasks
+                Task completedTask = (Task) result;
+                recentlyCompletedTasks.push(completedTask);
+                loadTodayTasks(completedTask.getUserId());
             }
 
             @Override
@@ -248,6 +254,7 @@ public class TaskViewModel extends AndroidViewModel {
             }
         });
     }
+
 
     public void undoCompleteTask() {
         if (!recentlyCompletedTasks.isEmpty()) {

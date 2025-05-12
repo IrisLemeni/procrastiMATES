@@ -23,6 +23,7 @@ import com.example.procrastimates.LeaderboardAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.NotificationsActivity;
+import com.example.procrastimates.activities.ObjectionsActivity;
 import com.example.procrastimates.activities.SearchFriendsActivity;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,7 +36,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class FriendsFragment extends Fragment {
-    private Button btnAddFriend;
+    private Button btnAddFriend, btnObjections;
     private ImageButton btnNotifications;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
@@ -59,6 +60,7 @@ public class FriendsFragment extends Fragment {
 
         btnNotifications = view.findViewById(R.id.btnNotifications);
         btnAddFriend = view.findViewById(R.id.btnAddFriend);
+        btnObjections = view.findViewById(R.id.btnObjections);
 
         // Inițializează RecyclerView-urile
         friendsRecyclerView = view.findViewById(R.id.friendsRecyclerView);
@@ -88,11 +90,20 @@ public class FriendsFragment extends Fragment {
 
         btnNotifications.setOnClickListener(v -> showNotifications());
 
+        // Set click listener for the ObjectionsActivity button
+        btnObjections.setOnClickListener(v -> launchObjectionsActivity());
+
         // Încarcă datele
         loadFriendsProgress();
         loadDailyTasks();
 
         return view;
+    }
+
+    // Method to launch the ObjectionsActivity
+    private void launchObjectionsActivity() {
+        Intent intent = new Intent(getContext(), ObjectionsActivity.class);
+        startActivity(intent);
     }
 
     private void loadDailyTasks() {

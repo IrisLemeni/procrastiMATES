@@ -10,16 +10,22 @@ public class Task {
     private Timestamp dueDate;
     private String userId;
     private Priority priority;
+    private String circleId;
+    private Timestamp createdAt;
+    private Timestamp completedAt;
 
     public Task() {}
 
-    public Task(String taskId, String title,  boolean isCompleted, Timestamp dueDate, String userId, Priority priority) {
+    public Task(String taskId, String title,  boolean isCompleted, Timestamp dueDate, String userId, Priority priority, String circleId, Timestamp createdAt, Timestamp completedAt) {
         this.taskId = taskId;
         this.title = title;
         this.isCompleted = isCompleted;
         this.dueDate = dueDate;
         this.userId = userId;
         this.priority = priority;
+        this.circleId = circleId;
+        this.createdAt = createdAt;
+        this.completedAt = completedAt;
     }
 
     public String getUserId() {
@@ -70,4 +76,27 @@ public class Task {
         this.priority = priority;
     }
 
+    public String getCircleId() {
+        return circleId;
+    }
+
+    public void setCircleId(String circleId) {
+        this.circleId = circleId;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Timestamp completedAt) {
+        this.completedAt = completedAt;
+    }
 }

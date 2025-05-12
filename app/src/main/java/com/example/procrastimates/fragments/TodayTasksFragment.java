@@ -27,6 +27,7 @@ import com.example.procrastimates.activities.AskAiActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -99,17 +100,38 @@ public class TodayTasksFragment extends Fragment {
         // Inside TodayTasksFragment
         taskAdapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
             if (isChecked) {
-                taskViewModel.completeTask(task);
-
-                Snackbar.make(tasksRecyclerView, "Task marked as completed", Snackbar.LENGTH_LONG)
-                        .setAction("Undo", v -> taskViewModel.undoCompleteTask())
-                        .show();
+                getCircleIdAndCompleteTask(task);
             }
         });
 
 
+
         return view;
     }
+    private void getCircleIdAndCompleteTask(Task task) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseFirestore.getInstance()
+                .collection("circles")
+                .whereArrayContains("members", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        String circleId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
+                        taskViewModel.completeTask(task, circleId);
+
+                        Snackbar.make(tasksRecyclerView, "Task marked as completed", Snackbar.LENGTH_LONG)
+                                .setAction("Undo", v -> taskViewModel.undoCompleteTask())
+                                .show();
+                    } else {
+                        Toast.makeText(getContext(), "Nu ești într-un cerc.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Eroare la căutarea cercului: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
 
     private void showSortMenu(View v) {
         PopupMenu popupMenu = new PopupMenu(getContext(), v);

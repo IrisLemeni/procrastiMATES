@@ -26,6 +26,10 @@ public class TaskService {
         taskRepository.updateTask(taskId, task, listener);
     }
 
+    public void completeTask(String taskId, String userId, String circleId, TaskRepository.OnTaskActionListener listener){
+        taskRepository.completeTask(taskId, userId, circleId, listener);
+    }
+
     // Șterge un task
     public void deleteTask(String taskId, TaskRepository.OnTaskActionListener listener) {
         taskRepository.deleteTask(taskId, listener);

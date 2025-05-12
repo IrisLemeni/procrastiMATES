@@ -3,4 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="taskDotColor">#BFA2F4</color>
+    <color name="objection_pending">#FF6200EE</color>
+    <color name="objection_resolved">#FF03DAC5</color>
+    <color name="objection_expired">#F44336</color>
 </resources>

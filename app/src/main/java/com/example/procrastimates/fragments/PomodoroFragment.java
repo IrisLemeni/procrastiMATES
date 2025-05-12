@@ -417,7 +417,7 @@ public class PomodoroFragment extends Fragment {
                     }
 
                     // Award streak and experience points
-                    updateStreakAndExperience();
+                    //updateStreakAndExperience();
 
                     // Stop the focus lock during break
                     Intent lockIntent = new Intent(requireContext(), FocusLockService.class);

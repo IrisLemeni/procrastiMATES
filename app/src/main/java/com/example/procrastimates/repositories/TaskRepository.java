@@ -1,8 +1,11 @@
 package com.example.procrastimates.repositories;
 
+import android.app.Notification;
 import android.util.Log;
 
+import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.Task;
+import com.example.procrastimates.TaskNotification;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -10,6 +13,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class TaskRepository {
@@ -38,6 +42,7 @@ public class TaskRepository {
         DocumentReference newTaskRef = tasksRef.document();
         task.setTaskId(newTaskRef.getId());
         task.setUserId(userId);
+        task.setCreatedAt(new Timestamp(new Date()));
 
         newTaskRef.set(task)
                 .addOnSuccessListener(aVoid -> {
@@ -61,6 +66,67 @@ public class TaskRepository {
                 .addOnFailureListener(e -> listener.onFailure(e));
     }
 
+    public void completeTask(String taskId, String userId, String circleId, OnTaskActionListener listener) {
+        DocumentReference taskRef = db.collection("tasks").document(taskId);
+
+        taskRef.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    Task task = documentSnapshot.toObject(Task.class);
+                    if (task != null) {
+                        task.setCompleted(true);
+                        task.setCompletedAt(new Timestamp(new Date()));
+
+                        taskRef.set(task)
+                                .addOnSuccessListener(aVoid -> {
+                                    // Notify circle members about the completed task
+                                    notifyCircleMembers(userId, circleId, task);
+                                    listener.onSuccess(task);
+                                })
+                                .addOnFailureListener(e -> listener.onFailure(e));
+                    } else {
+                        listener.onFailure(new Exception("Task not found"));
+                    }
+                })
+                .addOnFailureListener(e -> listener.onFailure(e));
+    }
+
+    private void notifyCircleMembers(String userId, String circleId, Task task) {
+        // This method would typically send Firebase Cloud Messages to circle members
+        // For simplicity, I'm just adding notifications to their Firestore collection
+
+        db.collection("circles").document(circleId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        List<String> members = (List<String>) documentSnapshot.get("members");
+                        if (members != null) {
+                            for (String memberId : members) {
+                                if (!memberId.equals(userId)) {
+                                    // Create notification for this member
+                                    String notificationId = db.collection("notifications").document().getId();
+
+                                    db.collection("users").document(userId).get()
+                                            .addOnSuccessListener(userDoc -> {
+                                                String username = userDoc.getString("username");
+                                                String message = username + " completed task: " + task.getTitle();
+
+                                                db.collection("notifications").document(notificationId)
+                                                        .set(new TaskNotification(
+                                                                notificationId,
+                                                                memberId,
+                                                                message,
+                                                                new Timestamp(new Date()),
+                                                                NotificationType.TASK_COMPLETED,
+                                                                false,
+                                                                userId,
+                                                                task.getTaskId()
+                                                        ));
+                                            });
+                                }
+                            }
+                        }
+                    }
+                });
+    }
 
     public void deleteTask(String taskId, OnTaskActionListener listener) {
         db.collection("tasks")
@@ -108,6 +174,7 @@ public class TaskRepository {
                 })
                 .addOnFailureListener(listener::onFailure);
     }
+
 
 
     public interface OnTaskActionListener {
