@@ -13,6 +13,7 @@ import com.example.procrastimates.service.TaskService;
 import com.example.procrastimates.Priority;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -187,18 +188,39 @@ public class TaskViewModel extends AndroidViewModel {
     }
 
     public void addTask(Task task, String userId) {
-        taskService.addTask(task, userId, new TaskRepository.OnTaskActionListener() {
-            @Override
-            public void onSuccess(Object result) {
-                loadTodayTasks(userId);
-            }
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-            @Override
-            public void onFailure(Exception e) {
-                Toast.makeText(getApplication(), "Failed to add task.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Caută cercul în care se află user-ul
+        db.collection("circles")
+                .whereArrayContains("members", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        // Folosește primul cerc găsit
+                        String circleId = queryDocumentSnapshots.getDocuments().get(0).getId();
+                        task.setCircleId(circleId);  // Setează circleId
+
+                        // Trimite mai departe către repository
+                        taskService.addTask(task, userId, new TaskRepository.OnTaskActionListener() {
+                            @Override
+                            public void onSuccess(Object result) {
+                                loadTodayTasks(userId);
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                Toast.makeText(getApplication(), "Failed to add task.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(getApplication(), "No circle found for user.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getApplication(), "Failed to fetch circle.", Toast.LENGTH_SHORT).show();
+                });
     }
+
 
     public void updateTask(String taskId, Task task) {
         if(taskId == null || task == null){
