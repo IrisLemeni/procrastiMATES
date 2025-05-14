@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import com.example.procrastimates.NotificationSender;
 import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.R;
+import com.example.procrastimates.fragments.CircleChatActivity;
 import com.example.procrastimates.fragments.FriendsFragment;
 import com.example.procrastimates.fragments.HomeFragment;
 import com.example.procrastimates.fragments.PomodoroFragment;
@@ -90,19 +91,27 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
     }
 
     private void handleNotificationIntent(Intent intent) {
-        if (intent != null) {
-            String taskId = intent.getStringExtra("taskId");
-            String circleId = intent.getStringExtra("circleId");
+        if (intent != null && intent.getExtras() != null) {
+            Bundle extras = intent.getExtras();
+            String taskId = extras.getString("taskId");
+            String circleId = extras.getString("circleId");
+            String notificationType = extras.getString("notificationType");
 
-            if (taskId != null) {
-                Log.d(TAG, "Opened from notification with taskId: " + taskId);
-                // Navigate to task details
+            if (circleId != null) {
+                Log.d(TAG, "Opened from circle notification with circleId: " + circleId);
+
+                // Deschide direct CircleChatActivity
+                Intent chatIntent = new Intent(this, CircleChatActivity.class);
+                chatIntent.putExtra("circleId", circleId);
+
+                // Adaugă flag-uri pentru a curăța back stack-ul dacă e necesar
+                chatIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(chatIntent);
+
+            } else if (taskId != null) {
+                Log.d(TAG, "Opened from task notification with taskId: " + taskId);
+                // Păstrează logica existentă pentru notificările legate de task-uri
                 loadFragment(new TasksFragment());
-                // You could also pass the taskId to the fragment
-            } else if (circleId != null) {
-                Log.d(TAG, "Opened from notification with circleId: " + circleId);
-                // Navigate to circle/friends section
-                loadFragment(new FriendsFragment());
             }
         }
     }
@@ -130,12 +139,6 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d(TAG, "FCM Token saved to Firestore");
 
-                                        // Show success message to explain notification functionality
-                                        Snackbar.make(
-                                                findViewById(android.R.id.content),
-                                                "Notifications configured successfully",
-                                                Snackbar.LENGTH_SHORT
-                                        ).show();
                                     })
                                     .addOnFailureListener(e -> {
                                         Log.e(TAG, "FCM Token save error: " + e.getMessage());
