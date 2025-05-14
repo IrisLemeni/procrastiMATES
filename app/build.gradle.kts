@@ -7,6 +7,12 @@ android {
     namespace = "com.example.procrastimates"
     compileSdk = 34
 
+    packaging {
+        resources {
+            excludes += "/META-INF/DEPENDENCIES"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.procrastimates"
         minSdk = 25
@@ -63,5 +69,6 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging:24.0.0")
     implementation("androidx.work:work-runtime:2.8.1")
     implementation("com.google.firebase:firebase-config-ktx:21.6.3")
-    implementation ("com.google.firebase:firebase-storage:21.0.1")
+    implementation("com.google.firebase:firebase-storage:21.0.1")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
 }

@@ -14,6 +14,7 @@ import com.example.procrastimates.Message;
 import com.example.procrastimates.MessageType;
 import com.example.procrastimates.Notification;
 import com.example.procrastimates.NotificationSender;
+import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.Objection;
 import com.example.procrastimates.Proof;
 import com.example.procrastimates.R;
@@ -186,6 +187,7 @@ public class ProofSubmissionActivity extends AppCompatActivity {
                             notification.setBody("Dovadă furnizată pentru task-ul: " + task.getTitle());
                             notification.setCircleId(task.getCircleId());
                             notification.setTaskId(task.getTaskId());
+                            notification.setType(NotificationType.PROOF_SUBMITTED);
                             notification.setRead(false);
                             notification.setCreatedAt(new Timestamp(new Date()));
 
@@ -197,7 +199,10 @@ public class ProofSubmissionActivity extends AppCompatActivity {
                                         NotificationSender.sendPushNotification(
                                                 objection.getObjectorUserId(),
                                                 "Dovadă primită",
-                                                "Dovadă furnizată pentru task-ul: " + task.getTitle()
+                                                "Dovadă furnizată pentru task-ul: " + task.getTitle(),
+                                                task.getTaskId(),
+                                                task.getCircleId(),
+                                                NotificationType.PROOF_SUBMITTED
                                         );
                                     });
                         }

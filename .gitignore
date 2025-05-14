@@ -1,6 +1,9 @@
 *.iml
 .gradle
 /local.properties
+app/src/main/res/raw/service_account.json
+app/src/debug/res/raw/service_account.json
+/app/local.properties
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml

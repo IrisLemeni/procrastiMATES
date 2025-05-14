@@ -12,6 +12,7 @@ import com.example.procrastimates.Message;
 import com.example.procrastimates.MessageType;
 import com.example.procrastimates.Notification;
 import com.example.procrastimates.NotificationSender;
+import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.Objection;
 import com.example.procrastimates.ObjectionStatus;
 import com.example.procrastimates.R;
@@ -177,6 +178,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                                         notification.setBody(objectorName + " a contestat task-ul tău: " + task.getTitle());
                                         notification.setCircleId(task.getCircleId());
                                         notification.setTaskId(task.getTaskId());
+                                        notification.setType(NotificationType.OBJECTION_RAISED);
                                         notification.setRead(false);
                                         notification.setCreatedAt(new Timestamp(new Date()));
 
@@ -188,8 +190,12 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                                                     NotificationSender.sendPushNotification(
                                                             task.getUserId(),
                                                             "Obiecție primită",
-                                                            objectorName + " a contestat task-ul tău: " + task.getTitle()
+                                                            objectorName + " a contestat task-ul tău: " + task.getTitle(),
+                                                            task.getTaskId(),
+                                                            task.getCircleId(),
+                                                            NotificationType.OBJECTION_RAISED
                                                     );
+
                                                 });
                                     }
                                 });

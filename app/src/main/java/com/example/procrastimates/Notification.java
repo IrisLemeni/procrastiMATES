@@ -9,19 +9,21 @@ public class Notification {
     private String userId; // Recipient
     private String title;
     private String body;
-    private String circleId; // Optional
-    private String taskId; // Optional
+    private String circleId;
+    private String taskId;
+    private NotificationType type;
     private boolean isRead;
     private Timestamp createdAt;
 
     // Constructor
-    public Notification(String userId, String title, String body, String circleId, String taskId) {
+    public Notification(String userId, String title, String body, String circleId, String taskId, NotificationType type) {
         this.notificationId = UUID.randomUUID().toString();
         this.userId = userId;
         this.title = title;
         this.body = body;
         this.circleId = circleId;
         this.taskId = taskId;
+        this.type = type;
         this.isRead = false;
         this.createdAt = Timestamp.now();
     }
@@ -92,5 +94,13 @@ public class Notification {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public NotificationType getType() {
+        return type;
+    }
+
+    public void setType(NotificationType type) {
+        this.type = type;
     }
 }

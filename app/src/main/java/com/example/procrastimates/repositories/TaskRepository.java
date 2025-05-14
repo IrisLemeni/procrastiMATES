@@ -1,11 +1,10 @@
 package com.example.procrastimates.repositories;
 
-import android.app.Notification;
 import android.util.Log;
 
+import com.example.procrastimates.NotificationSender;
 import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.Task;
-import com.example.procrastimates.TaskNotification;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -109,17 +108,14 @@ public class TaskRepository {
                                                 String username = userDoc.getString("username");
                                                 String message = username + " completed task: " + task.getTitle();
 
-                                                db.collection("notifications").document(notificationId)
-                                                        .set(new TaskNotification(
-                                                                notificationId,
-                                                                memberId,
-                                                                message,
-                                                                new Timestamp(new Date()),
-                                                                NotificationType.TASK_COMPLETED,
-                                                                false,
-                                                                userId,
-                                                                task.getTaskId()
-                                                        ));
+                                                NotificationSender.sendPushNotification(
+                                                        memberId,
+                                                        "Task Completed",
+                                                        message,
+                                                        task.getTaskId(),
+                                                        task.getCircleId(),
+                                                        NotificationType.TASK_COMPLETED
+                                                );
                                             });
                                 }
                             }

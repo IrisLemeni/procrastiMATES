@@ -3,6 +3,7 @@ package com.example.procrastimates.fragments;
 import com.example.procrastimates.Circle;
 import com.example.procrastimates.Notification;
 import com.example.procrastimates.NotificationSender;
+import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.ObjectionStatus;
 import com.example.procrastimates.Poll;
 import com.example.procrastimates.PollStatus;
@@ -122,6 +123,7 @@ public class PollProcessor {
         notification.setBody("Dovada pentru task-ul \"" + task.getTitle() + "\" a fost respinsă de grup.");
         notification.setCircleId(task.getCircleId());
         notification.setTaskId(task.getTaskId());
+        notification.setType(NotificationType.TASK_REJECTED);
         notification.setRead(false);
         notification.setCreatedAt(new Timestamp(new Date()));
 
@@ -132,8 +134,12 @@ public class PollProcessor {
                     NotificationSender.sendPushNotification(
                             task.getUserId(),
                             "Task respins",
-                            "Dovada pentru task-ul \"" + task.getTitle() + "\" a fost respinsă de grup."
+                            "Dovada pentru task-ul \"" + task.getTitle() + "\" a fost respinsă de grup.",
+                            task.getTaskId(),
+                            task.getCircleId(),
+                            NotificationType.TASK_REJECTED
                     );
+
                 });
     }
 }

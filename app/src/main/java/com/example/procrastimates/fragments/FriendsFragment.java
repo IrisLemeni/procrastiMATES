@@ -23,7 +23,6 @@ import com.example.procrastimates.LeaderboardAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.NotificationsActivity;
-import com.example.procrastimates.activities.ObjectionsActivity;
 import com.example.procrastimates.activities.SearchFriendsActivity;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
