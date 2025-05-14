@@ -30,6 +30,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
@@ -57,4 +60,8 @@ dependencies {
     implementation("io.noties.markwon:html:4.6.2")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.google.firebase:firebase-messaging:24.0.0")
+    implementation("androidx.work:work-runtime:2.8.1")
+    implementation("com.google.firebase:firebase-config-ktx:21.6.3")
+    implementation ("com.google.firebase:firebase-storage:21.0.1")
 }

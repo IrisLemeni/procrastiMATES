@@ -20,6 +20,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Stack;
+import java.util.UUID;
 
 public class TaskViewModel extends AndroidViewModel {
 
@@ -267,6 +268,11 @@ public class TaskViewModel extends AndroidViewModel {
             public void onSuccess(Object result) {
                 Task completedTask = (Task) result;
                 recentlyCompletedTasks.push(completedTask);
+
+                // Create a completion message in the chat
+                createTaskCompletedMessage(completedTask, circleId);
+
+                // Refresh the tasks
                 loadTodayTasks(completedTask.getUserId());
             }
 
@@ -275,6 +281,28 @@ public class TaskViewModel extends AndroidViewModel {
                 Log.e("TaskViewModel", "Failed to complete task: " + e.getMessage());
             }
         });
+    }
+
+    // Add this new method to create chat messages
+    private void createTaskCompletedMessage(Task completedTask, String circleId) {
+        // Create a new message object for the task completion
+        Message completionMessage = new Message();
+        completionMessage.setMessageId(UUID.randomUUID().toString());
+        completionMessage.setCircleId(circleId);
+        completionMessage.setSenderId(completedTask.getUserId());
+        completionMessage.setText("Task completed: " + completedTask.getTitle());
+        completionMessage.setType(MessageType.TASK_COMPLETED);
+        completionMessage.setTaskId(completedTask.getTaskId());
+        completionMessage.setTimestamp(new Timestamp(new Date()));
+
+        // Save the message to Firebase
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("messages").document(completionMessage.getMessageId())
+                .set(completionMessage)
+                .addOnSuccessListener(aVoid ->
+                        Log.d("TaskViewModel", "Task completion message added to chat"))
+                .addOnFailureListener(e ->
+                        Log.e("TaskViewModel", "Failed to add task completion message: " + e.getMessage()));
     }
 
 

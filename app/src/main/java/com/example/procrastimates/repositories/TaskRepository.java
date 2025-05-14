@@ -175,6 +175,16 @@ public class TaskRepository {
                 .addOnFailureListener(listener::onFailure);
     }
 
+    public Task getTaskById(String taskId) {
+        try {
+            DocumentSnapshot doc = db.collection("tasks").document(taskId).get().getResult();
+            return doc.toObject(Task.class);
+        } catch (Exception e) {
+            Log.e("TaskService", "Error getting task", e);
+            return null;
+        }
+    }
+
 
 
     public interface OnTaskActionListener {

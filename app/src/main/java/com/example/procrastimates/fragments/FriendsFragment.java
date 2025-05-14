@@ -91,7 +91,7 @@ public class FriendsFragment extends Fragment {
         btnNotifications.setOnClickListener(v -> showNotifications());
 
         // Set click listener for the ObjectionsActivity button
-        btnObjections.setOnClickListener(v -> launchObjectionsActivity());
+        btnObjections.setOnClickListener(v -> launchCircleChatActivity());
 
         // Încarcă datele
         loadFriendsProgress();
@@ -101,9 +101,20 @@ public class FriendsFragment extends Fragment {
     }
 
     // Method to launch the ObjectionsActivity
-    private void launchObjectionsActivity() {
-        Intent intent = new Intent(getContext(), ObjectionsActivity.class);
-        startActivity(intent);
+    private void launchCircleChatActivity() {
+        FirebaseFirestore.getInstance()
+                .collection("circles")
+                .whereArrayContains("members", FirebaseAuth.getInstance().getCurrentUser().getUid())
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        String circleId = queryDocumentSnapshots.getDocuments().get(0).getId();
+                        Intent intent = new Intent(getContext(), CircleChatActivity.class);
+                        intent.putExtra("circleId", circleId);
+                        startActivity(intent);
+                    }
+                });
+
     }
 
     private void loadDailyTasks() {

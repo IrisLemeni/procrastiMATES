@@ -1,6 +1,7 @@
 package com.example.procrastimates.activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -15,6 +16,9 @@ import com.example.procrastimates.fragments.HomeFragment;
 import com.example.procrastimates.fragments.PomodoroFragment;
 import com.example.procrastimates.fragments.TasksFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity implements PomodoroFragment.FocusLockListener {
 
@@ -52,6 +56,23 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
                 return true;
             }
         });
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        String token = task.getResult();
+                        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                        FirebaseFirestore.getInstance()
+                                .collection("users")
+                                .document(userId)
+                                .update("deviceToken", token)
+                                .addOnSuccessListener(aVoid -> Log.d("FCM", "Token salvat în Firestore"))
+                                .addOnFailureListener(e -> Log.e("FCM", "Eroare la salvare token: " + e.getMessage()));
+                    } else {
+                        Log.e("FCM", "Eroare la obținerea tokenului: " + task.getException());
+                    }
+                });
+
     }
 
     @Override
