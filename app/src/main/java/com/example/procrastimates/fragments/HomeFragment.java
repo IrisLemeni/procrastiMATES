@@ -1,7 +1,9 @@
 package com.example.procrastimates.fragments;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,10 +18,12 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.example.procrastimates.FocusChartAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.Task;
 import com.example.procrastimates.activities.LoginActivity;
+import com.example.procrastimates.activities.ProfileImageActivity;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -39,6 +43,8 @@ import com.google.firebase.firestore.FieldPath;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -63,6 +69,8 @@ public class HomeFragment extends Fragment {
     private TextView focusScoreText, totalSessionsText, interruptionsText, timeOutsideText, bestFocusTimeText;
     private LineChart focusLineChart;
     private List<FocusChartAdapter.PomodoroSession> todaySessions = new ArrayList<>();
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
 
 
     public HomeFragment() {
@@ -87,6 +95,11 @@ public class HomeFragment extends Fragment {
         barChart.setDrawBarShadow(false);
         barChart.setDrawValueAboveBar(true);
         fetchPomodoroSessions();
+
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
+
+        userImage.setOnClickListener(v -> openProfileImageActivity());
 
         focusScoreIndicator = view.findViewById(R.id.focusScoreIndicator);
         focusScoreText = view.findViewById(R.id.focusScoreText);
@@ -124,6 +137,22 @@ public class HomeFragment extends Fragment {
 
 
         return view;
+    }
+
+    private void openProfileImageActivity() {
+        Intent intent = new Intent(getActivity(), ProfileImageActivity.class);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Actualizează imaginea de profil în caz că a fost modificată
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            loadUserData(currentUser.getUid());
+        }
     }
 
     private void fetchTaskProgress() {
@@ -331,23 +360,30 @@ public class HomeFragment extends Fragment {
 
 
     private void loadUserData(String userId) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        db.collection("users").document(userId).get()
+        db.collection("users").document(userId)
+                .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
+                        // Setează textul de bun venit
                         String username = documentSnapshot.getString("username");
                         if (username != null) {
-                            welcomeText.setText("Hello, " + username + "!");
-                        } else {
-                            welcomeText.setText("Hello, User!");
+                            welcomeText.setText("Bun venit, " + username + "!");
                         }
-                    } else {
-                        Toast.makeText(getContext(), "User data not found", Toast.LENGTH_SHORT).show();
+
+                        // Încarcă imaginea de profil
+                        String profileImageUrl = documentSnapshot.getString("profileImageUrl");
+                        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                            Glide.with(HomeFragment.this)
+                                    .load(profileImageUrl)
+                                    .circleCrop()
+                                    .into(userImage);
+                        }
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Error loading user data", Toast.LENGTH_SHORT).show();
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "Error loading user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 });
     }
 }

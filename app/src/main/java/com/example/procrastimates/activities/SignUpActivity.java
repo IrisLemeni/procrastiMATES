@@ -96,7 +96,7 @@ public class SignUpActivity extends AppCompatActivity {
     private void saveUserData(String userId, String username, String email) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        User user = new User(userId, username, email);
+        User user = new User(userId, username, email, "");
 
         db.collection("users")
                 .document(userId)

@@ -4,6 +4,7 @@ public class Friend {
     private String name;
     private int completedTasks;
     private int totalTasks;
+    private String profileImageUrl;
 
     public Friend(String friendId, String name, int completedTasks, int totalTasks) {
         this.name = name;
@@ -45,5 +46,13 @@ public class Friend {
 
     public int getProgress() {
         return totalTasks == 0 ? 0 : (completedTasks * 100) / totalTasks;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

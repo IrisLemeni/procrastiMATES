@@ -1,6 +1,7 @@
 package com.example.procrastimates.fragments;
 
 import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,9 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.procrastimates.Circle;
 import com.example.procrastimates.Friend;
 import com.example.procrastimates.FriendsAdapter;
@@ -44,6 +47,7 @@ public class FriendsFragment extends Fragment {
     private TextView userName;
     private FriendsAdapter friendsAdapter;
     private LeaderboardAdapter top3Adapter, othersAdapter;
+    private ImageView userProfileImage;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -55,6 +59,7 @@ public class FriendsFragment extends Fragment {
 
         currentUserId = mAuth.getCurrentUser().getUid();
         userName = view.findViewById(R.id.userName);
+        userProfileImage = view.findViewById(R.id.userProfileImage);
         loadUserData(currentUserId);
 
         btnNotifications = view.findViewById(R.id.btnNotifications);
@@ -305,8 +310,6 @@ public class FriendsFragment extends Fragment {
                 others = new ArrayList<>(allFriends.subList(3, allFriends.size()));
             }
 
-            // Rearanjează lista top3 în ordinea: locul 2, locul 1, locul 3
-            // dar numai dacă avem cel puțin 2 elemente
             if (top3.size() >= 2) {
                 Friend first = top3.get(0);  // Locul 1
                 Friend second = top3.get(1); // Locul 2
@@ -338,6 +341,13 @@ public class FriendsFragment extends Fragment {
                             userName.setText(username);
                         } else {
                             userName.setText("Your username");
+                        }
+                        String profileImageUrl = documentSnapshot.getString("profileImageUrl");
+                        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                            Glide.with(FriendsFragment.this)
+                                    .load(profileImageUrl)
+                                    .circleCrop()
+                                    .into(userProfileImage);
                         }
                     }
                 });
