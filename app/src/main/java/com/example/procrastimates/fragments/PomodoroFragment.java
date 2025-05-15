@@ -24,7 +24,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.example.procrastimates.Achievement;
+import com.example.procrastimates.models.Achievement;
 import com.example.procrastimates.AchievementDialogHelper;
 import com.example.procrastimates.R;
 import com.example.procrastimates.AchievementManager;

@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -13,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.procrastimates.activities.AchievementsActivity;
+import com.example.procrastimates.models.Achievement;
 import com.squareup.picasso.Picasso;
 
 public class AchievementDialogHelper {

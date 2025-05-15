@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.fragments;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.R;
-import com.example.procrastimates.Achievement;
+import com.example.procrastimates.models.Achievement;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;

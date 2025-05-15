@@ -14,11 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.AddTaskBottomSheet;
-import com.example.procrastimates.CalendarTaskAdapter;
+import com.example.procrastimates.adapters.CalendarTaskAdapter;
 import com.example.procrastimates.EditTaskBottomSheet;
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
-import com.example.procrastimates.TaskDayDecorator;
+import com.example.procrastimates.adapters.TaskDayDecorator;
 import com.example.procrastimates.TaskViewModel;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.google.firebase.auth.FirebaseAuth;

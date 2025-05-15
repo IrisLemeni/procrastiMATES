@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.R;
-import com.example.procrastimates.ConversationMessage;
+import com.example.procrastimates.models.ConversationMessage;
 
 import java.util.ArrayList;
 

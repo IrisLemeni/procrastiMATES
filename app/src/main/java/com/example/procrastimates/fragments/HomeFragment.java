@@ -16,7 +16,7 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
-import com.example.procrastimates.FocusChartAdapter;
+import com.example.procrastimates.adapters.FocusChartAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.activities.AchievementsActivity;
 import com.example.procrastimates.models.Task;

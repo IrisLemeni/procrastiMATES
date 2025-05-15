@@ -21,7 +21,7 @@ import com.example.procrastimates.Priority;
 import com.example.procrastimates.R;
 import com.example.procrastimates.RecyclerItemTouchHelper;
 import com.example.procrastimates.models.Task;
-import com.example.procrastimates.TaskAdapter;
+import com.example.procrastimates.adapters.TaskAdapter;
 import com.example.procrastimates.TaskViewModel;
 import com.example.procrastimates.activities.AskAiActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;

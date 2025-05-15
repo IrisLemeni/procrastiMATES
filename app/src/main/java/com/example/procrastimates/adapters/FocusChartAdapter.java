@@ -1,8 +1,6 @@
-package com.example.procrastimates;
+package com.example.procrastimates.adapters;
 
 import android.graphics.Color;
-import android.util.Pair;
-import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;

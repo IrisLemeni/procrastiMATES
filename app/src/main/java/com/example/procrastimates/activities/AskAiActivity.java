@@ -3,7 +3,6 @@ package com.example.procrastimates.activities;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
-import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -11,8 +10,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.R;
 import com.example.procrastimates.ai.CloudFunctionClient;
-import com.example.procrastimates.ConversationAdapter;
-import com.example.procrastimates.ConversationMessage;
+import com.example.procrastimates.adapters.ConversationAdapter;
+import com.example.procrastimates.models.ConversationMessage;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.procrastimates.models.Message;
 import com.example.procrastimates.MessageType;
 import com.example.procrastimates.R;
-import com.example.procrastimates.fragments.MessageAdapter;
+import com.example.procrastimates.adapters.MessageAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;

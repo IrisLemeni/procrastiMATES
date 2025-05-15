@@ -1,17 +1,16 @@
 package com.example.procrastimates.activities;
 
 import android.os.Bundle;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.Achievement;
+import com.example.procrastimates.models.Achievement;
 import com.example.procrastimates.AchievementDialogHelper;
 import com.example.procrastimates.AchievementManager;
-import com.example.procrastimates.AchievementsAdapter;
+import com.example.procrastimates.fragments.AchievementsAdapter;
 import com.example.procrastimates.R;
 
 import java.util.ArrayList;

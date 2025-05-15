@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
 
 import java.util.List;

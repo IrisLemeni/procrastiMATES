@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.adapters;
 import android.text.style.ForegroundColorSpan;
 
 import com.prolificinteractive.materialcalendarview.DayViewDecorator;

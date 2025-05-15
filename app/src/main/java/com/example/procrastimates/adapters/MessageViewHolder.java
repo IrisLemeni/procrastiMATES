@@ -1,4 +1,4 @@
-package com.example.procrastimates.fragments;
+package com.example.procrastimates.adapters;
 
 import android.content.Context;
 import android.view.View;

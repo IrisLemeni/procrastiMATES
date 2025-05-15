@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.models;
 
 public class Achievement {
     private String id;

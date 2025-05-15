@@ -1,4 +1,4 @@
-package com.example.procrastimates.fragments;
+package com.example.procrastimates.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,10 @@ import android.view.ViewGroup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.procrastimates.adapters.ObjectionViewHolder;
+import com.example.procrastimates.adapters.PollViewHolder;
+import com.example.procrastimates.adapters.ProofViewHolder;
+import com.example.procrastimates.adapters.TaskCompletedViewHolder;
 import com.example.procrastimates.models.Message;
 import com.example.procrastimates.R;
 import com.google.firebase.firestore.FirebaseFirestore;
