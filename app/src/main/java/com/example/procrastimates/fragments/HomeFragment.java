@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -17,6 +18,7 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.example.procrastimates.FocusChartAdapter;
 import com.example.procrastimates.R;
+import com.example.procrastimates.activities.AchievementsActivity;
 import com.example.procrastimates.models.Task;
 import com.example.procrastimates.activities.LoginActivity;
 import com.example.procrastimates.activities.ProfileImageActivity;
@@ -51,7 +53,7 @@ public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private ImageButton logoutButtton;
-
+    private Button achievementButton;
     private CircularProgressIndicator focusScoreIndicator;
     private TextView focusScoreText, totalSessionsText, interruptionsText, timeOutsideText, bestFocusTimeText;
     private LineChart focusLineChart;
@@ -77,6 +79,7 @@ public class HomeFragment extends Fragment {
         welcomeText = view.findViewById(R.id.welcomeText);
         userImage = view.findViewById(R.id.userImage);
         logoutButtton = view.findViewById(R.id.logoutButton);
+        achievementButton = view.findViewById(R.id.achievementButton);
         quoteText = view.findViewById(R.id.quoteText);
         barChart = view.findViewById(R.id.barChart);
         barChart.setDrawBarShadow(false);
@@ -119,6 +122,11 @@ public class HomeFragment extends Fragment {
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(getActivity(), LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+
+        achievementButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), AchievementsActivity.class);
             startActivity(intent);
         });
 

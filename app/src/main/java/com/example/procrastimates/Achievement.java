@@ -4,18 +4,17 @@ public class Achievement {
     private String id;
     private String title;
     private String description;
-    private String iconResource;
-    private int threshold;
-    private int xpReward;
+    private String iconUrl;
+    private int targetCount;
+    private boolean unlocked;
 
-    public Achievement(String id, String title, String description,
-                       String iconResource, int threshold, int xpReward) {
+    public Achievement(String id, String title, String description, String iconUrl, int targetCount) {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.iconResource = iconResource;
-        this.threshold = threshold;
-        this.xpReward = xpReward;
+        this.iconUrl = iconUrl;
+        this.targetCount = targetCount;
+        this.unlocked = false;
     }
 
     public String getId() {
@@ -30,15 +29,19 @@ public class Achievement {
         return description;
     }
 
-    public String getIconResource() {
-        return iconResource;
+    public String getIconUrl() {
+        return iconUrl;
     }
 
-    public int getThreshold() {
-        return threshold;
+    public int getTargetCount() {
+        return targetCount;
     }
 
-    public int getXpReward() {
-        return xpReward;
+    public boolean isUnlocked() {
+        return unlocked;
+    }
+
+    public void setUnlocked(boolean unlocked) {
+        this.unlocked = unlocked;
     }
 }

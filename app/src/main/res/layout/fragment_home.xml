@@ -63,7 +63,13 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/userImage" />
             </androidx.constraintlayout.widget.ConstraintLayout>
-
+            <Button
+                android:id="@+id/achievementButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Achievements"
+                android:layout_gravity="center"
+                />
             <!-- Motivational Quote Text -->
             <TextView
                 android:id="@+id/quoteText"

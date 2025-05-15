@@ -2,6 +2,9 @@
     <string name="app_name">procrastiMATES</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="achievement_icon_desc">Achievement icon</string>
+    <string name="locked_achievement_desc">Locked achievement</string>
+    <string name="grey_600">#757575</string>
     <string-array name="priority_options">
         <item>Low</item>
         <item>Medium</item>

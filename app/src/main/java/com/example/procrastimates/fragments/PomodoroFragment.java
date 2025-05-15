@@ -24,7 +24,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.example.procrastimates.Achievement;
+import com.example.procrastimates.AchievementDialogHelper;
 import com.example.procrastimates.R;
+import com.example.procrastimates.AchievementManager;
 import com.example.procrastimates.service.FocusLockService;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -37,7 +40,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class PomodoroFragment extends Fragment {
+public class PomodoroFragment extends Fragment implements AchievementManager.AchievementListener{
 
     private static final String KEY_IS_SESSION_RUNNING = "isSessionRunning";
     private static final String KEY_SESSION_DURATION = "sessionDuration";
@@ -63,17 +66,22 @@ public class PomodoroFragment extends Fragment {
     private int interruptionCount = 0;
     private long timeOutsideApp = 0;
     private int focusScore = 100;
-    private int streakCount = 0;
     private BroadcastReceiver focusInterruptionReceiver;
     private long remainingTimeMillis = 0;
     private boolean isWorkSession = true;
-    private String currentViewState = "duration"; // "duration", "background", "timer"
+    private String currentViewState = "duration";
+
+    private AchievementManager achievementManager;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate layout for this fragment
         View view = inflater.inflate(R.layout.fragment_pomodoro, container, false);
+
+        // Inițializăm AchievementManager
+        achievementManager = AchievementManager.getInstance();
+        achievementManager.addAchievementListener(this);
 
         initViews(view);
         setupListeners();
@@ -143,8 +151,8 @@ public class PomodoroFragment extends Fragment {
         });
 
         selectDurationButton25.setOnClickListener(v -> {
-            sessionDuration = 1 * 60 * 1000; // 25 minutes
-            breakDuration = 1 * 60 * 1000; // 5 minutes
+            sessionDuration = 1 * 60 * 1000; // 25 minutes (modificat la 1 minut pentru testare)
+            breakDuration = 1 * 60 * 1000; // 5 minutes (modificat la 1 minut pentru testare)
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
             currentViewState = "background";
@@ -306,6 +314,28 @@ public class PomodoroFragment extends Fragment {
         if (focusLockListener != null && isSessionRunning) {
             focusLockListener.setBottomNavEnabled(true);
         }
+
+        achievementManager.removeAchievementListener(this);
+    }
+
+    @Override
+    public void onAchievementUnlocked(Achievement achievement) {
+        if (isAdded() && getActivity() != null) {
+            // Show the achievement unlocked dialog on the UI thread
+            getActivity().runOnUiThread(() -> {
+                // Play achievement sound
+                playAchievementSound();
+
+                // Show custom achievement dialog
+                AchievementDialogHelper.showAchievementUnlockedDialog(getActivity(), achievement);
+            });
+        }
+    }
+
+    private void playAchievementSound() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getContext(), R.raw.positive);
+        mediaPlayer.setOnCompletionListener(MediaPlayer::release);
+        mediaPlayer.start();
     }
 
     private void selectBackground(int option) {
@@ -409,6 +439,10 @@ public class PomodoroFragment extends Fragment {
 
                 if (isWorkSession) {
                     saveSessionToFirestore(true);
+
+                    // Verifică achievement-urile asociate sesiunii
+                    achievementManager.checkSessionAchievements(true, sessionDuration, focusScore);
+
                     showCustomAlert("break");
                     breakTime.setVisibility(View.VISIBLE);
                     workingTime.setVisibility(View.GONE);
@@ -560,72 +594,5 @@ public class PomodoroFragment extends Fragment {
                 focusProgressBar.setProgress(focusScore);
             }
         }
-    }
-
-    // Update user streak and award experience points
-    private void updateStreakAndExperience() {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        // Get current streak and XP
-        db.collection("users").document(userId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        // Update streak
-                        int currentStreak = documentSnapshot.getLong("currentStreak") != null ?
-                                documentSnapshot.getLong("currentStreak").intValue() : 0;
-                        int bestStreak = documentSnapshot.getLong("bestStreak") != null ?
-                                documentSnapshot.getLong("bestStreak").intValue() : 0;
-                        int experiencePoints = documentSnapshot.getLong("experiencePoints") != null ?
-                                documentSnapshot.getLong("experiencePoints").intValue() : 0;
-
-                        // Calculate XP based on focus score
-                        int baseXP = (focusScore / 10) + 5; // 5-15 XP per session
-
-                        // Increment streak
-                        int newStreak = currentStreak + 1;
-
-                        // Check if it's a new best
-                        int newBestStreak = Math.max(newStreak, bestStreak);
-
-                        // Calculate streak bonus
-                        int streakBonus = 0;
-                        boolean hasStreakBonus = false;
-                        if (newStreak % 5 == 0) {
-                            // Bonus for every 5 streak
-                            streakBonus = 10;
-                            hasStreakBonus = true;
-                        }
-
-                        // Calculate total session XP (base + bonus)
-                        final int totalSessionXP = baseXP + streakBonus;
-
-                        // Final XP update
-                        final int newExperiencePoints = experiencePoints + totalSessionXP;
-
-                        // Update to Firestore
-                        Map<String, Object> updates = new HashMap<>();
-                        updates.put("currentStreak", newStreak);
-                        updates.put("bestStreak", newBestStreak);
-                        updates.put("experiencePoints", newExperiencePoints);
-
-                        // Save the streak bonus flag for the lambda
-                        final boolean finalHasStreakBonus = hasStreakBonus;
-
-                        db.collection("users").document(userId).update(updates)
-                                .addOnSuccessListener(aVoid -> {
-                                    // Show streak bonus toast if applicable
-                                    if (finalHasStreakBonus) {
-                                        Toast.makeText(requireContext(),
-                                                "Streak bonus! +10 XP", Toast.LENGTH_SHORT).show();
-                                    }
-
-                                    // Show XP toast
-                                    Toast.makeText(requireContext(),
-                                            "Session complete! +" + totalSessionXP + " XP",
-                                            Toast.LENGTH_SHORT).show();
-                                });
-                    }
-                });
     }
 }

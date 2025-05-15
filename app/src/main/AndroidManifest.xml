@@ -20,6 +20,9 @@
         android:theme="@style/Theme.ProcrastiMATES"
         tools:targetApi="31">
         <activity
+            android:name=".activities.AchievementsActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.ProfileImageActivity"
             android:exported="false" />
 
