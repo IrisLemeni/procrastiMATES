@@ -1,22 +1,19 @@
-package com.example.procrastimates.fragments;
+package com.example.procrastimates.activities;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.Message;
+import com.example.procrastimates.models.Message;
 import com.example.procrastimates.MessageType;
 import com.example.procrastimates.R;
+import com.example.procrastimates.fragments.MessageAdapter;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;

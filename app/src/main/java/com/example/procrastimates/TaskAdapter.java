@@ -7,8 +7,8 @@ import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.procrastimates.R;
-import com.example.procrastimates.Task;
+
+import com.example.procrastimates.models.Task;
 import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {

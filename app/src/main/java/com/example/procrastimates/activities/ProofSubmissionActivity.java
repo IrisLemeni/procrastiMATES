@@ -10,15 +10,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.procrastimates.Message;
+import com.example.procrastimates.models.Message;
 import com.example.procrastimates.MessageType;
-import com.example.procrastimates.Notification;
+import com.example.procrastimates.models.Notification;
 import com.example.procrastimates.NotificationSender;
 import com.example.procrastimates.NotificationType;
-import com.example.procrastimates.Objection;
-import com.example.procrastimates.Proof;
+import com.example.procrastimates.models.Objection;
+import com.example.procrastimates.models.Proof;
 import com.example.procrastimates.R;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;

@@ -1,6 +1,6 @@
 package com.example.procrastimates.service;
 
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;

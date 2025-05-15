@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.Message;
+import com.example.procrastimates.models.Message;
 import com.example.procrastimates.R;
 import com.google.firebase.firestore.FirebaseFirestore;
 

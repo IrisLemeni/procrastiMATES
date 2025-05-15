@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,7 +20,6 @@ import androidx.fragment.app.Fragment;
 import com.example.procrastimates.NotificationSender;
 import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.R;
-import com.example.procrastimates.fragments.CircleChatActivity;
 import com.example.procrastimates.fragments.FriendsFragment;
 import com.example.procrastimates.fragments.HomeFragment;
 import com.example.procrastimates.fragments.PomodoroFragment;

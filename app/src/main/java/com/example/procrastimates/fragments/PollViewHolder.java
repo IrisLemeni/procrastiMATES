@@ -7,11 +7,10 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.Message;
-import com.example.procrastimates.Poll;
+import com.example.procrastimates.models.Message;
+import com.example.procrastimates.models.Poll;
 import com.example.procrastimates.PollStatus;
 import com.example.procrastimates.R;
-import com.example.procrastimates.fragments.PollProcessor;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;

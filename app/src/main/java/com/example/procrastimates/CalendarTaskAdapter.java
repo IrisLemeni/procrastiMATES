@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.repositories.TaskRepository;
+import com.example.procrastimates.models.Task;
 
 import java.util.List;
 

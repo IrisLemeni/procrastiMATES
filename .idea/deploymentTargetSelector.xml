@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="procrastiMATES">
         <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2025-05-14T14:54:56.974488600Z">
+        <DropdownSelection timestamp="2025-05-15T09:34:03.183247200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Iris\.android\avd\Medium_Phone.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Iris\.android\avd\Medium_Phone_API_35_2.avd" />
             </handle>
           </Target>
         </DropdownSelection>

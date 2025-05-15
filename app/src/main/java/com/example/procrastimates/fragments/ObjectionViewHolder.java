@@ -8,9 +8,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.procrastimates.Message;
+import com.example.procrastimates.models.Message;
 import com.example.procrastimates.R;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.example.procrastimates.activities.ProofSubmissionActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 

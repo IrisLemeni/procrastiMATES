@@ -13,10 +13,8 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.TaskAdapter;
 import com.example.procrastimates.repositories.TaskRepository;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 
 public class RecyclerItemTouchHelper extends ItemTouchHelper.SimpleCallback {
 

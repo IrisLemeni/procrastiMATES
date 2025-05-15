@@ -7,13 +7,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
-import com.example.procrastimates.Invitation;
+import com.example.procrastimates.models.Invitation;
 import com.example.procrastimates.R;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;

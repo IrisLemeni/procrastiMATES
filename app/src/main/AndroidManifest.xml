@@ -36,7 +36,7 @@
             android:name=".activities.ProofSubmissionActivity"
             android:exported="false" />
         <activity
-            android:name=".fragments.CircleChatActivity"
+            android:name=".activities.CircleChatActivity"
             android:exported="false" />
         <activity
             android:name=".activities.AskAiActivity"

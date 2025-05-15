@@ -1,7 +1,6 @@
 package com.example.procrastimates.fragments;
 
 import android.content.Intent;
-import android.media.Image;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,12 +18,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.procrastimates.Circle;
-import com.example.procrastimates.Friend;
+import com.example.procrastimates.models.Circle;
+import com.example.procrastimates.models.Friend;
 import com.example.procrastimates.FriendsAdapter;
 import com.example.procrastimates.LeaderboardAdapter;
 import com.example.procrastimates.R;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
+import com.example.procrastimates.activities.CircleChatActivity;
 import com.example.procrastimates.activities.NotificationsActivity;
 import com.example.procrastimates.activities.SearchFriendsActivity;
 import com.google.firebase.Timestamp;

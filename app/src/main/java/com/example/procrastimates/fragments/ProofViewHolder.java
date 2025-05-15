@@ -11,13 +11,13 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.example.procrastimates.Message;
+import com.example.procrastimates.models.Message;
 import com.example.procrastimates.MessageType;
-import com.example.procrastimates.Poll;
+import com.example.procrastimates.models.Poll;
 import com.example.procrastimates.PollStatus;
-import com.example.procrastimates.Proof;
+import com.example.procrastimates.models.Proof;
 import com.example.procrastimates.R;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;

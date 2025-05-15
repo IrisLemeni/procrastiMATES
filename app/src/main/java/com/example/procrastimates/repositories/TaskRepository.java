@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.example.procrastimates.NotificationSender;
 import com.example.procrastimates.NotificationType;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;

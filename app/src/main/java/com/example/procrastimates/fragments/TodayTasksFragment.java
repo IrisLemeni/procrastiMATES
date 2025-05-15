@@ -20,7 +20,7 @@ import com.example.procrastimates.EditTaskBottomSheet;
 import com.example.procrastimates.Priority;
 import com.example.procrastimates.R;
 import com.example.procrastimates.RecyclerItemTouchHelper;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.example.procrastimates.TaskAdapter;
 import com.example.procrastimates.TaskViewModel;
 import com.example.procrastimates.activities.AskAiActivity;

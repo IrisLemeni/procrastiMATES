@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.models;
 
 import java.util.ArrayList;
 import java.util.List;

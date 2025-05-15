@@ -7,12 +7,12 @@ import android.widget.Toast;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import com.example.procrastimates.Task;
+
+import com.example.procrastimates.models.Message;
+import com.example.procrastimates.models.Task;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.example.procrastimates.service.TaskService;
-import com.example.procrastimates.Priority;
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;

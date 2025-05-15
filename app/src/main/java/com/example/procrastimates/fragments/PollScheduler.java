@@ -9,19 +9,10 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.example.procrastimates.Circle;
 import com.example.procrastimates.MyApplication;
-import com.example.procrastimates.Notification;
-import com.example.procrastimates.ObjectionStatus;
-import com.example.procrastimates.Poll;
-import com.example.procrastimates.PollStatus;
-import com.example.procrastimates.Task;
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.procrastimates.models.Poll;
 
 import java.util.Date;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class PollScheduler {

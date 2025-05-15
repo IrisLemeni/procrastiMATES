@@ -1,13 +1,13 @@
 package com.example.procrastimates.fragments;
 
-import com.example.procrastimates.Circle;
-import com.example.procrastimates.Notification;
+import com.example.procrastimates.models.Circle;
+import com.example.procrastimates.models.Notification;
 import com.example.procrastimates.NotificationSender;
 import com.example.procrastimates.NotificationType;
 import com.example.procrastimates.ObjectionStatus;
-import com.example.procrastimates.Poll;
+import com.example.procrastimates.models.Poll;
 import com.example.procrastimates.PollStatus;
-import com.example.procrastimates.Task;
+import com.example.procrastimates.models.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;

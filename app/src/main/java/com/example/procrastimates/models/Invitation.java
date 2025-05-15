@@ -1,7 +1,5 @@
-package com.example.procrastimates;
+package com.example.procrastimates.models;
 import com.google.firebase.Timestamp;
-
-import java.util.Date;
 
 public class Invitation {
     private String invitationId;

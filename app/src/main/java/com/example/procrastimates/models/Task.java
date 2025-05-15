@@ -1,5 +1,6 @@
-package com.example.procrastimates;
+package com.example.procrastimates.models;
 
+import com.example.procrastimates.Priority;
 import com.google.firebase.Timestamp;
 
 
