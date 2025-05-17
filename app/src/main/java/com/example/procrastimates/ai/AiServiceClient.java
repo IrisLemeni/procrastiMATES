@@ -15,7 +15,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CloudFunctionClient {
+public class AiServiceClient {
 
     private final RequestQueue requestQueue;
     private final String BASE_URL = "https://ai-server-qask.onrender.com/ask";
@@ -26,7 +26,7 @@ public class CloudFunctionClient {
         void onError(String errorMessage);
     }
 
-    public CloudFunctionClient(Context context) {
+    public AiServiceClient(Context context) {
         requestQueue = Volley.newRequestQueue(context.getApplicationContext());
         db = FirebaseFirestore.getInstance();
     }

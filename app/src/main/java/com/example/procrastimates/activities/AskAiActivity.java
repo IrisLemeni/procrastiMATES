@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.R;
-import com.example.procrastimates.ai.CloudFunctionClient;
+import com.example.procrastimates.ai.AiServiceClient;
 import com.example.procrastimates.adapters.ConversationAdapter;
 import com.example.procrastimates.models.ConversationMessage;
 import com.google.firebase.FirebaseApp;
@@ -29,7 +29,7 @@ public class AskAiActivity extends AppCompatActivity {
     private RecyclerView historyRecyclerView;
     private Button viewHistoryButton;
 
-    private CloudFunctionClient cloudFunctionClient;
+    private AiServiceClient aiServiceClient;
     private Markwon markwon;
     private ArrayList<ConversationMessage> conversationHistory = new ArrayList<>();
     private ConversationAdapter conversationAdapter;
@@ -45,7 +45,7 @@ public class AskAiActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         // Initialize the Cloud Function client
-        cloudFunctionClient = new CloudFunctionClient(this);
+        aiServiceClient = new AiServiceClient(this);
 
         // UI references
         questionInput = findViewById(R.id.questionInput);
@@ -137,7 +137,7 @@ public class AskAiActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             String userId = user.getUid();
-            cloudFunctionClient.askAi(question, userId, new CloudFunctionClient.AiCallback() {
+            aiServiceClient.askAi(question, userId, new AiServiceClient.AiCallback() {
                 @Override
                 public void onSuccess(String answer) {
                     isRequestInProgress = false;

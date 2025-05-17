@@ -17,9 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Clasa centrală pentru gestionarea sistemului de achievement-uri
- */
+
 public class AchievementManager {
 
     private static final String COLLECTION_ACHIEVEMENTS = "user_achievements";
@@ -29,7 +27,6 @@ public class AchievementManager {
     private List<Achievement> allAchievements;
     private List<AchievementListener> listeners = new ArrayList<>();
 
-    // Flag to track whether achievements are being loaded to avoid duplicate notifications
     private boolean isLoading = false;
 
     private AchievementManager() {
@@ -46,38 +43,32 @@ public class AchievementManager {
         return instance;
     }
 
-    /**
-     * Inițializează lista de achievement-uri disponibile
-     */
     private void initializeAchievements() {
         allAchievements = Arrays.asList(
                 // Achievement-uri pentru sesiuni de pomodoro complete
-                new Achievement("session_starter", "Session Starter", "Completează prima sesiune pomodoro", "icons/achievement_session_starter.png", 1),
-                new Achievement("focus_apprentice", "Focus Apprentice", "Completează 5 sesiuni pomodoro", "icons/achievement_focus_apprentice.png", 5),
-                new Achievement("focus_master", "Focus Master", "Completează 25 sesiuni pomodoro", "icons/achievement_focus_master.png", 25),
-                new Achievement("focus_wizard", "Focus Wizard", "Completează 100 sesiuni pomodoro", "icons/achievement_focus_wizard.png", 100),
+                new Achievement("session_starter", "Session Starter", "Completează prima sesiune pomodoro", "icons/launcher.png", 1),
+                new Achievement("focus_apprentice", "Focus Apprentice", "Completează 5 sesiuni pomodoro", "icons/apprentice.png", 5),
+                new Achievement("focus_master", "Focus Master", "Completează 25 sesiuni pomodoro", "icons/master.png", 25),
+                new Achievement("focus_wizard", "Focus Wizard", "Completează 100 sesiuni pomodoro", "icons/wizard.png", 100),
 
                 // Achievement-uri pentru scor de focus ridicat
-                new Achievement("laser_focus", "Laser Focus", "Menține un scor de focus de 100 într-o sesiune", "icons/achievement_laser_focus.png", 1),
-                new Achievement("undistracted", "Undistracted", "Completează 5 sesiuni cu scor de focus peste 90", "icons/achievement_undistracted.png", 5),
-                new Achievement("concentration_guru", "Concentration Guru", "Completează 15 sesiuni cu scor de focus peste 95", "icons/achievement_concentration_guru.png", 15),
+                new Achievement("laser_focus", "Laser Focus", "Menține un scor de focus de 100 într-o sesiune", "icons/laser.png", 1),
+                new Achievement("undistracted", "Undistracted", "Completează 5 sesiuni cu scor de focus peste 90", "icons/focus.png", 5),
+                new Achievement("concentration_guru", "Concentration Guru", "Completează 15 sesiuni cu scor de focus peste 95", "icons/guru.png", 15),
 
                 // Achievement-uri pentru sesiuni consecutive
-                new Achievement("daily_streak", "Daily Streak", "Completează sesiuni pomodoro 3 zile consecutiv", "icons/achievement_daily_streak.png", 3),
-                new Achievement("weekly_focus", "Weekly Focus", "Completează sesiuni pomodoro 7 zile consecutiv", "icons/achievement_weekly_focus.png", 7),
-                new Achievement("focus_warrior", "Focus Warrior", "Completează sesiuni pomodoro 14 zile consecutiv", "icons/achievement_focus_warrior.png", 14),
+                new Achievement("daily_streak", "Daily Streak", "Completează sesiuni pomodoro 3 zile consecutiv", "icons/fire.png", 3),
+                new Achievement("weekly_focus", "Weekly Focus", "Completează sesiuni pomodoro 7 zile consecutiv", "icons/timetable.png", 7),
+                new Achievement("focus_warrior", "Focus Warrior", "Completează sesiuni pomodoro 14 zile consecutiv", "icons/swordsman.png", 14),
 
                 // Achievement-uri pentru sesiuni de lungă durată
-                new Achievement("marathon_focus", "Marathon Focus", "Completează o sesiune pomodoro de 50 minute", "icons/achievement_marathon_focus.png", 1),
-                new Achievement("endurance_master", "Endurance Master", "Completează 10 sesiuni pomodoro de 50 minute", "icons/achievement_endurance_master.png", 10)
+                new Achievement("marathon_focus", "Marathon Focus", "Completează o sesiune pomodoro de 50 minute", "icons/winner.png", 1),
+                new Achievement("endurance_master", "Endurance Master", "Completează 10 sesiuni pomodoro de 50 minute", "icons/persistence.png", 10)
         );
     }
 
-    /**
-     * Verifică achievement-urile după completarea unei sesiuni pomodoro
-     */
     public void checkSessionAchievements(boolean isWorkSession, int sessionDuration, int focusScore) {
-        if (!isWorkSession || userId == null) return; // Verifică achievement-urile doar pentru sesiunile de lucru
+        if (!isWorkSession || userId == null) return;
 
         // Obține istoricul sesiunilor pentru verificări
         db.collection("pomodoro_sessions")
@@ -127,9 +118,6 @@ public class AchievementManager {
                 });
     }
 
-    /**
-     * Verifică achievement-urile pentru sesiunile lungi
-     */
     private void checkLongSessionsAchievements() {
         if (userId == null) return;
 
@@ -146,9 +134,6 @@ public class AchievementManager {
                 });
     }
 
-    /**
-     * Verifică achievement-urile pentru streaks zilnice
-     */
     private void checkDailyStreakAchievements() {
         if (userId == null) return;
 
@@ -171,9 +156,6 @@ public class AchievementManager {
                 });
     }
 
-    /**
-     * Verifică și deblochează un achievement dacă condiția este îndeplinită
-     */
     private void checkAndUnlockAchievement(String achievementId, boolean condition) {
         if (!condition || userId == null) return;
 
@@ -193,9 +175,7 @@ public class AchievementManager {
                 });
     }
 
-    /**
-     * Deblochează un achievement și notifică ascultătorii
-     */
+
     private void unlockAchievement(String achievementId) {
         Achievement achievement = getAchievementById(achievementId);
         if (achievement == null || userId == null) return;
@@ -222,9 +202,6 @@ public class AchievementManager {
                 });
     }
 
-    /**
-     * Notifică toți ascultătorii despre un achievement deblocat
-     */
     private void notifyAchievementUnlocked(Achievement achievement) {
         List<AchievementListener> listenersCopy = new ArrayList<>(listeners);
         for (AchievementListener listener : listenersCopy) {
@@ -234,9 +211,7 @@ public class AchievementManager {
         }
     }
 
-    /**
-     * Obține un achievement din listă după ID
-     */
+
     private Achievement getAchievementById(String achievementId) {
         for (Achievement achievement : allAchievements) {
             if (achievement.getId().equals(achievementId)) {
@@ -246,9 +221,6 @@ public class AchievementManager {
         return null;
     }
 
-    /**
-     * Obține toate achievement-urile deblocate de utilizator
-     */
     public void getUnlockedAchievements(AchievementsCallback callback) {
         if (userId == null) {
             callback.onAchievementsLoadFailed(new Exception("User not logged in"));
@@ -284,9 +256,6 @@ public class AchievementManager {
                 });
     }
 
-    /**
-     * Actualizează statutul deblocat al unui achievement în lista principală
-     */
     private void updateAchievementUnlockedStatus(String achievementId, boolean unlocked) {
         for (Achievement achievement : allAchievements) {
             if (achievement.getId().equals(achievementId)) {
@@ -296,42 +265,27 @@ public class AchievementManager {
         }
     }
 
-    /**
-     * Obține toate achievement-urile disponibile
-     */
     public List<Achievement> getAllAchievements() {
         return new ArrayList<>(allAchievements); // Return a copy to prevent external modification
     }
 
-    /**
-     * Adaugă un ascultător pentru notificări de achievement-uri
-     */
     public void addAchievementListener(AchievementListener listener) {
         if (listener != null && !listeners.contains(listener)) {
             listeners.add(listener);
         }
     }
 
-    /**
-     * Elimină un ascultător pentru notificări de achievement-uri
-     */
     public void removeAchievementListener(AchievementListener listener) {
         if (listener != null) {
             listeners.remove(listener);
         }
     }
 
-    /**
-     * Interfață pentru callback-uri de achievement-uri
-     */
     public interface AchievementsCallback {
         void onAchievementsLoaded(List<Achievement> achievements);
         void onAchievementsLoadFailed(Exception exception);
     }
 
-    /**
-     * Interfață pentru ascultători de evenimente de achievement
-     */
     public interface AchievementListener {
         void onAchievementUnlocked(Achievement achievement);
     }
