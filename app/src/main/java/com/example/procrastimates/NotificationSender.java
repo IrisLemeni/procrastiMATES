@@ -37,14 +37,10 @@ public class NotificationSender {
     private static final String TAG = "NotificationSender";
     private static final String FCM_API = "https://fcm.googleapis.com/v1/projects/procrastimate-cc91b/messages:send";
     private static final List<String> SCOPES = Arrays.asList("https://www.googleapis.com/auth/firebase.messaging");
-    // Crearea unui pool de thread-uri pentru operațiunile asincrone
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private static FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    /**
-     * Main method to send notifications - this combines local and remote notification delivery
-     */
     public static void sendPushNotification(String userId, String title, String body,
                                             String taskId, String circleId,
                                             NotificationType type) {
@@ -111,9 +107,6 @@ public class NotificationSender {
                 });
     }
 
-    /**
-     * Fetches user info and sends FCM notification
-     */
     private static void fetchUserAndSendFCM(String userId, String title, String body, String taskId, String circleId) {
         db.collection("users").document(userId)
                 .get()
@@ -287,29 +280,5 @@ public class NotificationSender {
         });
     }
 
-    /**
-     * Method to send a test notification to the current user
-     */
-    public static void sendTestNotification() {
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null ?
-                FirebaseAuth.getInstance().getCurrentUser().getUid() : null;
 
-        if (currentUserId != null) {
-            sendPushNotification(
-                    currentUserId,
-                    "Test Notification",
-                    "This is a test notification from Procrastimates",
-                    null,
-                    null,
-                    NotificationType.SYSTEM_MESSAGE
-            );
-
-            // Also show directly
-            if (MyApplication.getAppContext() != null) {
-                NotificationHelper.sendTestNotification(MyApplication.getAppContext());
-            }
-        } else {
-            Log.e(TAG, "Cannot send test notification - user not logged in");
-        }
-    }
 }
