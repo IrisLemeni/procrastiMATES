@@ -85,7 +85,7 @@
             android:padding="8dp"
             android:text="Forgot Password?"
             android:textAlignment="center"
-            android:textColor="#7E18DC"
+            android:textColor="@color/white"
             android:textSize="16sp" />
 
         <Button
@@ -97,7 +97,7 @@
             android:padding="18dp"
             android:text="Login"
             android:textSize="18sp"
-            android:textColor="#AE1CED" />
+            android:textColor="@color/ic_launcher_background" />
 
         <TextView
             android:id="@+id/create_account_text"
@@ -108,7 +108,7 @@
             android:focusable="true"
             android:padding="8dp"
             android:text="Create new account"
-            android:textColor="#7E18DC"
+            android:textColor="@color/white"
             android:textSize="16sp"
             android:textAlignment="center"/>
 

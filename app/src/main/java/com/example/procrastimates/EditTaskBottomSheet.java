@@ -7,30 +7,30 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.procrastimates.models.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 
 import java.util.Calendar;
 
 public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
-    private EditText editTaskTitle;
-    private Button saveButton;
+    private TextInputEditText editTaskTitle;
+    private Button saveButton, cancelButton;
     private Task task;
-    private RadioGroup dateSelectionGroup;
-    private RadioButton todayButton, tomorrowButton, pickDateButton;
+    private ChipGroup dateChipGroup;
+    private Chip todayChip, tomorrowChip, pickDateChip;
     private Timestamp selectedDate;
-    private Spinner prioritySpinner;
+    private AutoCompleteTextView prioritySpinner;
 
     private OnTaskUpdatedListener onTaskUpdatedListener;
 
@@ -53,53 +53,63 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
         editTaskTitle = view.findViewById(R.id.editTaskTitle);
         saveButton = view.findViewById(R.id.saveButton);
-        dateSelectionGroup = view.findViewById(R.id.dateSelectionGroup);
-        todayButton = view.findViewById(R.id.todayButton);
-        tomorrowButton = view.findViewById(R.id.tomorrowButton);
-        pickDateButton = view.findViewById(R.id.pickDateButton);
+        cancelButton = view.findViewById(R.id.cancelButton);
+        dateChipGroup = view.findViewById(R.id.dateChipGroup);
+        todayChip = view.findViewById(R.id.todayChip);
+        tomorrowChip = view.findViewById(R.id.tomorrowChip);
+        pickDateChip = view.findViewById(R.id.pickDateChip);
         prioritySpinner = view.findViewById(R.id.prioritySpinner);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
-                R.array.priority_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Setup priority dropdown
+        String[] priorities = getResources().getStringArray(R.array.priority_options);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+                android.R.layout.simple_dropdown_item_1line, priorities);
         prioritySpinner.setAdapter(adapter);
 
-        // Pre-populează câmpurile
+        // Pre-populate fields
         if (task != null) {
             editTaskTitle.setText(task.getTitle());
-            selectedDate = task.getDueDate();  // Setează data existentă
+            selectedDate = task.getDueDate();
 
-            // Pre-selectează opțiunea corespunzătoare
+            // Pre-select appropriate date option
             if (isToday(selectedDate)) {
-                todayButton.setChecked(true);
+                todayChip.setChecked(true);
             } else if (isTomorrow(selectedDate)) {
-                tomorrowButton.setChecked(true);
+                tomorrowChip.setChecked(true);
             } else {
-                pickDateButton.setChecked(true);
+                pickDateChip.setChecked(true);
             }
 
+            // Set priority
             if (task.getPriority() != null) {
                 String priorityString = task.getPriority().toString().substring(0, 1).toUpperCase()
-                        + task.getPriority().toString().substring(1).toLowerCase(); // Transformă enum-ul într-un string compatibil (ex. LOW -> Low)
-                int spinnerPosition = adapter.getPosition(priorityString);
-                prioritySpinner.setSelection(spinnerPosition);
+                        + task.getPriority().toString().substring(1).toLowerCase();
+                prioritySpinner.setText(priorityString, false);
             }
+        } else {
+            // Default values for new task
+            selectedDate = getTodayTimestamp();
+            todayChip.setChecked(true);
         }
 
+        // Setup button listeners
         saveButton.setOnClickListener(v -> {
-            Task updatedTask = getUpdatedTask(); // Creează un nou task cu valorile actualizate
-            if (onTaskUpdatedListener != null) {
+            Task updatedTask = getUpdatedTask();
+            if (updatedTask != null && onTaskUpdatedListener != null) {
                 onTaskUpdatedListener.onTaskUpdated(updatedTask);
             }
             dismiss();
         });
 
-        dateSelectionGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.todayButton) {
+        cancelButton.setOnClickListener(v -> dismiss());
+
+        // Setup chip group listener
+        dateChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.contains(R.id.todayChip)) {
                 selectedDate = getTodayTimestamp();
-            } else if (checkedId == R.id.tomorrowButton) {
+            } else if (checkedIds.contains(R.id.tomorrowChip)) {
                 selectedDate = getTomorrowTimestamp();
-            } else if (checkedId == R.id.pickDateButton) {
+            } else if (checkedIds.contains(R.id.pickDateChip)) {
                 showDatePickerDialog();
             }
         });
@@ -108,6 +118,8 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
     }
 
     private boolean isToday(Timestamp timestamp) {
+        if (timestamp == null) return false;
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(timestamp.getSeconds() * 1000);
         int day = calendar.get(Calendar.DAY_OF_YEAR);
@@ -118,6 +130,8 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
     }
 
     private boolean isTomorrow(Timestamp timestamp) {
+        if (timestamp == null) return false;
+
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
         Calendar taskDate = Calendar.getInstance();
@@ -127,53 +141,79 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
                 taskDate.get(Calendar.DAY_OF_YEAR) == calendar.get(Calendar.DAY_OF_YEAR);
     }
 
-
     private Timestamp getTodayTimestamp() {
         Calendar calendar = Calendar.getInstance();
+        // Set time to start of day
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         return new Timestamp(calendar.getTime());
     }
 
     private Timestamp getTomorrowTimestamp() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_YEAR, 1);
+        // Set time to start of day
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
         return new Timestamp(calendar.getTime());
     }
 
     private void showDatePickerDialog() {
         Calendar calendar = Calendar.getInstance();
+        if (selectedDate != null) {
+            calendar.setTimeInMillis(selectedDate.getSeconds() * 1000);
+        }
+
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 getActivity(),
                 (view, year, month, dayOfMonth) -> {
-                    // Setăm valoarea pentru data selectată
                     calendar.set(year, month, dayOfMonth);
+                    // Set time to start of day
+                    calendar.set(Calendar.HOUR_OF_DAY, 0);
+                    calendar.set(Calendar.MINUTE, 0);
+                    calendar.set(Calendar.SECOND, 0);
+                    calendar.set(Calendar.MILLISECOND, 0);
                     selectedDate = new Timestamp(calendar.getTime());
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
         );
+
+        // Set minimum date to today
+        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
         datePickerDialog.show();
     }
 
     private Task getUpdatedTask() {
         if (task == null) {
-            task = new Task(); // Creează un task nou dacă nu există unul
+            task = new Task();
         }
+
         String updatedTitle = editTaskTitle.getText().toString().trim();
 
         if (TextUtils.isEmpty(updatedTitle)) {
             editTaskTitle.setError("Task title cannot be empty");
-            return null; // Nu continua dacă titlul este gol
+            return null;
         }
 
         task.setTitle(updatedTitle);
-        task.setDueDate(selectedDate); // Setează data actualizată
+        task.setDueDate(selectedDate);
 
-        String selectedPriority = (String) prioritySpinner.getSelectedItem();
+        // Set priority
+        String selectedPriority = prioritySpinner.getText().toString();
         try {
-            task.setPriority(Priority.valueOf(selectedPriority.toUpperCase()));
-        } catch (IllegalArgumentException | NullPointerException e) {
-            task.setPriority(Priority.LOW); // Default dacă prioritatea nu este validă
+            if (!TextUtils.isEmpty(selectedPriority)) {
+                task.setPriority(Priority.valueOf(selectedPriority.toUpperCase()));
+            } else {
+                task.setPriority(Priority.LOW); // Default priority
+            }
+        } catch (IllegalArgumentException e) {
+            task.setPriority(Priority.LOW); // Default if invalid
         }
 
         return task;

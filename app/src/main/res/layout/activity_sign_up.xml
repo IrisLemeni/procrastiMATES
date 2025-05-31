@@ -76,7 +76,7 @@
             android:layout_height="wrap_content"
             android:text="Sign Up"
             android:backgroundTint="@color/white"
-            android:textColor="#7D1CEB"
+            android:textColor="@color/ic_launcher_background"
             android:padding="18dp"
             android:layout_marginTop="32dp"
             android:layout_marginHorizontal="22dp"
@@ -91,7 +91,7 @@
             android:focusable="true"
             android:padding="12dp"
             android:text="Already have an account?"
-            android:textColor="#7D1CEB"
+            android:textColor="@color/white"
             android:textSize="16sp" />
 
     </LinearLayout>

@@ -13,5 +13,12 @@
     <color name="red">#F44336</color>
     <color name="primary">#1976D2</color>
     <color name="light_gray">#EEEEEE</color>
+    <color name="background_light">#F8F9FA</color>
+    <color name="text_primary">#1F2937</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="text_tertiary">#9CA3AF</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="accent_light">#F0F0FF</color>
+    <color name="success_light">#F0FFF0</color>
 
 </resources>

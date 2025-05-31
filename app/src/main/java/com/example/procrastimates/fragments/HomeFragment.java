@@ -56,6 +56,7 @@ public class HomeFragment extends Fragment {
     private Button achievementButton;
     private CircularProgressIndicator focusScoreIndicator;
     private TextView focusScoreText, totalSessionsText, interruptionsText, timeOutsideText, bestFocusTimeText;
+    private TextView progressPercentage;
     private LineChart focusLineChart;
     private List<FocusChartAdapter.PomodoroSession> todaySessions = new ArrayList<>();
     private FirebaseStorage storage;
@@ -81,6 +82,7 @@ public class HomeFragment extends Fragment {
         logoutButtton = view.findViewById(R.id.logoutButton);
         achievementButton = view.findViewById(R.id.achievementButton);
         quoteText = view.findViewById(R.id.quoteText);
+        progressPercentage = view.findViewById(R.id.progressPercentage);
         barChart = view.findViewById(R.id.barChart);
         barChart.setDrawBarShadow(false);
         barChart.setDrawValueAboveBar(true);
@@ -202,9 +204,13 @@ public class HomeFragment extends Fragment {
             int progress = (int) ((completedTasks / (float) totalTasks) * 100);
             dailyProgressBar.setProgress(progress);
             progressText.setText(completedTasks + "/" + totalTasks + " tasks completed");
+
+            progressPercentage.setText(progress + "%");
         } else {
             progressText.setText("No tasks for today");
-            dailyProgressBar.setProgress(0); // Setează progresul la 0 când nu sunt task-uri
+            dailyProgressBar.setProgress(0);
+
+            progressPercentage.setText("0%");
         }
     }
 

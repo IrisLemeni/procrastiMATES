@@ -5,8 +5,8 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
-    app:cardBackgroundColor="@android:color/white">
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="#F8F9FC">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,50 +14,43 @@
         android:orientation="horizontal"
         android:padding="16dp"
         android:gravity="center_vertical"
-        android:minHeight="56dp">
+        android:minHeight="56dp"
+        android:alpha="0.8">
 
-        <!-- Checkbox -->
+        <!-- Checkbox pentru completed tasks -->
         <CheckBox
             android:id="@+id/todoCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="12dp"
-            android:buttonTint="#835ECA"
+            android:buttonTint="#4CAF50"
             android:clickable="true"
             android:focusable="true" />
 
-        <!-- Task Title -->
+        <!-- Task Title pentru completed tasks -->
         <TextView
             android:id="@+id/taskTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Sample Task Title"
+            android:text="Sample Completed Task"
             android:textSize="16sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#9E9E9E"
             android:fontFamily="sans-serif"
             android:maxLines="2"
             android:ellipsize="end"
+            android:textStyle="italic"
             android:visibility="visible" />
 
-        <!-- Edit Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/editTask"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <!-- Icon sau indicator pentru completed status (opțional) -->
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_marginStart="8dp"
-            android:backgroundTint="@android:color/transparent"
-            android:minWidth="64dp"
-            android:minHeight="48dp"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            android:strokeColor="#835ECA"
-            android:text="Edit"
-            android:textColor="#835ECA"
-            android:textSize="12sp"
+            android:src="@drawable/ic_check_circle"
+            android:contentDescription="Completed task"
             android:visibility="visible"
-            app:cornerRadius="8dp" />
+            app:tint="#4CAF50" />
 
     </LinearLayout>
 

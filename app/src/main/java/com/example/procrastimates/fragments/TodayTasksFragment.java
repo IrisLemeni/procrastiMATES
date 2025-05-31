@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupMenu;
 import android.widget.Toast;
+import android.widget.TextView;
+import android.widget.LinearLayout;
 
 import com.example.procrastimates.AddTaskBottomSheet;
 import com.example.procrastimates.EditTaskBottomSheet;
@@ -40,6 +42,10 @@ public class TodayTasksFragment extends Fragment {
     private TaskViewModel taskViewModel;
     private FloatingActionButton fabAddTask, fabSortTasks, askAiButton;
 
+    // Add references to empty state layouts and count TextViews
+    private LinearLayout emptyActiveTasksLayout, emptyCompletedTasksLayout;
+    private TextView activeTasksCount, completedTasksCount;
+
     public TodayTasksFragment(){
     }
 
@@ -50,41 +56,78 @@ public class TodayTasksFragment extends Fragment {
 
         taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
 
+        // Initialize views
+        initializeViews(view);
+        setupRecyclerViews();
+        setupObservers();
+        setupClickListeners();
+
+        // Load user tasks
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        taskViewModel.loadTodayTasks(userId);
+
+        return view;
+    }
+
+    private void initializeViews(View view) {
         fabAddTask = view.findViewById(R.id.fabAddTask);
         fabSortTasks = view.findViewById(R.id.fabSortTasks);
         askAiButton = view.findViewById(R.id.askAiButton);
 
         tasksRecyclerView = view.findViewById(R.id.tasksRecyclerView);
-        tasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        completedTasksRecyclerView = view.findViewById(R.id.completedTasksRecyclerView);
 
-        taskAdapter = new TaskAdapter(new ArrayList<>());
+        emptyActiveTasksLayout = view.findViewById(R.id.emptyActiveTasksLayout);
+        emptyCompletedTasksLayout = view.findViewById(R.id.emptyCompletedTasksLayout);
+
+        activeTasksCount = view.findViewById(R.id.activeTasksCount);
+        completedTasksCount = view.findViewById(R.id.completedTasksCount);
+    }
+
+    private void setupRecyclerViews() {
+        // Setup pentru task-uri active
+        tasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        taskAdapter = new TaskAdapter(new ArrayList<>(), false); // false = active tasks
         tasksRecyclerView.setAdapter(taskAdapter);
 
-        completedTasksRecyclerView = view.findViewById(R.id.completedTasksRecyclerView);
+        // Setup pentru task-uri completate
         completedTasksRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        completedTaskAdapter = new TaskAdapter(new ArrayList<>());
+        completedTaskAdapter = new TaskAdapter(new ArrayList<>(), true); // true = completed tasks
         completedTasksRecyclerView.setAdapter(completedTaskAdapter);
 
-        // lista de task-uri
+        // Setup touch helper pentru swipe actions doar pe task-urile active
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new RecyclerItemTouchHelper(taskAdapter));
+        itemTouchHelper.attachToRecyclerView(tasksRecyclerView);
+    }
+
+    private void setupObservers() {
+        // Observe active tasks
         taskViewModel.getTasksLiveData().observe(getViewLifecycleOwner(), tasks -> {
             if (tasks != null) {
                 taskAdapter.setTasks(tasks);
+                updateActiveTasksVisibility(tasks.size());
+                updateActiveTasksCount(tasks.size());
             } else {
                 Toast.makeText(getContext(), "Failed to load tasks.", Toast.LENGTH_SHORT).show();
+                updateActiveTasksVisibility(0);
+                updateActiveTasksCount(0);
             }
         });
 
+        // Observe completed tasks
         taskViewModel.getCompletedTasksLiveData().observe(getViewLifecycleOwner(), completedTasks -> {
             if (completedTasks != null) {
                 completedTaskAdapter.setTasks(completedTasks);
+                updateCompletedTasksVisibility(completedTasks.size());
+                updateCompletedTasksCount(completedTasks.size());
+            } else {
+                updateCompletedTasksVisibility(0);
+                updateCompletedTasksCount(0);
             }
         });
+    }
 
-        // Încarcă task-urile utilizatorului
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        taskViewModel.loadTodayTasks(userId);
-
+    private void setupClickListeners() {
         fabAddTask.setOnClickListener(v -> showAddTaskBottomSheet());
         fabSortTasks.setOnClickListener(this::showSortMenu);
         askAiButton.setOnClickListener(v -> {
@@ -92,22 +135,80 @@ public class TodayTasksFragment extends Fragment {
             startActivity(intent);
         });
 
+        // Set listeners pentru task-uri active
         taskAdapter.setOnEditTaskListener(this::showEditTaskBottomSheet);
-
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new RecyclerItemTouchHelper(taskAdapter));
-        itemTouchHelper.attachToRecyclerView(tasksRecyclerView);
-
-        // Inside TodayTasksFragment
         taskAdapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
             if (isChecked) {
                 getCircleIdAndCompleteTask(task);
             }
         });
 
-
-
-        return view;
+        // Set listeners pentru task-uri completate
+        // Nu setăm OnEditTaskListener pentru că nu avem buton de edit
+        completedTaskAdapter.setOnTaskCheckedChangeListener((task, isChecked) -> {
+            if (!isChecked) {
+                // Handle unchecking completed tasks - move back to active
+                uncompleteTask(task);
+            }
+        });
     }
+
+    private void uncompleteTask(Task task) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseFirestore.getInstance()
+                .collection("circles")
+                .whereArrayContains("members", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        String circleId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
+                        // Update task status
+                        task.setCompleted(false);
+                        taskViewModel.updateTask(task.getTaskId(), task);
+
+                        Snackbar.make(completedTasksRecyclerView, "Task moved back to active", Snackbar.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Nu ești într-un cerc.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Eroare: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void updateActiveTasksVisibility(int taskCount) {
+        if (taskCount == 0) {
+            tasksRecyclerView.setVisibility(View.GONE);
+            emptyActiveTasksLayout.setVisibility(View.VISIBLE);
+        } else {
+            tasksRecyclerView.setVisibility(View.VISIBLE);
+            emptyActiveTasksLayout.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateCompletedTasksVisibility(int taskCount) {
+        if (taskCount == 0) {
+            completedTasksRecyclerView.setVisibility(View.GONE);
+            emptyCompletedTasksLayout.setVisibility(View.VISIBLE);
+        } else {
+            completedTasksRecyclerView.setVisibility(View.VISIBLE);
+            emptyCompletedTasksLayout.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateActiveTasksCount(int count) {
+        if (activeTasksCount != null) {
+            activeTasksCount.setText(String.valueOf(count));
+        }
+    }
+
+    private void updateCompletedTasksCount(int count) {
+        if (completedTasksCount != null) {
+            completedTasksCount.setText(String.valueOf(count));
+        }
+    }
+
     private void getCircleIdAndCompleteTask(Task task) {
         String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         FirebaseFirestore.getInstance()
@@ -132,19 +233,16 @@ public class TodayTasksFragment extends Fragment {
                 });
     }
 
-
     private void showSortMenu(View v) {
         PopupMenu popupMenu = new PopupMenu(getContext(), v);
         popupMenu.getMenuInflater().inflate(R.menu.sort_menu, popupMenu.getMenu());
 
-        // Mapăm ID-urile din meniu la acțiunile corespunzătoare
         Map<Integer, Runnable> filterActions = new HashMap<>();
         filterActions.put(R.id.sort_high, () -> taskViewModel.filterTasksByPriority(Priority.HIGH));
         filterActions.put(R.id.sort_medium, () -> taskViewModel.filterTasksByPriority(Priority.MEDIUM));
         filterActions.put(R.id.sort_low, () -> taskViewModel.filterTasksByPriority(Priority.LOW));
         filterActions.put(R.id.sort_reset, taskViewModel::resetFilters);
 
-        // Setăm listener-ul pentru meniul popup
         popupMenu.setOnMenuItemClickListener(item -> {
             Runnable action = filterActions.get(item.getItemId());
             if (action != null) {
@@ -181,10 +279,8 @@ public class TodayTasksFragment extends Fragment {
         AddTaskBottomSheet addTaskBottomSheet = new AddTaskBottomSheet();
         addTaskBottomSheet.setOnTaskAddedListener(newTask -> {
             if (newTask != null) {
-                // Acum apelăm direct Repository pentru a salva task-ul
                 String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 taskViewModel.addTask(newTask, userId);
-
                 Toast.makeText(getContext(), "Task added successfully.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getContext(), "Failed to add task.", Toast.LENGTH_SHORT).show();
@@ -192,5 +288,4 @@ public class TodayTasksFragment extends Fragment {
         });
         addTaskBottomSheet.show(getParentFragmentManager(), "AddTaskBottomSheet");
     }
-
 }

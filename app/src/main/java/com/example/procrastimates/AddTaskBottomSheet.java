@@ -6,16 +6,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.procrastimates.models.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.Timestamp;
 
@@ -27,10 +29,10 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
     private Button saveButton;
     private TaskViewModel taskViewModel;
     private OnTaskAddedListener onTaskAddedListener;
-    private RadioGroup dateSelectionGroup;
-    private RadioButton todayButton, tomorrowButton, pickDateButton;
+    private ChipGroup dateChipGroup;
+    private Chip todayChip, tomorrowChip, pickDateChip;
     private Timestamp selectedTimestamp;
-    private Spinner prioritySpinner;
+    private AutoCompleteTextView prioritySpinner;
 
     public interface OnTaskAddedListener {
         void onTaskAdded(Task newTask);
@@ -46,22 +48,22 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
         taskEditText = view.findViewById(R.id.newTaskText);
         saveButton = view.findViewById(R.id.saveButton);
-        dateSelectionGroup = view.findViewById(R.id.dateSelectionGroup);
-        todayButton = view.findViewById(R.id.todayButton);
-        tomorrowButton = view.findViewById(R.id.tomorrowButton);
-        pickDateButton = view.findViewById(R.id.pickDateButton);
+        dateChipGroup = view.findViewById(R.id.dateChipGroup);
+        todayChip = view.findViewById(R.id.todayChip);
+        tomorrowChip = view.findViewById(R.id.tomorrowChip);
+        pickDateChip = view.findViewById(R.id.pickDateChip);
         prioritySpinner = view.findViewById(R.id.prioritySpinner);
 
         taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
 
         saveButton.setOnClickListener(v -> saveTask());
 
-        dateSelectionGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.todayButton) {
+        dateChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.todayChip) {
                 selectedTimestamp = getTodayTimestamp();
-            } else if (checkedId == R.id.tomorrowButton) {
+            } else if (checkedId == R.id.tomorrowChip) {
                 selectedTimestamp = getTomorrowTimestamp();
-            } else if (checkedId == R.id.pickDateButton) {
+            } else if (checkedId == R.id.pickDateChip) {
                 showDatePickerDialog();
             }
         });
@@ -126,26 +128,26 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
     // Metoda direct cu Timestamp
     private Timestamp getDueDateAsTimestamp() {
-        if (todayButton.isChecked()) {
+        if (todayChip.isChecked()) {
             return getTodayTimestamp();
-        } else if (tomorrowButton.isChecked()) {
+        } else if (tomorrowChip.isChecked()) {
             return getTomorrowTimestamp();
-        } else if (pickDateButton.isChecked()) {
+        } else if (pickDateChip.isChecked()) {
             return selectedTimestamp;
         }
         return getTodayTimestamp();  // Default to today if no date selected
     }
 
     private Priority getSelectedPriority() {
-        String selectedPriority = (String) prioritySpinner.getSelectedItem();
+        String selectedPriority = prioritySpinner.getText().toString();
 
-        if (selectedPriority.equals("Low")) {
+        if (selectedPriority.equalsIgnoreCase("Low")) {
             return Priority.LOW;
-        } else if (selectedPriority.equals("Medium")) {
+        } else if (selectedPriority.equalsIgnoreCase("Medium")) {
             return Priority.MEDIUM;
-        } else if (selectedPriority.equals("High")) {
+        } else if (selectedPriority.equalsIgnoreCase("High")) {
             return Priority.HIGH;
         }
-        return Priority.LOW;  // Default
+        return Priority.LOW;
     }
 }
