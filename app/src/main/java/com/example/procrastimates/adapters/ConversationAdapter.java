@@ -4,57 +4,67 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.ConversationMessage;
-
-import java.util.ArrayList;
-
 import io.noties.markwon.Markwon;
+import java.util.List;
 
-public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapter.ViewHolder> {
-    private final ArrayList<ConversationMessage> conversationMessages;
-    private final Context context;
-    private final Markwon markwon;
+public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapter.ConversationViewHolder> {
 
-    public ConversationAdapter(Context context, ArrayList<ConversationMessage> messages, Markwon markwon) {
+    private Context context;
+    private List<ConversationMessage> conversations;
+    private Markwon markwon;
+
+    public ConversationAdapter(Context context, List<ConversationMessage> conversations, Markwon markwon) {
         this.context = context;
-        this.conversationMessages = messages;
+        this.conversations = conversations;
         this.markwon = markwon;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_conversation, parent, false);
-        return new ViewHolder(view);
+    public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_conversation, parent, false);
+        return new ConversationViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ConversationMessage message = conversationMessages.get(position);
-        holder.questionTextView.setText(message.getQuestion());
-        markwon.setMarkdown(holder.answerTextView, message.getAnswer());
+    public void onBindViewHolder(@NonNull ConversationViewHolder holder, int position) {
+        ConversationMessage conversation = conversations.get(position);
+
+        holder.questionText.setText(conversation.getQuestion());
+        markwon.setMarkdown(holder.answerText, conversation.getAnswer());
+
+        // Add a subtle animation
+        holder.itemView.setAlpha(0f);
+        holder.itemView.animate()
+                .alpha(1f)
+                .setDuration(300)
+                .setStartDelay(position * 50L)
+                .start();
     }
 
     @Override
     public int getItemCount() {
-        return conversationMessages.size();
+        return conversations.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView questionTextView;
-        public TextView answerTextView;
+    public static class ConversationViewHolder extends RecyclerView.ViewHolder {
+        TextView questionText;
+        TextView answerText;
+        ImageView userIcon;
+        ImageView aiIcon;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ConversationViewHolder(@NonNull View itemView) {
             super(itemView);
-            questionTextView = itemView.findViewById(R.id.questionTextView);
-            answerTextView = itemView.findViewById(R.id.answerTextView);
+            questionText = itemView.findViewById(R.id.questionText);
+            answerText = itemView.findViewById(R.id.answerText);
+            userIcon = itemView.findViewById(R.id.userIcon);
+            aiIcon = itemView.findViewById(R.id.aiIcon);
         }
     }
 }

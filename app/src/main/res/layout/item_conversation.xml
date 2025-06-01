@@ -1,39 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp">
 
+    <!-- User Question -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:id="@+id/userIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_person"
+            android:layout_marginEnd="8dp"
+            app:tint="@color/primary" />
 
         <TextView
-            android:id="@+id/questionTextView"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="You"
+            android:textSize="12sp"
             android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@android:color/black" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/answerTextView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="#333333" />
+            android:textColor="@color/primary" />
 
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <TextView
+        android:id="@+id/questionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginBottom="12dp"
+        android:textSize="14sp"
+        android:textColor="@color/on_surface_primary"
+        android:background="@drawable/message_bubble_user"
+        android:padding="12dp" />
+
+    <!-- AI Answer -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:id="@+id/aiIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_smart_toy"
+            android:layout_marginEnd="8dp"
+            app:tint="@color/secondary" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="AI Assistant"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/secondary" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/answerText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:textSize="14sp"
+        android:textColor="@color/on_surface_primary"
+        android:textIsSelectable="true"
+        android:lineSpacingExtra="2dp"
+        android:background="@drawable/message_bubble_ai"
+        android:padding="12dp" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/surface_variant"
+        android:alpha="0.3" />
+
+</LinearLayout>

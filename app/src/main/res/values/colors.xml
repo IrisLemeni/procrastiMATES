@@ -21,6 +21,9 @@
     <color name="primary_variant">#4F46E5</color>
     <color name="primary_light">#A5B4FC</color>
     <color name="primary_dark">#3730A3</color>
+    <color name="primary_container">#D0E8FF</color>
+    <color name="on_primary_container">#003355</color>
+
 
     <!-- Secondary Colors -->
     <color name="secondary_color">#EC4899</color>
@@ -67,5 +70,38 @@
     <color name="task_completed">#10B981</color>
     <color name="task_overdue">#EF4444</color>
     <color name="task_pending">#F59E0B</color>
+
+
+    <!-- Surface Colors -->
+    <color name="surface_primary">#FFFFFF</color>
+    <color name="on_surface_primary">#1E293B</color>
+    <color name="on_surface_variant">#64748B</color>
+
+
+    <!-- Accent Colors -->
+    <color name="secondary">#10B981</color>
+    <color name="secondary_container">#D1FAE5</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="on_secondary_container">#064E3B</color>
+
+    <!-- System Colors -->
+    <color name="error">#EF4444</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="warning">#F59E0B</color>
+    <color name="success">#10B981</color>
+
+    <!-- Neutral Colors -->
+    <color name="outline">#E2E8F0</color>
+    <color name="outline_variant">#CBD5E1</color>
+
+    <!-- Material Design 3 Compatible -->
+    <color name="colorPrimary">@color/primary</color>
+    <color name="colorPrimaryVariant">@color/primary_variant</color>
+    <color name="colorSecondary">@color/secondary</color>
+    <color name="colorOnSecondary">@color/on_secondary</color>
+    <color name="colorSurface">@color/surface_primary</color>
+    <color name="colorOnSurface">@color/on_surface_primary</color>
+    <color name="colorBackground">@color/background_primary</color>
+    <color name="colorOnBackground">@color/on_surface_primary</color>
 
 </resources>

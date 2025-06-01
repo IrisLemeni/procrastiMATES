@@ -15,8 +15,10 @@ import com.example.procrastimates.models.ConversationMessage;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import io.noties.markwon.Markwon;
 import java.util.ArrayList;
@@ -28,6 +30,10 @@ public class AskAiActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private RecyclerView historyRecyclerView;
     private Button viewHistoryButton;
+    private LinearLayout emptyStateText;
+    private View inputContainer;
+    private View responseContainer;
+    private View historyContainer; // Add reference to history container
 
     private AiServiceClient aiServiceClient;
     private Markwon markwon;
@@ -54,11 +60,23 @@ public class AskAiActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         historyRecyclerView = findViewById(R.id.historyRecyclerView);
         viewHistoryButton = findViewById(R.id.viewHistoryButton);
+        emptyStateText = findViewById(R.id.emptyStateText);
+        inputContainer = findViewById(R.id.inputContainer);
+        responseContainer = findViewById(R.id.responseContainer);
+
+        // Find the history container (the MaterialCardView that contains the RecyclerView)
+        historyContainer = (View) historyRecyclerView.getParent().getParent(); // RecyclerView -> LinearLayout -> MaterialCardView
 
         markwon = Markwon.create(this);
 
         // Set up RecyclerView for conversation history
         setupHistoryRecyclerView();
+
+        // Set up toolbar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("AI Assistant");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         sendButton.setOnClickListener(v -> {
             String question = questionInput.getText().toString();
@@ -67,23 +85,32 @@ public class AskAiActivity extends AppCompatActivity {
                 askQuestion(question.trim());
                 questionInput.setText(""); // Clear input field after sending
             } else {
-                Toast.makeText(this, "Scrie o întrebare!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please enter a question!", Toast.LENGTH_SHORT).show();
             }
         });
 
         viewHistoryButton.setOnClickListener(v -> {
-            if (historyRecyclerView.getVisibility() == View.VISIBLE) {
+            if (historyContainer.getVisibility() == View.VISIBLE) {
+                // Hide history
+                historyContainer.setVisibility(View.GONE);
                 historyRecyclerView.setVisibility(View.GONE);
-                viewHistoryButton.setText("Arată Istoricul");
+                viewHistoryButton.setText("Show History");
+                viewHistoryButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_expand_more, 0);
             } else {
+                // Show history
                 loadConversationHistory();
+                historyContainer.setVisibility(View.VISIBLE);
                 historyRecyclerView.setVisibility(View.VISIBLE);
-                viewHistoryButton.setText("Ascunde Istoricul");
+                viewHistoryButton.setText("Hide History");
+                viewHistoryButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_expand_less, 0);
             }
         });
 
         // Load conversation history when activity starts
         loadConversationHistory();
+
+        // Show empty state initially
+        showEmptyState();
     }
 
     private void setupHistoryRecyclerView() {
@@ -94,7 +121,10 @@ public class AskAiActivity extends AppCompatActivity {
 
     private void loadConversationHistory() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
+        if (user == null) {
+            Toast.makeText(this, "Please login to view history", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         String userId = user.getUid();
         db.collection("conversations")
@@ -105,34 +135,65 @@ public class AskAiActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     conversationHistory.clear();
-                    for (int i = 0; i < queryDocumentSnapshots.size(); i++) {
-                        String question = queryDocumentSnapshots.getDocuments().get(i).getString("question");
-                        String answer = queryDocumentSnapshots.getDocuments().get(i).getString("answer");
-                        conversationHistory.add(new ConversationMessage(question, answer));
+
+                    // Debug: Log the number of documents found
+                    System.out.println("Found " + queryDocumentSnapshots.size() + " conversation documents");
+
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        String question = document.getString("question");
+                        String answer = document.getString("answer");
+
+                        // Debug: Log each conversation
+                        System.out.println("Question: " + question + ", Answer: " + answer);
+
+                        if (question != null && answer != null) {
+                            conversationHistory.add(new ConversationMessage(question, answer));
+                        }
                     }
+
+                    // Reverse the list to show oldest first (since we ordered by descending)
+                    // Collections.reverse(conversationHistory); // Uncomment if you want oldest first
+
                     conversationAdapter.notifyDataSetChanged();
+
+                    // Update history button visibility
+                    if (conversationHistory.isEmpty()) {
+                        viewHistoryButton.setVisibility(View.GONE);
+                        historyContainer.setVisibility(View.GONE);
+                        System.out.println("No conversation history found");
+                    } else {
+                        viewHistoryButton.setVisibility(View.VISIBLE);
+                        System.out.println("Loaded " + conversationHistory.size() + " conversations");
+                    }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Eroare la încărcarea istoricului: " + e.getMessage(),
+                    System.err.println("Error loading history: " + e.getMessage());
+                    Toast.makeText(this, "Error loading history: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
                 });
     }
 
     private boolean isRequestInProgress = false;
+
     private void askQuestion(String question) {
         // Add input validation with clearer error messages
         if (question == null || question.trim().isEmpty()) {
-            Toast.makeText(this, "Întrebarea nu poate fi goală", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Question cannot be empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (isRequestInProgress) return;
 
+        // Hide empty state and show response container
+        hideEmptyState();
+        showResponseContainer();
+
         // Show loading state
         isRequestInProgress = true;
         progressBar.setVisibility(View.VISIBLE);
         sendButton.setEnabled(false);
-        responseText.setText("Se generează răspunsul...");
+        sendButton.setAlpha(0.5f);
+        responseText.setText("Generating response...");
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
@@ -143,12 +204,17 @@ public class AskAiActivity extends AppCompatActivity {
                     isRequestInProgress = false;
                     progressBar.setVisibility(View.GONE);
                     sendButton.setEnabled(true);
+                    sendButton.setAlpha(1.0f);
                     markwon.setMarkdown(responseText, answer);
 
                     // Add the new message to the conversation history UI
                     conversationHistory.add(0, new ConversationMessage(question, answer));
                     conversationAdapter.notifyItemInserted(0);
 
+                    // Show history button if it was hidden
+                    if (viewHistoryButton.getVisibility() == View.GONE) {
+                        viewHistoryButton.setVisibility(View.VISIBLE);
+                    }
                 }
 
                 @Override
@@ -156,15 +222,38 @@ public class AskAiActivity extends AppCompatActivity {
                     isRequestInProgress = false;
                     progressBar.setVisibility(View.GONE);
                     sendButton.setEnabled(true);
-                    responseText.setText("Eroare: " + errorMessage);
-                    Toast.makeText(AskAiActivity.this, "Nu am putut primi răspunsul.",
+                    sendButton.setAlpha(1.0f);
+                    responseText.setText("Error: " + errorMessage);
+                    Toast.makeText(AskAiActivity.this, "Could not get response. Please try again.",
                             Toast.LENGTH_SHORT).show();
                 }
             });
 
         } else {
             isRequestInProgress = false;
-            Toast.makeText(this, "Trebuie să fii autentificat.", Toast.LENGTH_SHORT).show();
+            progressBar.setVisibility(View.GONE);
+            sendButton.setEnabled(true);
+            sendButton.setAlpha(1.0f);
+            Toast.makeText(this, "You must be authenticated.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void showEmptyState() {
+        emptyStateText.setVisibility(View.VISIBLE);
+        responseContainer.setVisibility(View.GONE);
+    }
+
+    private void hideEmptyState() {
+        emptyStateText.setVisibility(View.GONE);
+    }
+
+    private void showResponseContainer() {
+        responseContainer.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 }
