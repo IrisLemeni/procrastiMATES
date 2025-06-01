@@ -37,7 +37,7 @@ public class AskAiActivity extends AppCompatActivity {
     private View historyContainer;
     private AiServiceClient aiServiceClient;
     private Markwon markwon;
-    private MaterialToolbar toolbar; // Schimbat din Toolbar în MaterialToolbar
+    private MaterialToolbar toolbar;
     private ArrayList<ConversationMessage> conversationHistory = new ArrayList<>();
     private ConversationAdapter conversationAdapter;
     private FirebaseFirestore db;
@@ -74,15 +74,11 @@ public class AskAiActivity extends AppCompatActivity {
         // Set up RecyclerView for conversation history
         setupHistoryRecyclerView();
 
-        // CONFIGURARE TOOLBAR CORECTĂ
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("AI Assistant");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
-        // SAU folosește direct toolbar-ul (alternativa mai simplă)
-        // toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         sendButton.setOnClickListener(v -> {
             String question = questionInput.getText().toString();
@@ -243,14 +239,8 @@ public class AskAiActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish(); // Sau onBackPressed() dacă vrei să simulezi comportamentul back button-ului
+        finish();
         return true;
     }
 
-    // Opțional: poți suprascrie și onBackPressed pentru comportament personalizat
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        // Aici poți adăuga logică suplimentară dacă e nevoie
-    }
 }

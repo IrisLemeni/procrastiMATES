@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
     tools:context=".fragments.PomodoroFragment">
 
     <!-- Duration Selection Screen -->
@@ -13,29 +14,167 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="16dp">
+        android:padding="24dp">
 
-        <TextView
+        <!-- Title Card -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Select Session Duration"
-            android:textAlignment="center"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="24dp"/>
+            android:layout_marginBottom="32dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            android:backgroundTint="#1A1A1A">
 
-        <Button
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🍅"
+                    android:textSize="48sp"
+                    android:layout_marginBottom="8dp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Focus Session"
+                    android:textAlignment="center"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="sans-serif-medium"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Choose your preferred session duration"
+                    android:textAlignment="center"
+                    android:textSize="16sp"
+                    android:textColor="#B3FFFFFF"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Duration Options -->
+        <androidx.cardview.widget.CardView
             android:id="@+id/selectDurationButton25"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="25 Minutes (5 min break)"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="12dp"
+            android:backgroundTint="#FF6B35"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
 
-        <Button
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚡"
+                    android:textSize="32sp"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quick Focus"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="25 minutes work • 5 minutes break"
+                        android:textSize="14sp"
+                        android:textColor="#E6FFFFFF"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="→"
+                    android:textSize="24sp"
+                    android:textColor="#FFFFFF"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
             android:id="@+id/selectDurationButton50"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="50 Minutes (10 min break)"/>
+            app:cardCornerRadius="20dp"
+            app:cardElevation="12dp"
+            android:backgroundTint="#4ECDC4"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔥"
+                    android:textSize="32sp"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Deep Focus"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FFFFFF"
+                        android:fontFamily="sans-serif-medium"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="50 minutes work • 10 minutes break"
+                        android:textSize="14sp"
+                        android:textColor="#E6FFFFFF"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="→"
+                    android:textSize="24sp"
+                    android:textColor="#FFFFFF"/>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
     <!-- Background Selection Screen -->
@@ -45,149 +184,340 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="16dp"
+        android:padding="24dp"
         android:visibility="gone">
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose Your Ambiance"
+            android:textAlignment="center"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Select Background"
+            android:text="Select a background to enhance your focus"
             android:textAlignment="center"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="24dp"/>
+            android:textSize="16sp"
+            android:textColor="#B3FFFFFF"
+            android:layout_marginBottom="32dp"/>
 
+        <!-- Background Options -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="32dp">
 
-            <ImageView
-                android:id="@+id/backgroundOption1"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:src="@drawable/photo1"
-                android:scaleType="centerCrop"
-                android:layout_margin="8dp"/>
+            <androidx.cardview.widget.CardView
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
 
-            <ImageView
-                android:id="@+id/backgroundOption2"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:src="@drawable/photo2"
-                android:scaleType="centerCrop"
-                android:layout_margin="8dp"/>
+                <ImageView
+                    android:id="@+id/backgroundOption1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/photo1"
+                    android:scaleType="centerCrop"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </androidx.cardview.widget.CardView>
 
-            <ImageView
-                android:id="@+id/backgroundOption3"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:src="@drawable/photo3"
-                android:scaleType="centerCrop"
-                android:layout_margin="8dp"/>
+            <androidx.cardview.widget.CardView
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
+
+                <ImageView
+                    android:id="@+id/backgroundOption2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/photo2"
+                    android:scaleType="centerCrop"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:layout_margin="8dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
+
+                <ImageView
+                    android:id="@+id/backgroundOption3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/photo3"
+                    android:scaleType="centerCrop"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"/>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <Button
+        <!-- Continue Button -->
+        <androidx.cardview.widget.CardView
             android:id="@+id/selectBackgroundButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Continue"/>
+            app:cardCornerRadius="25dp"
+            app:cardElevation="8dp"
+            android:backgroundTint="@color/ic_launcher_background"
+            android:foreground="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Focus Session"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:padding="16dp"
+                android:fontFamily="sans-serif-medium"/>
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
     <!-- Timer Screen -->
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/linearLayoutTimer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="16dp"
+        android:padding="24dp"
         android:visibility="gone">
 
-        <TextView
-            android:id="@+id/workingTime"
+        <!-- Subtle Gradient Overlay - Reduced opacity -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/timer_overlay"
+            android:alpha="0.3"/>
+
+        <!-- Session Type Indicator - Semi-transparent -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/sessionTypeCard"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="WORK TIME"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:background="#80000000"
-            android:padding="8dp"
-            android:layout_marginBottom="16dp"/>
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="40dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="8dp"
+            android:backgroundTint="#80000000">
 
-        <TextView
-            android:id="@+id/breakTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="BREAK TIME"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:background="#80000000"
-            android:padding="8dp"
-            android:visibility="gone"
-            android:layout_marginBottom="16dp"/>
+            <TextView
+                android:id="@+id/workingTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🎯 FOCUS TIME"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="12dp"
+                android:fontFamily="sans-serif-medium"/>
 
-        <TextView
-            android:id="@+id/timerText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="00:00"
-            android:textSize="72sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:background="#80000000"
-            android:padding="16dp"
-            android:layout_marginBottom="32dp"/>
+            <TextView
+                android:id="@+id/breakTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☕ BREAK TIME"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="12dp"
+                android:visibility="gone"
+                android:fontFamily="sans-serif-medium"/>
+        </androidx.cardview.widget.CardView>
 
-        <Button
-            android:id="@+id/startTimerButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Start Session"
-            android:paddingHorizontal="32dp"/>
-    </LinearLayout>
+        <!-- Timer Circle Container - Transparent with glassmorphism effect -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/timerCircleCard"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_centerInParent="true"
+            android:layout_above="@+id/controlsContainer"
+            android:layout_marginBottom="20dp"
+            app:cardCornerRadius="140dp"
+            app:cardElevation="16dp"
+            android:backgroundTint="#00FFFFFF">
 
-    <!-- Stats Panel -->
-    <LinearLayout
-        android:id="@+id/linearLayoutStats"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="bottom|center_horizontal"
-        android:padding="16dp"
-        android:background="#80000000"
-        android:layout_gravity="bottom"
-        android:visibility="gone">
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="24dp">
 
-        <TextView
-            android:id="@+id/focusScoreText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Focus Score: 100"
-            android:textSize="18sp"
-            android:textColor="@android:color/white"
-            android:layout_marginBottom="8dp"/>
+                <!-- Timer Text with shadow -->
+                <TextView
+                    android:id="@+id/timerText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:text="25:00"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="sans-serif-condensed"
+                    android:shadowColor="#000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="4"/>
 
-        <ProgressBar
-            android:id="@+id/focusProgressBar"
-            style="?android:attr/progressBarStyleHorizontal"
+                <!-- Circular Progress Indicator -->
+                <ProgressBar
+                    android:id="@+id/circularProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/circular_progress"
+                    android:background="@drawable/circular_progress_background"/>
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Controls Container - Fixed at bottom with proper spacing -->
+        <LinearLayout
+            android:id="@+id/controlsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="100"
-            android:progress="100"
-            android:progressTint="#4CAF50"
-            android:layout_marginBottom="8dp"/>
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <TextView
-            android:id="@+id/interruptionCountText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Interruptions: 0"
-            android:textSize="16sp"
-            android:textColor="@android:color/white"/>
-    </LinearLayout>
+            <!-- Modern Stats Panel - Above the button -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/linearLayoutStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="12dp"
+                android:backgroundTint="#80000000"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <!-- Focus Score Section -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎯"
+                            android:textSize="24sp"
+                            android:layout_marginEnd="12dp"/>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/focusScoreText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Focus Score: 100"
+                                android:textSize="16sp"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium"/>
+
+                            <ProgressBar
+                                android:id="@+id/focusProgressBar"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="8dp"
+                                android:layout_marginTop="8dp"
+                                android:max="100"
+                                android:progress="100"
+                                android:progressDrawable="@drawable/modern_progress_bar"
+                                android:background="@drawable/progress_background"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Interruption Count -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚠️"
+                            android:textSize="24sp"
+                            android:layout_marginEnd="12dp"/>
+
+                        <TextView
+                            android:id="@+id/interruptionCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Interruptions: 0"
+                            android:textSize="16sp"
+                            android:textColor="#B3FFFFFF"
+                            android:fontFamily="sans-serif-medium"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Control Button - Now purple as requested -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/startTimerButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="30dp"
+                app:cardElevation="12dp"
+                android:backgroundTint="#8B5CF6"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▶ Start Session"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:paddingHorizontal="32dp"
+                    android:paddingVertical="16dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:shadowColor="#000000"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="2"/>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </RelativeLayout>
 </FrameLayout>

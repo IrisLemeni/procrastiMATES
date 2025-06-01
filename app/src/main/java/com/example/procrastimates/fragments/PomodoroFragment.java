@@ -11,16 +11,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -53,13 +54,18 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     private static final String KEY_TIME_OUTSIDE_APP = "timeOutsideApp";
     private static final String KEY_CURRENT_VIEW_STATE = "currentViewState";
 
-    private Button selectDurationButton25, selectDurationButton50;
-    private Button selectBackgroundButton, sessionButton;
+    // UI Elements - Updated to match new layout
+    private CardView selectDurationButton25, selectDurationButton50;
+    private CardView selectBackgroundButton, startTimerButton;
     private int selectedBackground = -1;
     private TextView timerText, workingTime, breakTime, focusScoreText, interruptionCountText;
     private ImageView backgroundOption1, backgroundOption2, backgroundOption3;
-    private ProgressBar focusProgressBar;
-    private LinearLayout linearLayoutDuration, linearLayoutBackground, linearLayoutTimer, linearLayoutStats;
+    private ProgressBar focusProgressBar, circularProgress;
+    private LinearLayout linearLayoutDuration, linearLayoutBackground;
+    private RelativeLayout linearLayoutTimer;
+    private CardView linearLayoutStats;
+
+    // Session variables
     private boolean isSessionRunning = false;
     private int sessionDuration, breakDuration;
     private CountDownTimer countDownTimer;
@@ -70,6 +76,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     private long remainingTimeMillis = 0;
     private boolean isWorkSession = true;
     private String currentViewState = "duration";
+    private int totalSessionTime = 0; // For progress calculation
 
     private AchievementManager achievementManager;
 
@@ -79,7 +86,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         // Inflate layout for this fragment
         View view = inflater.inflate(R.layout.fragment_pomodoro, container, false);
 
-        // Inițializăm AchievementManager
+        // Initialize AchievementManager
         achievementManager = AchievementManager.getInstance();
         achievementManager.addAchievementListener(this);
 
@@ -112,29 +119,41 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     }
 
     private void initViews(View view) {
+        // Session type indicators
         workingTime = view.findViewById(R.id.workingTime);
         breakTime = view.findViewById(R.id.breakTime);
+
+        // Layout containers
         linearLayoutDuration = view.findViewById(R.id.linearLayoutDuration);
         linearLayoutBackground = view.findViewById(R.id.linearLayoutBackground);
         linearLayoutTimer = view.findViewById(R.id.linearLayoutTimer);
         linearLayoutStats = view.findViewById(R.id.linearLayoutStats);
 
+        // Stats elements
         focusScoreText = view.findViewById(R.id.focusScoreText);
         interruptionCountText = view.findViewById(R.id.interruptionCountText);
         focusProgressBar = view.findViewById(R.id.focusProgressBar);
 
+        // Timer elements
+        timerText = view.findViewById(R.id.timerText);
+        circularProgress = view.findViewById(R.id.circularProgress);
+
+        // Background selection
         backgroundOption1 = view.findViewById(R.id.backgroundOption1);
         backgroundOption2 = view.findViewById(R.id.backgroundOption2);
         backgroundOption3 = view.findViewById(R.id.backgroundOption3);
         selectBackgroundButton = view.findViewById(R.id.selectBackgroundButton);
 
+        // Duration selection buttons (now CardViews)
         selectDurationButton25 = view.findViewById(R.id.selectDurationButton25);
         selectDurationButton50 = view.findViewById(R.id.selectDurationButton50);
-        sessionButton = view.findViewById(R.id.startTimerButton);
-        timerText = view.findViewById(R.id.timerText);
+
+        // Timer control button (now CardView)
+        startTimerButton = view.findViewById(R.id.startTimerButton);
     }
 
     private void setupListeners() {
+        // Background selection listeners
         backgroundOption1.setOnClickListener(v -> selectBackground(1));
         backgroundOption2.setOnClickListener(v -> selectBackground(2));
         backgroundOption3.setOnClickListener(v -> selectBackground(3));
@@ -150,9 +169,11 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
             }
         });
 
+        // Duration selection listeners
         selectDurationButton25.setOnClickListener(v -> {
-            sessionDuration = 1 * 60 * 1000; // 25 minutes (modificat la 1 minut pentru testare)
-            breakDuration = 1 * 60 * 1000; // 5 minutes (modificat la 1 minut pentru testare)
+            sessionDuration = 25 * 60 * 1000; // 25 minutes
+            breakDuration = 5 * 60 * 1000; // 5 minutes
+            totalSessionTime = sessionDuration; // Store total for progress calculation
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
             currentViewState = "background";
@@ -161,13 +182,14 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         selectDurationButton50.setOnClickListener(v -> {
             sessionDuration = 50 * 60 * 1000; // 50 minutes
             breakDuration = 10 * 60 * 1000; // 10 minutes
+            totalSessionTime = sessionDuration; // Store total for progress calculation
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
             currentViewState = "background";
         });
 
-        // Start or stop session
-        sessionButton.setOnClickListener(v -> {
+        // Timer control listener
+        startTimerButton.setOnClickListener(v -> {
             if (isSessionRunning) {
                 stopSession();
             } else {
@@ -219,6 +241,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         focusScore = savedInstanceState.getInt(KEY_FOCUS_SCORE, 100);
         timeOutsideApp = savedInstanceState.getLong(KEY_TIME_OUTSIDE_APP, 0);
         currentViewState = savedInstanceState.getString(KEY_CURRENT_VIEW_STATE, "duration");
+        totalSessionTime = isWorkSession ? sessionDuration : breakDuration;
 
         // Restore UI state
         restoreUiState();
@@ -244,8 +267,18 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
                 linearLayoutTimer.setVisibility(View.VISIBLE);
                 linearLayoutStats.setVisibility(View.VISIBLE);
 
-                // Update session button text
-                sessionButton.setText(isSessionRunning ? "Stop Session" : "Start Timer");
+                // Update timer button text
+                TextView buttonText = startTimerButton.findViewById(android.R.id.text1);
+                if (buttonText == null) {
+                    // If no specific TextView found, look for any TextView in the CardView
+                    View child = startTimerButton.getChildAt(0);
+                    if (child instanceof TextView) {
+                        buttonText = (TextView) child;
+                    }
+                }
+                if (buttonText != null) {
+                    buttonText.setText(isSessionRunning ? "⏹ Stop Session" : "▶ Start Session");
+                }
 
                 // Show correct session type label
                 workingTime.setVisibility(isWorkSession ? View.VISIBLE : View.GONE);
@@ -299,10 +332,6 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     public void onPause() {
         super.onPause();
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(focusInterruptionReceiver);
-
-        // Save remaining time if timer is running
-        if (countDownTimer != null && isSessionRunning) {
-        }
     }
 
     @Override
@@ -383,6 +412,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         timeOutsideApp = 0;
         focusScore = 100;
         isWorkSession = true;
+        totalSessionTime = sessionDuration;
         updateSessionStats();
 
         // Start the focus lock service
@@ -397,7 +427,10 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         isSessionRunning = true;
         workingTime.setVisibility(View.VISIBLE);
         breakTime.setVisibility(View.GONE);
-        sessionButton.setText("Stop Session");
+
+        // Update button text
+        updateTimerButtonText("⏹ Stop Session");
+
         startTimer(sessionDuration, true);
     }
 
@@ -407,15 +440,23 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         }
         if (countDownTimer != null) countDownTimer.cancel();
         isSessionRunning = false;
-        sessionButton.setText("Start Timer");
+
+        // Update button text and timer display
+        updateTimerButtonText("▶ Start Session");
         timerText.setText("00:00");
         remainingTimeMillis = 0;
+
+        // Reset circular progress
+        if (circularProgress != null) {
+            circularProgress.setProgress(0);
+        }
 
         // Stop the focus lock service
         Intent lockIntent = new Intent(requireContext(), FocusLockService.class);
         lockIntent.putExtra(FocusLockService.EXTRA_LOCK_ACTIVE, false);
         requireContext().startService(lockIntent);
 
+        // Reset to duration selection view
         linearLayoutTimer.setVisibility(View.GONE);
         linearLayoutBackground.setVisibility(View.GONE);
         linearLayoutStats.setVisibility(View.GONE);
@@ -423,8 +464,17 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         currentViewState = "duration";
     }
 
+    private void updateTimerButtonText(String text) {
+        // Find the TextView inside the CardView and update its text
+        View child = startTimerButton.getChildAt(0);
+        if (child instanceof TextView) {
+            ((TextView) child).setText(text);
+        }
+    }
+
     private void startTimer(long duration, boolean isWorkSession) {
         this.isWorkSession = isWorkSession;
+        this.totalSessionTime = (int) duration;
 
         countDownTimer = new CountDownTimer(duration, 1000) {
             public void onTick(long millisUntilFinished) {
@@ -432,15 +482,26 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
                 int minutes = (int) (millisUntilFinished / 1000) / 60;
                 int seconds = (int) (millisUntilFinished / 1000) % 60;
                 timerText.setText(String.format("%02d:%02d", minutes, seconds));
+
+                // Update circular progress
+                if (circularProgress != null && totalSessionTime > 0) {
+                    int progress = (int) ((totalSessionTime - millisUntilFinished) * 100 / totalSessionTime);
+                    circularProgress.setProgress(progress);
+                }
             }
 
             public void onFinish() {
                 remainingTimeMillis = 0;
 
+                // Complete the circular progress
+                if (circularProgress != null) {
+                    circularProgress.setProgress(100);
+                }
+
                 if (isWorkSession) {
                     saveSessionToFirestore(true);
 
-                    // Verifică achievement-urile asociate sesiunii
+                    // Check achievements for completed session
                     achievementManager.checkSessionAchievements(true, sessionDuration, focusScore);
 
                     showCustomAlert("break");
@@ -449,9 +510,6 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
                     if (focusLockListener != null) {
                         focusLockListener.setBottomNavEnabled(true);
                     }
-
-                    // Award streak and experience points
-                    //updateStreakAndExperience();
 
                     // Stop the focus lock during break
                     Intent lockIntent = new Intent(requireContext(), FocusLockService.class);
@@ -510,7 +568,6 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
                 .add(sessionData)
                 .addOnSuccessListener(documentReference -> {
                     Log.d("PomodoroFragment", "Session saved successfully! ID: " + documentReference.getId());
-
                     updateDailySessionCounter(dayString, userId);
                 })
                 .addOnFailureListener(e -> Log.e("PomodoroFragment", "Error saving session", e));
@@ -555,7 +612,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         builder.setView(customView);
         AlertDialog dialog = builder.create();
 
-        Button btnClose = customView.findViewById(R.id.btnClose);
+        TextView btnClose = customView.findViewById(R.id.btnClose);
         btnClose.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
