@@ -5,213 +5,431 @@
     android:id="@+id/friendsLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_primary"
     tools:context=".fragments.FriendsFragment">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:background="@drawable/login_background">
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
 
-            <!-- Header with Notifications Button -->
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <ImageButton
-                    android:id="@+id/btnNotifications"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:layout_alignParentEnd="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="Notifications Button"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/baseline_notifications_24" />
-            </RelativeLayout>
-
-            <!-- User Profile Section -->
-            <ImageView
-                android:id="@+id/userProfileImage"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_gravity="center_horizontal"
-                android:contentDescription="User Profile Picture"
-                android:scaleType="centerCrop"
-                android:src="@drawable/default_user_image" />
-
-            <TextView
-                android:id="@+id/userName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="8dp"
-                android:text="Your Name"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <!-- Daily Progress Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Daily Progress"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/friendsRecyclerView"
+            <!-- Header Section with Gradient -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:nestedScrollingEnabled="false"
-                android:orientation="vertical" />
+                android:orientation="vertical"
+                android:background="@drawable/gradient_background"
+                android:paddingHorizontal="24dp"
+                android:paddingTop="40dp"
+                android:paddingBottom="32dp">
 
-            <!-- Add Friend Button -->
-            <Button
-                android:id="@+id/btnAddFriend"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:backgroundTint="@color/ic_launcher_background"
-                android:padding="12dp"
-                android:text="Add New Friends to Your Circle"
-                android:textColor="@android:color/white" />
+                <!-- Header with Notifications -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp">
 
-            <Button
-                android:id="@+id/btnObjections"
-                android:layout_width="379dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-                android:backgroundTint="@color/ic_launcher_background"
-                android:text="Objections"
-                app:layout_constraintEnd_toStartOf="@+id/btnAddFriend"
-                app:layout_constraintTop_toTopOf="@+id/btnAddFriend" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:text="Friends"
+                        android:textColor="@android:color/white"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium" />
 
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_alignParentEnd="true"
+                        app:cardCornerRadius="24dp"
+                        app:cardElevation="4dp"
+                        android:backgroundTint="@color/card_surface">
 
-            <!-- Monthly Leaderboard Section -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Monthly Leaderboard"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                        <ImageButton
+                            android:id="@+id/btnNotifications"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="Notifications"
+                            android:scaleType="fitCenter"
+                            android:src="@drawable/baseline_notifications_24"
+                            app:tint="#C350DB" />
+                    </com.google.android.material.card.MaterialCardView>
+                </RelativeLayout>
 
-            <!-- Podium for Top 3 -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp">
-
-                <!-- Podium Background -->
+                <!-- User Profile Section -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="150dp"
-                    android:layout_gravity="bottom"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:weightSum="3">
+                    android:gravity="center_vertical"
+                    android:padding="16dp"
+                    android:background="@drawable/profile_card_background">
 
-                    <!-- Second Place -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        app:cardCornerRadius="40dp"
+                        app:cardElevation="8dp">
+
+                        <ImageView
+                            android:id="@+id/userProfileImage"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="Profile Picture"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/default_user_image" />
+                    </com.google.android.material.card.MaterialCardView>
+
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:gravity="center"
+                        android:layout_marginStart="16dp"
                         android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="2"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="80dp"
-                            android:layout_marginHorizontal="8dp"
-                            android:background="#C0C0C0" />
-                    </LinearLayout>
-
-                    <!-- First Place (taller) -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                            android:text="Welcome back,"
+                            android:textColor="@color/white"
+                            android:textSize="14sp" />
 
                         <TextView
+                            android:id="@+id/userName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="1"
+                            android:text="Your Name"
+                            android:textColor="@android:color/white"
                             android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="110dp"
-                            android:layout_marginHorizontal="8dp"
-                            android:background="#FFD700"
-                            />
-                    </LinearLayout>
-
-                    <!-- Third Place -->
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="3"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="60dp"
-                            android:layout_marginHorizontal="8dp"
-                            android:background="#CD7F32" />
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
                     </LinearLayout>
                 </LinearLayout>
+            </LinearLayout>
 
-                <!-- Top 3 RecyclerView -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/top3RecyclerView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-            </FrameLayout>
-
-            <!-- Other Friends Title -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Other Friends"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- Other Friends RecyclerView -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/othersRecyclerView"
+            <!-- Content Section -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:nestedScrollingEnabled="false" />
+                android:orientation="vertical"
+                android:padding="24dp"
+                android:layout_marginTop="-16dp"
+                android:background="@drawable/gradient_background">
 
+                <!-- Daily Progress Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="8dp"
+                    android:backgroundTint="@color/card_surface">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="16dp">
+
+                            <View
+                                android:layout_width="4dp"
+                                android:layout_height="24dp"
+                                android:background="@drawable/accent_bar"
+                                android:layout_marginEnd="12dp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Today's Progress"
+                                android:textColor="@color/text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium" />
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_trending_up"
+                                app:tint="@color/accent_primary" />
+                        </LinearLayout>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/friendsRecyclerView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Action Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="32dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddFriend"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:text="Add Friends"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/ic_launcher_background"
+                        app:cornerRadius="16dp"
+                        app:elevation="4dp"
+                        app:icon="@drawable/ic_person_add"
+                        app:iconTint="@android:color/white"
+                        app:iconGravity="textStart" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnObjections"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="Circle Chat"
+                        android:textColor="@color/ic_launcher_background"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/card_surface"
+                        app:cornerRadius="16dp"
+                        app:elevation="4dp"
+                        app:strokeColor="@color/ic_launcher_background"
+                        app:strokeWidth="2dp"
+                        app:icon="@drawable/ic_chat"
+                        app:iconTint="@color/ic_launcher_background"
+                        app:iconGravity="textStart" />
+                </LinearLayout>
+
+                <!-- Monthly Leaderboard Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="8dp"
+                    android:backgroundTint="@color/card_surface">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="20dp">
+
+                            <View
+                                android:layout_width="4dp"
+                                android:layout_height="24dp"
+                                android:background="@drawable/gold_accent_bar"
+                                android:layout_marginEnd="12dp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Monthly Leaderboard"
+                                android:textColor="@color/text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium" />
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_trophy"
+                                app:tint="@color/gold_primary" />
+                        </LinearLayout>
+
+                        <!-- Modern Podium -->
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="20dp">
+
+                            <!-- Podium Background with Modern Design -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="140dp"
+                                android:layout_gravity="bottom"
+                                android:orientation="horizontal"
+                                android:weightSum="3"
+                                android:layout_marginTop="60dp">
+
+                                <!-- Second Place -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="80dp"
+                                        android:layout_marginHorizontal="8dp"
+                                        app:cardCornerRadius="8dp"
+                                        app:cardElevation="4dp"
+                                        android:backgroundTint="@color/silver_gradient">
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:orientation="vertical"
+                                            android:gravity="center">
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="2"
+                                                android:textColor="@android:color/white"
+                                                android:textSize="24sp"
+                                                android:textStyle="bold" />
+                                        </LinearLayout>
+                                    </com.google.android.material.card.MaterialCardView>
+                                </LinearLayout>
+
+                                <!-- First Place (taller) -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="110dp"
+                                        android:layout_marginHorizontal="8dp"
+                                        app:cardCornerRadius="8dp"
+                                        app:cardElevation="8dp"
+                                        android:backgroundTint="@color/gold_gradient">
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:orientation="vertical"
+                                            android:gravity="center">
+
+                                            <ImageView
+                                                android:layout_width="24dp"
+                                                android:layout_height="24dp"
+                                                android:src="@drawable/ic_crown"
+                                                android:layout_marginBottom="4dp"
+                                                app:tint="@android:color/white" />
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="1"
+                                                android:textColor="@android:color/white"
+                                                android:textSize="28sp"
+                                                android:textStyle="bold" />
+                                        </LinearLayout>
+                                    </com.google.android.material.card.MaterialCardView>
+                                </LinearLayout>
+
+                                <!-- Third Place -->
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_weight="1"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                    <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="60dp"
+                                        android:layout_marginHorizontal="8dp"
+                                        app:cardCornerRadius="8dp"
+                                        app:cardElevation="4dp"
+                                        android:backgroundTint="@color/bronze_gradient">
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:orientation="vertical"
+                                            android:gravity="center">
+
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="3"
+                                                android:textColor="@android:color/white"
+                                                android:textSize="20sp"
+                                                android:textStyle="bold" />
+                                        </LinearLayout>
+                                    </com.google.android.material.card.MaterialCardView>
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Top 3 RecyclerView positioned above the podium -->
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/top3RecyclerView"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="top"
+                                android:paddingTop="8dp" />
+                        </FrameLayout>
+
+                        <!-- Other Friends Section -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="12dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Other Friends"
+                                android:textColor="@color/text_primary"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <View
+                                android:layout_width="40dp"
+                                android:layout_height="1dp"
+                                android:background="@color/divider_color" />
+                        </LinearLayout>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/othersRecyclerView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:nestedScrollingEnabled="false" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,6 +12,14 @@ public class Friend {
         this.totalTasks = totalTasks;
     }
 
+    public Friend(String id, String name, int completedTasks, int totalTasks, String profileImageUrl) {
+        this.friendId = id;
+        this.name = name;
+        this.completedTasks = completedTasks;
+        this.totalTasks = totalTasks;
+        this.profileImageUrl = profileImageUrl;
+    }
+
     public String getFriendId() {
         return friendId;
     }

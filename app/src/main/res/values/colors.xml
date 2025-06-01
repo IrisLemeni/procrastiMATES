@@ -104,4 +104,23 @@
     <color name="colorBackground">@color/background_primary</color>
     <color name="colorOnBackground">@color/on_surface_primary</color>
 
+    <color name="card_surface">#FFFFFF</color>
+
+    <!-- Accent Colors -->
+    <color name="accent_primary">#6366F1</color>
+    <color name="accent_secondary">#8B5CF6</color>
+
+    <!-- Icon Colors -->
+    <color name="icon_primary">#6366F1</color>
+
+    <!-- Medal colors -->
+    <color name="gold_primary">#FFD700</color>
+    <color name="silver_primary">#C0C0C0</color>
+    <color name="bronze_primary">#CD7F32</color>
+
+    <!-- Gradient colors for podium -->
+    <color name="gold_gradient">#FFD700</color>
+    <color name="silver_gradient">#C0C0C0</color>
+    <color name="bronze_gradient">#CD7F32</color>
+
 </resources>

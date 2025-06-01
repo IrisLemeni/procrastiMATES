@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FriendsFragment extends Fragment {
     private Button btnAddFriend, btnObjections;
@@ -66,59 +67,45 @@ public class FriendsFragment extends Fragment {
         btnAddFriend = view.findViewById(R.id.btnAddFriend);
         btnObjections = view.findViewById(R.id.btnObjections);
 
-        // Inițializează RecyclerView-urile
         friendsRecyclerView = view.findViewById(R.id.friendsRecyclerView);
         top3RecyclerView = view.findViewById(R.id.top3RecyclerView);
         othersRecyclerView = view.findViewById(R.id.othersRecyclerView);
 
-        // Setează layout managers
         friendsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        // Grid cu 3 coloane pentru poziționarea celor 3 de pe podium
         top3RecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
         othersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Inițializează adaptoarele
         friendsAdapter = new FriendsAdapter(new ArrayList<>());
-        top3Adapter = new LeaderboardAdapter(new ArrayList<>(), true); // true pentru view-ul de podium
+        top3Adapter = new LeaderboardAdapter(new ArrayList<>(), true);
         othersAdapter = new LeaderboardAdapter(new ArrayList<>(), false);
 
-        // Setează adaptoarele pentru RecyclerView-uri
         friendsRecyclerView.setAdapter(friendsAdapter);
         top3RecyclerView.setAdapter(top3Adapter);
         othersRecyclerView.setAdapter(othersAdapter);
 
-        btnAddFriend.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), SearchFriendsActivity.class);
-            startActivity(intent);
-        });
-
+        btnAddFriend.setOnClickListener(v -> startActivity(new Intent(getContext(), SearchFriendsActivity.class)));
         btnNotifications.setOnClickListener(v -> showNotifications());
-
-        // Set click listener for the ObjectionsActivity button
         btnObjections.setOnClickListener(v -> launchCircleChatActivity());
 
-        // Încarcă datele
-        loadFriendsProgress();
+        // Load both daily progress and monthly leaderboard
         loadDailyTasks();
+        loadMonthlyLeaderboard();
 
         return view;
     }
 
-    // Method to launch the ObjectionsActivity
     private void launchCircleChatActivity() {
-        FirebaseFirestore.getInstance()
-                .collection("circles")
-                .whereArrayContains("members", FirebaseAuth.getInstance().getCurrentUser().getUid())
+        db.collection("circles")
+                .whereArrayContains("members", currentUserId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        String circleId = queryDocumentSnapshots.getDocuments().get(0).getId();
+                .addOnSuccessListener(query -> {
+                    if (!query.isEmpty()) {
+                        String circleId = query.getDocuments().get(0).getId();
                         Intent intent = new Intent(getContext(), CircleChatActivity.class);
                         intent.putExtra("circleId", circleId);
                         startActivity(intent);
                     }
                 });
-
     }
 
     private void loadDailyTasks() {
@@ -141,93 +128,99 @@ public class FriendsFragment extends Fragment {
         db.collection("circles")
                 .whereArrayContains("members", currentUserId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
+                .addOnSuccessListener(query -> {
+                    if (!query.isEmpty()) {
+                        DocumentSnapshot circleDoc = query.getDocuments().get(0);
                         Circle circle = circleDoc.toObject(Circle.class);
                         if (circle != null) {
                             List<String> members = circle.getMembers();
-                            List<Friend> dailyFriendsList = new ArrayList<>();
-
-                            for (String friendId : members) {
-                                db.collection("users")
-                                        .document(friendId)
-                                        .get()
-                                        .addOnSuccessListener(documentSnapshot -> {
-                                            if (documentSnapshot.exists()) {
-                                                String friendName = documentSnapshot.getString("username");
-
-                                                db.collection("tasks")
-                                                        .whereEqualTo("userId", friendId)
-                                                        .whereGreaterThanOrEqualTo("dueDate", startTimestamp)
-                                                        .whereLessThanOrEqualTo("dueDate", endTimestamp)
-                                                        .get()
-                                                        .addOnSuccessListener(taskSnapshots -> {
-                                                            int completedTasks = 0;
-                                                            int totalTasks = taskSnapshots.size();
-
-                                                            for (DocumentSnapshot taskDoc : taskSnapshots) {
-                                                                Task task = taskDoc.toObject(Task.class);
-                                                                if (task != null && task.isCompleted()) {
-                                                                    completedTasks++;
-                                                                }
-                                                            }
-
-                                                            dailyFriendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
-
-                                                            if (dailyFriendsList.size() == members.size()) {
-                                                                // Sortează după rata de completare (procent), apoi după numărul absolut
-                                                                Collections.sort(dailyFriendsList, (f1, f2) -> {
-                                                                    float rate1 = f1.getTotalTasks() > 0 ? (float) f1.getCompletedTasks() / f1.getTotalTasks() : 0;
-                                                                    float rate2 = f2.getTotalTasks() > 0 ? (float) f2.getCompletedTasks() / f2.getTotalTasks() : 0;
-
-                                                                    if (Float.compare(rate2, rate1) == 0) {
-                                                                        // Dacă procentele sunt egale, sortează după numărul de task-uri completate
-                                                                        return Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks());
-                                                                    }
-                                                                    return Float.compare(rate2, rate1);
-                                                                });
-
-                                                                friendsAdapter.setFriends(dailyFriendsList);
-                                                            }
-                                                        })
-                                                        .addOnFailureListener(e -> {
-                                                            Toast.makeText(getContext(), "Failed to load daily tasks for friend", Toast.LENGTH_SHORT).show();
-                                                        });
-                                            }
-                                        })
-                                        .addOnFailureListener(e -> {
-                                            Toast.makeText(getContext(), "Failed to get friend name", Toast.LENGTH_SHORT).show();
-                                        });
-                            }
+                            loadDailyProgressForMembers(members, startTimestamp, endTimestamp);
                         }
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Failed to get circle", Toast.LENGTH_SHORT).show();
                 });
     }
 
-    public void loadFriendsProgress() {
+    private void loadDailyProgressForMembers(List<String> members, Timestamp startTimestamp, Timestamp endTimestamp) {
+        List<Friend> dailyFriendsList = new ArrayList<>();
+        AtomicInteger completedRequests = new AtomicInteger(0);
+
+        for (String friendId : members) {
+            db.collection("users").document(friendId).get()
+                    .addOnSuccessListener(userDoc -> {
+                        if (userDoc.exists()) {
+                            String friendName = userDoc.getString("username");
+                            String profileImageUrl = userDoc.getString("profileImageUrl");
+
+                            db.collection("tasks")
+                                    .whereEqualTo("userId", friendId)
+                                    .whereGreaterThanOrEqualTo("dueDate", startTimestamp)
+                                    .whereLessThanOrEqualTo("dueDate", endTimestamp)
+                                    .get()
+                                    .addOnSuccessListener(tasks -> {
+                                        int completed = 0;
+                                        int total = tasks.size();
+
+                                        for (DocumentSnapshot doc : tasks.getDocuments()) {
+                                            Task task = doc.toObject(Task.class);
+                                            if (task != null && task.isCompleted()) {
+                                                completed++;
+                                            }
+                                        }
+
+                                        dailyFriendsList.add(new Friend(friendId, friendName, completed, total, profileImageUrl));
+
+                                        // Check if all requests are completed
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            // Sort by completion rate (percentage)
+                                            dailyFriendsList.sort((f1, f2) -> {
+                                                float rate1 = f1.getTotalTasks() > 0 ? (float) f1.getCompletedTasks() / f1.getTotalTasks() : 0;
+                                                float rate2 = f2.getTotalTasks() > 0 ? (float) f2.getCompletedTasks() / f2.getTotalTasks() : 0;
+                                                return Float.compare(rate2, rate1);
+                                            });
+
+                                            friendsAdapter.setFriends(dailyFriendsList);
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        // Handle error - add friend with 0 tasks
+                                        dailyFriendsList.add(new Friend(friendId, friendName, 0, 0, profileImageUrl));
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            friendsAdapter.setFriends(dailyFriendsList);
+                                        }
+                                    });
+                        } else {
+                            // User doesn't exist, still increment counter
+                            if (completedRequests.incrementAndGet() == members.size()) {
+                                friendsAdapter.setFriends(dailyFriendsList);
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Handle error
+                        if (completedRequests.incrementAndGet() == members.size()) {
+                            friendsAdapter.setFriends(dailyFriendsList);
+                        }
+                    });
+        }
+    }
+
+    private void loadMonthlyLeaderboard() {
         db.collection("circles")
                 .whereArrayContains("members", currentUserId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot circleDoc = queryDocumentSnapshots.getDocuments().get(0);
+                .addOnSuccessListener(query -> {
+                    if (!query.isEmpty()) {
+                        DocumentSnapshot circleDoc = query.getDocuments().get(0);
                         Circle circle = circleDoc.toObject(Circle.class);
                         if (circle != null) {
-                            List<String> members = circle.getMembers();
-                            loadProgressForFriends(members);
+                            loadMonthlyProgressForMembers(circle.getMembers());
                         }
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Failed to get circle", Toast.LENGTH_SHORT).show();
                 });
     }
 
-    public void loadProgressForFriends(List<String> members) {
+    private void loadMonthlyProgressForMembers(List<String> members) {
+        // Get current month's start and end dates
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -243,111 +236,124 @@ public class FriendsFragment extends Fragment {
         calendar.set(Calendar.MILLISECOND, 999);
         long endOfMonth = calendar.getTimeInMillis();
 
-        List<Friend> updatedFriendsList = new ArrayList<>();
+        Timestamp startTimestamp = new Timestamp(startOfMonth / 1000, 0);
+        Timestamp endTimestamp = new Timestamp(endOfMonth / 1000, 0);
+
+        List<Friend> monthlyFriendsList = new ArrayList<>();
+        AtomicInteger completedRequests = new AtomicInteger(0);
 
         for (String friendId : members) {
-            db.collection("users")
-                    .document(friendId)
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
-                            String friendName = documentSnapshot.getString("username");
+            db.collection("users").document(friendId).get()
+                    .addOnSuccessListener(userDoc -> {
+                        if (userDoc.exists()) {
+                            String friendName = userDoc.getString("username");
+                            String profileImageUrl = userDoc.getString("profileImageUrl");
 
                             db.collection("tasks")
                                     .whereEqualTo("userId", friendId)
-                                    .whereGreaterThanOrEqualTo("dueDate", new Timestamp(startOfMonth / 1000, 0))
-                                    .whereLessThanOrEqualTo("dueDate", new Timestamp(endOfMonth / 1000, 0))
+                                    .whereGreaterThanOrEqualTo("dueDate", startTimestamp)
+                                    .whereLessThanOrEqualTo("dueDate", endTimestamp)
                                     .get()
-                                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                                        int completedTasks = 0;
-                                        int totalTasks = 0;
+                                    .addOnSuccessListener(tasks -> {
+                                        int completed = 0;
+                                        int total = tasks.size();
 
-                                        for (DocumentSnapshot taskDoc : queryDocumentSnapshots) {
-                                            Task task = taskDoc.toObject(Task.class);
-                                            if (task != null) {
-                                                totalTasks++;
-                                                if (task.isCompleted()) {
-                                                    completedTasks++;
-                                                }
+                                        for (DocumentSnapshot doc : tasks.getDocuments()) {
+                                            Task task = doc.toObject(Task.class);
+                                            if (task != null && task.isCompleted()) {
+                                                completed++;
                                             }
                                         }
 
-                                        updatedFriendsList.add(new Friend(friendId, friendName, completedTasks, totalTasks));
+                                        monthlyFriendsList.add(new Friend(friendId, friendName, completed, total, profileImageUrl));
 
-                                        if (updatedFriendsList.size() == members.size()) {
-                                            // Sortează lista după numărul de task-uri completate
-                                            Collections.sort(updatedFriendsList, (f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
-
-                                            // Actualizează lista prietenilor pentru progresul zilnic
-                                            friendsAdapter = new FriendsAdapter(updatedFriendsList);
-                                            friendsRecyclerView.setAdapter(friendsAdapter);
-
-                                            // Actualizează leaderboard-ul
-                                            updateLeaderboard(updatedFriendsList);
+                                        // Check if all requests are completed
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            // Sort by completed tasks count (descending)
+                                            monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                            updateLeaderboard(monthlyFriendsList);
                                         }
                                     })
                                     .addOnFailureListener(e -> {
-                                        Toast.makeText(getContext(), "Failed to load tasks for friend", Toast.LENGTH_SHORT).show();
+                                        // Handle error - add friend with 0 tasks
+                                        monthlyFriendsList.add(new Friend(friendId, friendName, 0, 0, profileImageUrl));
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                            updateLeaderboard(monthlyFriendsList);
+                                        }
                                     });
+                        } else {
+                            // User doesn't exist, still increment counter
+                            if (completedRequests.incrementAndGet() == members.size()) {
+                                monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                updateLeaderboard(monthlyFriendsList);
+                            }
                         }
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Failed to get friend name", Toast.LENGTH_SHORT).show();
+                        // Handle error
+                        if (completedRequests.incrementAndGet() == members.size()) {
+                            monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                            updateLeaderboard(monthlyFriendsList);
+                        }
                     });
         }
     }
 
     private void updateLeaderboard(List<Friend> allFriends) {
-        if (allFriends.size() > 0) {
-            List<Friend> top3;
-            List<Friend> others;
-
-            if (allFriends.size() <= 3) {
-                top3 = new ArrayList<>(allFriends);
-                others = new ArrayList<>();
-            } else {
-                top3 = new ArrayList<>(allFriends.subList(0, 3));
-                others = new ArrayList<>(allFriends.subList(3, allFriends.size()));
-            }
-
-            if (top3.size() >= 2) {
-                Friend first = top3.get(0);  // Locul 1
-                Friend second = top3.get(1); // Locul 2
-
-                // Rearanjează pentru a se potrivi cu aranjamentul vizual al podiumului
-                top3.set(0, second);  // Pune locul 2 pe prima poziție
-                top3.set(1, first);   // Pune locul 1 pe a doua poziție
-            }
-
-            // Actualizează RecyclerView-urile
-            top3Adapter.setFriends(top3);
-            othersAdapter.setFriends(others);
+        if (allFriends.isEmpty()) {
+            return;
         }
+
+        // Get top 3 and others
+        List<Friend> top3 = allFriends.size() <= 3 ? new ArrayList<>(allFriends) : allFriends.subList(0, 3);
+        List<Friend> others = allFriends.size() <= 3 ? new ArrayList<>() : allFriends.subList(3, allFriends.size());
+
+        // Rearrange top 3 for podium display (2nd, 1st, 3rd)
+        if (top3.size() >= 2) {
+            List<Friend> rearrangedTop3 = new ArrayList<>();
+            if (top3.size() >= 2) {
+                rearrangedTop3.add(top3.get(1)); // 2nd place
+                rearrangedTop3.add(top3.get(0)); // 1st place
+                if (top3.size() >= 3) {
+                    rearrangedTop3.add(top3.get(2)); // 3rd place
+                }
+            } else {
+                rearrangedTop3.addAll(top3);
+            }
+            top3 = rearrangedTop3;
+        }
+
+        // Update adapters
+        top3Adapter.setFriends(top3);
+        othersAdapter.setFriends(others);
+
+        // Notify adapters that data has changed
+        top3Adapter.notifyDataSetChanged();
+        othersAdapter.notifyDataSetChanged();
+    }
+
+    // Keep the old method names for compatibility but make them call the new methods
+    public void loadFriendsProgress() {
+        loadMonthlyLeaderboard();
+    }
+
+    public void loadProgressForFriends(List<String> members) {
+        loadMonthlyProgressForMembers(members);
     }
 
     private void showNotifications() {
-        Intent intent = new Intent(getActivity(), NotificationsActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(getActivity(), NotificationsActivity.class));
     }
 
     private void loadUserData(String userId) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
         db.collection("users").document(userId).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        String username = documentSnapshot.getString("username");
-                        if (username != null) {
-                            userName.setText(username);
-                        } else {
-                            userName.setText("Your username");
-                        }
-                        String profileImageUrl = documentSnapshot.getString("profileImageUrl");
-                        if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
-                            Glide.with(FriendsFragment.this)
-                                    .load(profileImageUrl)
-                                    .circleCrop()
-                                    .into(userProfileImage);
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        userName.setText(doc.getString("username") != null ? doc.getString("username") : "Your username");
+                        String imageUrl = doc.getString("profileImageUrl");
+                        if (imageUrl != null && !imageUrl.isEmpty()) {
+                            Glide.with(FriendsFragment.this).load(imageUrl).circleCrop().into(userProfileImage);
                         }
                     }
                 });

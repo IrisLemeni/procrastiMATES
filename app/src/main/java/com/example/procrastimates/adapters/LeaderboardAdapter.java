@@ -3,13 +3,16 @@ package com.example.procrastimates.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.Friend;
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
 
@@ -37,6 +40,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public void setPodiumView(boolean isPodiumView) {
         this.isPodiumView = isPodiumView;
+        notifyDataSetChanged(); // Add this to refresh the view when switching
     }
 
     @Override
@@ -63,9 +67,22 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         if (holder instanceof PodiumViewHolder) {
             PodiumViewHolder podiumHolder = (PodiumViewHolder) holder;
             podiumHolder.friendName.setText(friend.getName());
-            podiumHolder.completedTasks.setText(friend.getCompletedTasks() + " tasks");
 
-            // Personalizează avatarul în funcție de poziție, dacă e nevoie
+            // Show both completed and total tasks for better synchronization
+            String taskText = friend.getCompletedTasks() + "/" + friend.getTotalTasks();
+            podiumHolder.completedTasks.setText(taskText);
+
+            // Load profile image if available
+            if (friend.getProfileImageUrl() != null && !friend.getProfileImageUrl().isEmpty()) {
+                Glide.with(podiumHolder.itemView.getContext())
+                        .load(friend.getProfileImageUrl())
+                        .circleCrop()
+                        .placeholder(R.drawable.default_user_image)
+                        .into(podiumHolder.friendAvatar);
+            } else {
+                podiumHolder.friendAvatar.setImageResource(R.drawable.default_user_image);
+            }
+
         } else if (holder instanceof NormalViewHolder) {
             NormalViewHolder normalHolder = (NormalViewHolder) holder;
             normalHolder.name.setText((position + 4) + ". " + friend.getName());
@@ -81,13 +98,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     public static class PodiumViewHolder extends RecyclerView.ViewHolder {
         TextView friendName, completedTasks;
-        // CircleImageView friendAvatar; // Dacă folosești biblioteca CircleImageView
+        ImageView friendAvatar, medalIcon;
+        MaterialCardView medalCard;
 
         public PodiumViewHolder(View itemView) {
             super(itemView);
             friendName = itemView.findViewById(R.id.friendName);
             completedTasks = itemView.findViewById(R.id.completedTasks);
-            // friendAvatar = itemView.findViewById(R.id.friendAvatar);
+            friendAvatar = itemView.findViewById(R.id.friendAvatar);
         }
     }
 
