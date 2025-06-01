@@ -38,7 +38,7 @@ class ObjectionViewHolder extends RecyclerView.ViewHolder {
     void bind(Message message) {
         objectionText.setText(message.getText());
 
-        // Verifică dacă utilizatorul actual este cel care a completat task-ul
+        // Check if current user is the one who completed the task
         if (message.getTaskId() != null) {
             db.collection("tasks").document(message.getTaskId())
                     .get()
@@ -55,17 +55,17 @@ class ObjectionViewHolder extends RecyclerView.ViewHolder {
                     });
         }
 
-        // Încarcă numele expeditorului (cel care a făcut obiecția)
+        // Load sender's name (the one who raised the objection)
         db.collection("users").document(message.getSenderId())
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         String name = document.getString("username");
-                        objectorName.setText(name != null ? name : "Unknown");
+                        objectorName.setText(name != null ? name : "Unknown user");
                     }
                 });
 
-        // Formatează timestamp-ul
+        // Format timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm, dd MMM", Locale.getDefault());
         timestamp.setText(sdf.format(message.getTimestamp().toDate()));
     }

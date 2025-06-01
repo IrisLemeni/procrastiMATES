@@ -1,101 +1,292 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/poll_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginVertical="6dp"
-    android:layout_marginHorizontal="12dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    android:backgroundTint="#F0F9FF">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- Textul votului -->
-        <TextView
-            android:id="@+id/poll_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="A început un vot pentru task-ul X"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textStyle="bold" />
+        <!-- Poll indicator with gradient background -->
+        <View
+            android:id="@+id/poll_indicator"
+            android:layout_width="4dp"
+            android:layout_height="0dp"
+            android:background="@drawable/gradient_success_indicator"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-        <!-- Timpul și statusul -->
+        <!-- Modern poll icon with circular background -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/poll_icon_container"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="12dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="#E0F2FE"
+            app:layout_constraintStart_toEndOf="@+id/poll_indicator"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/poll_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_poll"
+                app:tint="#0EA5E9" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Status and time container -->
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
+            android:id="@+id/status_time_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp">
+            android:layout_marginStart="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/poll_icon_container"
+            app:layout_constraintTop_toTopOf="@+id/poll_icon_container"
+            app:layout_constraintBottom_toBottomOf="@+id/poll_icon_container">
 
-            <TextView
-                android:id="@+id/poll_status"
+            <androidx.cardview.widget.CardView
+                android:id="@+id/status_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Poll activ"
-                android:textColor="#673AB7"
-                android:textStyle="italic"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#DBEAFE"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/time_remaining"
+                <TextView
+                    android:id="@+id/poll_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="Active Poll"
+                    android:textColor="#1E40AF"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/time_container"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Timp rămas: 11h 30m"
-                android:textColor="#666"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#F1F5F9"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"/>
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/time_remaining"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:textColor="#64748B"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
+                    tools:text="11h 30m left" />
+
+            </androidx.cardview.widget.CardView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Progres Acceptare -->
-        <TextView
-            android:id="@+id/accept_count"
-            android:layout_width="wrap_content"
+        <!-- Poll message section -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/poll_message_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="3 (60%)"
-            android:layout_marginTop="8dp"
-            android:textColor="#4CAF50" />
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#F8FAFC"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/poll_indicator"
+            app:layout_constraintTop_toBottomOf="@+id/poll_icon_container">
 
-        <ProgressBar
-            android:id="@+id/accept_progress"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:progress="60"
-            android:progressTint="#4CAF50"
-            android:layout_marginBottom="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <!-- Progres Respingere -->
-        <TextView
-            android:id="@+id/reject_count"
-            android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/poll_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="POLL STARTED"
+                    android:textSize="11sp"
+                    android:textColor="#0EA5E9"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/poll_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textSize="16sp"
+                    android:textColor="#1F2937"
+                    android:lineSpacingExtra="4dp"
+                    android:fontFamily="sans-serif"
+                    tools:text="A poll has started for task X" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Progress section -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/progress_container"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="2 (40%)"
-            android:textColor="#F44336" />
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/poll_indicator"
+            app:layout_constraintTop_toBottomOf="@+id/poll_message_container">
 
-        <ProgressBar
-            android:id="@+id/reject_progress"
-            android:layout_width="match_parent"
-            android:layout_height="8dp"
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:progress="40"
-            android:progressTint="#F44336" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <!-- Timp -->
+                <!-- Accept section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_check_circle"
+                        app:tint="#10B981"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Accept"
+                        android:textSize="14sp"
+                        android:textColor="#374151"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <TextView
+                        android:id="@+id/accept_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#10B981"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="3 (60%)" />
+
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/accept_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:progress="60"
+                    android:progressTint="#10B981"
+                    android:progressBackgroundTint="#E5E7EB"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- Reject section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_cancel"
+                        app:tint="#EF4444"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Reject"
+                        android:textSize="14sp"
+                        android:textColor="#374151"
+                        android:fontFamily="sans-serif-medium" />
+
+                    <TextView
+                        android:id="@+id/reject_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#EF4444"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="2 (40%)" />
+
+                </LinearLayout>
+
+                <ProgressBar
+                    android:id="@+id/reject_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:progress="40"
+                    android:progressTint="#EF4444"
+                    android:progressBackgroundTint="#E5E7EB" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- Timestamp -->
         <TextView
             android:id="@+id/timestamp"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="12:45, 14 mai"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:gravity="end"
+            android:textColor="#9CA3AF"
             android:textSize="12sp"
-            android:textColor="#999"
-            android:layout_marginTop="10dp"
-            android:gravity="end" />
+            android:fontFamily="sans-serif"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/poll_indicator"
+            app:layout_constraintTop_toBottomOf="@+id/progress_container"
+            tools:text="12:45 PM, May 14" />
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.cardview.widget.CardView>

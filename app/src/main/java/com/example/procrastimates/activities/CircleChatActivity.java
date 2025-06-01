@@ -2,11 +2,15 @@ package com.example.procrastimates.activities;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,7 +33,9 @@ public class CircleChatActivity extends AppCompatActivity {
     private RecyclerView chatRecyclerView;
     private MessageAdapter messageAdapter;
     private EditText messageInput;
-    private Button sendButton;
+    private CardView sendButton;
+    private ImageButton backButton;
+    private TextView chatTitle;
     private String circleId;
     private FirebaseFirestore db;
     private String currentUserId;
@@ -48,26 +54,41 @@ public class CircleChatActivity extends AppCompatActivity {
         }
 
         Log.d("CircleChatActivity", "Activity started with circleId: " + circleId);
-        // Restul codului...
         db = FirebaseFirestore.getInstance();
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         initializeViews();
         setupRecyclerView();
         loadMessages();
-        setupSendButton();
+        setupInputHandlers();
+        loadCircleInfo();
     }
 
     private void initializeViews() {
         chatRecyclerView = findViewById(R.id.chat_recycler_view);
         messageInput = findViewById(R.id.message_input);
         sendButton = findViewById(R.id.send_button);
+        backButton = findViewById(R.id.back_button);
+        chatTitle = findViewById(R.id.chat_title);
     }
 
     private void setupRecyclerView() {
         messageAdapter = new MessageAdapter(this, currentUserId);
-        chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        chatRecyclerView.setLayoutManager(layoutManager);
         chatRecyclerView.setAdapter(messageAdapter);
+
+        // Scroll automat la ultimul mesaj când se adaugă unul nou
+        messageAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int totalItems = messageAdapter.getItemCount();
+                if (totalItems > 0) {
+                    chatRecyclerView.smoothScrollToPosition(totalItems - 1);
+                }
+            }
+        });
     }
 
     private void loadMessages() {
@@ -104,14 +125,48 @@ public class CircleChatActivity extends AppCompatActivity {
                 });
     }
 
-    private void setupSendButton() {
-        sendButton.setOnClickListener(v -> {
-            String text = messageInput.getText().toString().trim();
-            if (!text.isEmpty()) {
-                sendMessage(text, MessageType.GENERAL_MESSAGE, null);
-                messageInput.setText("");
+    private void setupInputHandlers() {
+        // Buton Back
+        backButton.setOnClickListener(v -> finish());
+
+        // Buton Send
+        sendButton.setOnClickListener(v -> sendMessageIfNotEmpty());
+
+        // Send pe Enter în EditText
+        messageInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEND ||
+                    (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                sendMessageIfNotEmpty();
+                return true;
             }
+            return false;
         });
+
+    }
+
+    private void loadCircleInfo() {
+        // Încarcă numele cercului pentru a-l afișa în toolbar
+        db.collection("circles").document(circleId)
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        String circleName = document.getString("name");
+                        if (circleName != null && !circleName.isEmpty()) {
+                            chatTitle.setText(circleName);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CircleChatActivity", "Error loading circle info", e);
+                });
+    }
+
+    private void sendMessageIfNotEmpty() {
+        String text = messageInput.getText().toString().trim();
+        if (!text.isEmpty()) {
+            sendMessage(text, MessageType.GENERAL_MESSAGE, null);
+            messageInput.setText("");
+        }
     }
 
     public void sendMessage(String text, MessageType type, String taskId) {
@@ -127,6 +182,15 @@ public class CircleChatActivity extends AppCompatActivity {
         db.collection("messages").document(message.getMessageId())
                 .set(message)
                 .addOnSuccessListener(aVoid -> Log.d("CircleChatActivity", "Message sent successfully"))
-                .addOnFailureListener(e -> Log.e("CircleChatActivity", "Error sending message", e));
+                .addOnFailureListener(e -> {
+                    Log.e("CircleChatActivity", "Error sending message", e);
+                    Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 }

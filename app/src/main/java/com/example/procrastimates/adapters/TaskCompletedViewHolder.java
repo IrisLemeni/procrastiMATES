@@ -32,7 +32,6 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
     private final Context context;
     private final FirebaseFirestore db;
 
-
     TaskCompletedViewHolder(View itemView, Context context, String currentUserId, FirebaseFirestore db) {
         super(itemView);
         this.context = context;
@@ -45,7 +44,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
     }
 
     void bind(Message message) {
-        // Încarcă detaliile task-ului
+        // Load task details
         if (message.getTaskId() != null) {
             db.collection("tasks").document(message.getTaskId())
                     .get()
@@ -55,24 +54,24 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                             if (task != null) {
                                 taskTitle.setText(task.getTitle());
 
-                                // Verifică dacă utilizatorul poate face obiecție
+                                // Check if user can raise objection
                                 checkObjectionEligibility(task, message);
                             }
                         }
                     });
         }
 
-        // Încarcă numele expeditorului
+        // Load sender's name
         db.collection("users").document(message.getSenderId())
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         String name = document.getString("username");
-                        completedBy.setText(name != null ? name + " a finalizat un task" : "Task finalizat");
+                        completedBy.setText(name != null ? name : "Unknown user");
                     }
                 });
 
-        // Formatează timestamp-ul
+        // Format timestamp
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm, dd MMM", Locale.getDefault());
         timestamp.setText(sdf.format(message.getTimestamp().toDate()));
     }
@@ -86,14 +85,14 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         long timeDifference = System.currentTimeMillis() - task.getCompletedAt().toDate().getTime();
         boolean isWithin10Minutes = timeDifference <= 10 * 60 * 1000;
 
-        // Verifică dacă există deja o obiecție pentru acest task
+        // Check if there's already an objection for this task
         db.collection("objections")
                 .whereEqualTo("taskId", task.getTaskId())
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     boolean hasObjection = !queryDocumentSnapshots.isEmpty();
 
-                    // Verifică câte obiecții a făcut utilizatorul astăzi
+                    // Check how many objections the user has made today
                     Calendar calendar = Calendar.getInstance();
                     calendar.set(Calendar.HOUR_OF_DAY, 0);
                     calendar.set(Calendar.MINUTE, 0);
@@ -117,7 +116,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
     }
 
     private void raiseObjection(Task task) {
-        // Creează obiecția
+        // Create objection
         Objection objection = new Objection();
         objection.setObjectionId(UUID.randomUUID().toString());
         objection.setTaskId(task.getTaskId());
@@ -128,14 +127,14 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         objection.setStatus(ObjectionStatus.PENDING);
         objection.setCircleId(task.getCircleId());
 
-        // Salvează obiecția în Firebase
+        // Save objection to Firebase
         db.collection("objections").document(objection.getObjectionId())
                 .set(objection)
                 .addOnSuccessListener(aVoid -> {
-                    // Creează un mesaj de obiecție
+                    // Create objection message
                     sendObjectionMessage(task, objection);
 
-                    // Trimite notificare utilizatorului care a completat task-ul
+                    // Send notification to user who completed the task
                     sendObjectionNotification(task, objection);
                 });
     }
@@ -145,7 +144,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         objectionMessage.setMessageId(UUID.randomUUID().toString());
         objectionMessage.setCircleId(task.getCircleId());
         objectionMessage.setSenderId(currentUserId);
-        objectionMessage.setText("A contestat completarea task-ului: " + task.getTitle());
+        objectionMessage.setText("Challenged task completion: " + task.getTitle());
         objectionMessage.setType(MessageType.OBJECTION_RAISED);
         objectionMessage.setTaskId(task.getTaskId());
         objectionMessage.setTimestamp(new Timestamp(new Date()));
@@ -155,46 +154,45 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
     }
 
     private void sendObjectionNotification(Task task, Objection objection) {
-        // Caută utilizatorul care a realizat task-ul
+        // Find user who completed the task
         db.collection("users").document(task.getUserId())
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         String targetUserName = document.getString("username");
 
-                        // Caută numele celui care face obiecția
+                        // Find name of the objector
                         db.collection("users").document(currentUserId)
                                 .get()
                                 .addOnSuccessListener(objectorDoc -> {
                                     if (objectorDoc.exists()) {
                                         String objectorName = objectorDoc.getString("username");
 
-                                        // Creează notificarea
+                                        // Create notification
                                         Notification notification = new Notification();
                                         notification.setNotificationId(UUID.randomUUID().toString());
                                         notification.setUserId(task.getUserId());
-                                        notification.setTitle("Obiecție primită");
-                                        notification.setBody(objectorName + " a contestat task-ul tău: " + task.getTitle());
+                                        notification.setTitle("Objection Received");
+                                        notification.setBody(objectorName + " challenged your task: " + task.getTitle());
                                         notification.setCircleId(task.getCircleId());
                                         notification.setTaskId(task.getTaskId());
                                         notification.setType(NotificationType.OBJECTION_RAISED);
                                         notification.setRead(false);
                                         notification.setCreatedAt(new Timestamp(new Date()));
 
-                                        // Salvează notificarea
+                                        // Save notification
                                         db.collection("notifications").document(notification.getNotificationId())
                                                 .set(notification)
                                                 .addOnSuccessListener(aVoid -> {
-                                                    // Trimite notificarea push
+                                                    // Send push notification
                                                     NotificationSender.sendPushNotification(
                                                             task.getUserId(),
-                                                            "Obiecție primită",
-                                                            objectorName + " a contestat task-ul tău: " + task.getTitle(),
+                                                            "Objection Received",
+                                                            objectorName + " challenged your task: " + task.getTitle(),
                                                             task.getTaskId(),
                                                             task.getCircleId(),
                                                             NotificationType.OBJECTION_RAISED
                                                     );
-
                                                 });
                                     }
                                 });

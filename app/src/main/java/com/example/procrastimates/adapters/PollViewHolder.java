@@ -97,20 +97,20 @@ class PollViewHolder extends RecyclerView.ViewHolder {
 
         // Display poll status
         if (poll.getStatus() == PollStatus.CLOSED) {
-            pollStatus.setText("Poll închis");
+            pollStatus.setText("Poll Closed");
             timeRemaining.setVisibility(View.GONE);
         } else {
-            pollStatus.setText("Poll activ");
+            pollStatus.setText("Active Poll");
 
             // Calculate remaining time
             long remainingTime = poll.getEndTime().toDate().getTime() - System.currentTimeMillis();
             if (remainingTime > 0) {
                 long hours = TimeUnit.MILLISECONDS.toHours(remainingTime);
                 long minutes = TimeUnit.MILLISECONDS.toMinutes(remainingTime) % 60;
-                timeRemaining.setText("Timp rămas: " + hours + "h " + minutes + "m");
+                timeRemaining.setText(hours + "h " + minutes + "m left");
                 timeRemaining.setVisibility(View.VISIBLE);
             } else {
-                timeRemaining.setText("Poll-ul se închide în curând");
+                timeRemaining.setText("Poll closing soon");
             }
         }
     }
