@@ -12,6 +12,7 @@ import com.example.procrastimates.R;
 import com.example.procrastimates.ai.AiServiceClient;
 import com.example.procrastimates.adapters.ConversationAdapter;
 import com.example.procrastimates.models.ConversationMessage;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -33,10 +34,10 @@ public class AskAiActivity extends AppCompatActivity {
     private LinearLayout emptyStateText;
     private View inputContainer;
     private View responseContainer;
-    private View historyContainer; // Add reference to history container
-
+    private View historyContainer;
     private AiServiceClient aiServiceClient;
     private Markwon markwon;
+    private MaterialToolbar toolbar; // Schimbat din Toolbar în MaterialToolbar
     private ArrayList<ConversationMessage> conversationHistory = new ArrayList<>();
     private ConversationAdapter conversationAdapter;
     private FirebaseFirestore db;
@@ -63,27 +64,32 @@ public class AskAiActivity extends AppCompatActivity {
         emptyStateText = findViewById(R.id.emptyStateText);
         inputContainer = findViewById(R.id.inputContainer);
         responseContainer = findViewById(R.id.responseContainer);
+        toolbar = findViewById(R.id.toolbar);
 
         // Find the history container (the MaterialCardView that contains the RecyclerView)
-        historyContainer = (View) historyRecyclerView.getParent().getParent(); // RecyclerView -> LinearLayout -> MaterialCardView
+        historyContainer = (View) historyRecyclerView.getParent().getParent();
 
         markwon = Markwon.create(this);
 
         // Set up RecyclerView for conversation history
         setupHistoryRecyclerView();
 
-        // Set up toolbar
+        // CONFIGURARE TOOLBAR CORECTĂ
+        setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("AI Assistant");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        // SAU folosește direct toolbar-ul (alternativa mai simplă)
+        // toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         sendButton.setOnClickListener(v -> {
             String question = questionInput.getText().toString();
 
             if (question != null && !question.trim().isEmpty()) {
                 askQuestion(question.trim());
-                questionInput.setText(""); // Clear input field after sending
+                questionInput.setText("");
             } else {
                 Toast.makeText(this, "Please enter a question!", Toast.LENGTH_SHORT).show();
             }
@@ -91,13 +97,11 @@ public class AskAiActivity extends AppCompatActivity {
 
         viewHistoryButton.setOnClickListener(v -> {
             if (historyContainer.getVisibility() == View.VISIBLE) {
-                // Hide history
                 historyContainer.setVisibility(View.GONE);
                 historyRecyclerView.setVisibility(View.GONE);
                 viewHistoryButton.setText("Show History");
                 viewHistoryButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_expand_more, 0);
             } else {
-                // Show history
                 loadConversationHistory();
                 historyContainer.setVisibility(View.VISIBLE);
                 historyRecyclerView.setVisibility(View.VISIBLE);
@@ -106,10 +110,7 @@ public class AskAiActivity extends AppCompatActivity {
             }
         });
 
-        // Load conversation history when activity starts
         loadConversationHistory();
-
-        // Show empty state initially
         showEmptyState();
     }
 
@@ -131,19 +132,17 @@ public class AskAiActivity extends AppCompatActivity {
                 .document(userId)
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(20) // Limit to most recent 20 conversations
+                .limit(20)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     conversationHistory.clear();
 
-                    // Debug: Log the number of documents found
                     System.out.println("Found " + queryDocumentSnapshots.size() + " conversation documents");
 
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                         String question = document.getString("question");
                         String answer = document.getString("answer");
 
-                        // Debug: Log each conversation
                         System.out.println("Question: " + question + ", Answer: " + answer);
 
                         if (question != null && answer != null) {
@@ -151,12 +150,8 @@ public class AskAiActivity extends AppCompatActivity {
                         }
                     }
 
-                    // Reverse the list to show oldest first (since we ordered by descending)
-                    // Collections.reverse(conversationHistory); // Uncomment if you want oldest first
-
                     conversationAdapter.notifyDataSetChanged();
 
-                    // Update history button visibility
                     if (conversationHistory.isEmpty()) {
                         viewHistoryButton.setVisibility(View.GONE);
                         historyContainer.setVisibility(View.GONE);
@@ -176,7 +171,6 @@ public class AskAiActivity extends AppCompatActivity {
     private boolean isRequestInProgress = false;
 
     private void askQuestion(String question) {
-        // Add input validation with clearer error messages
         if (question == null || question.trim().isEmpty()) {
             Toast.makeText(this, "Question cannot be empty", Toast.LENGTH_SHORT).show();
             return;
@@ -184,11 +178,9 @@ public class AskAiActivity extends AppCompatActivity {
 
         if (isRequestInProgress) return;
 
-        // Hide empty state and show response container
         hideEmptyState();
         showResponseContainer();
 
-        // Show loading state
         isRequestInProgress = true;
         progressBar.setVisibility(View.VISIBLE);
         sendButton.setEnabled(false);
@@ -207,11 +199,9 @@ public class AskAiActivity extends AppCompatActivity {
                     sendButton.setAlpha(1.0f);
                     markwon.setMarkdown(responseText, answer);
 
-                    // Add the new message to the conversation history UI
                     conversationHistory.add(0, new ConversationMessage(question, answer));
                     conversationAdapter.notifyItemInserted(0);
 
-                    // Show history button if it was hidden
                     if (viewHistoryButton.getVisibility() == View.GONE) {
                         viewHistoryButton.setVisibility(View.VISIBLE);
                     }
@@ -253,7 +243,14 @@ public class AskAiActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        finish(); // Sau onBackPressed() dacă vrei să simulezi comportamentul back button-ului
         return true;
+    }
+
+    // Opțional: poți suprascrie și onBackPressed pentru comportament personalizat
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        // Aici poți adăuga logică suplimentară dacă e nevoie
     }
 }

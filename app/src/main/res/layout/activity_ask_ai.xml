@@ -14,6 +14,7 @@
         android:elevation="0dp"
         app:elevation="0dp">
 
+
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -21,6 +22,7 @@
             android:background="@color/surface_primary"
             app:title="AI Assistant"
             app:titleTextColor="@color/on_surface_primary"
+            app:navigationIcon="@drawable/baseline_arrow_back_24"
             app:navigationIconTint="@color/on_surface_primary" />
 
     </com.google.android.material.appbar.AppBarLayout>
