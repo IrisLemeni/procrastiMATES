@@ -22,25 +22,14 @@
             android:id="@+id/todoCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:buttonTint="@color/primary_color"
+            android:buttonTint="@color/ic_launcher_background"
             android:clickable="true"
             android:focusable="true"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <!-- Priority Indicator -->
-        <View
-            android:id="@+id/priorityIndicator"
-            android:layout_width="4dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/priority_indicator_background"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/todoCheckBox" />
-
-        <!-- Task Content -->
+        <!-- Task Content (updated to link directly to CheckBox) -->
         <LinearLayout
             android:id="@+id/taskContentLayout"
             android:layout_width="0dp"
@@ -50,7 +39,7 @@
             android:layout_marginEnd="8dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/priorityIndicator"
+            app:layout_constraintStart_toEndOf="@id/todoCheckBox"
             app:layout_constraintEnd_toStartOf="@id/actionButtonsLayout">
 
             <TextView

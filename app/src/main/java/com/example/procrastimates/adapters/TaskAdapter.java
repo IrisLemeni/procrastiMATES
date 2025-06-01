@@ -85,7 +85,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.checkBox.setChecked(task.isCompleted());
 
         if (!isCompletedTasksAdapter) {
-            holder.setPriorityIndicator(task.getPriority());
+            //holder.setPriorityIndicator(task.getPriority());
             holder.setPriorityChip(task.getPriority());
         }
 
@@ -171,11 +171,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             if (!isCompletedTask) {
                 editButton = itemView.findViewById(R.id.editTask);
                 deleteButton = itemView.findViewById(R.id.delete);
-                priorityIndicator = itemView.findViewById(R.id.priorityIndicator);
+                //priorityIndicator = itemView.findViewById(R.id.priorityIndicator);
                 priorityChip = itemView.findViewById(R.id.taskPriority);
             }
         }
 
+        /*
         private void setPriorityIndicator(Priority priority) {
             if (priorityIndicator == null) return;
             int color;
@@ -195,6 +196,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
             priorityIndicator.setBackgroundTintList(ColorStateList.valueOf(color));
         }
+         */
 
         private void setPriorityChip(Priority priority) {
             if (priorityChip == null) return;

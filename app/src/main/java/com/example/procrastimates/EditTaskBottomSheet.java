@@ -103,13 +103,13 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
         cancelButton.setOnClickListener(v -> dismiss());
 
-        // Setup chip group listener
-        dateChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.contains(R.id.todayChip)) {
+        // FIXED: Setup chip group listener - folosim OnCheckedChangeListener în loc de OnCheckedStateChangeListener
+        dateChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.todayChip) {
                 selectedDate = getTodayTimestamp();
-            } else if (checkedIds.contains(R.id.tomorrowChip)) {
+            } else if (checkedId == R.id.tomorrowChip) {
                 selectedDate = getTomorrowTimestamp();
-            } else if (checkedIds.contains(R.id.pickDateChip)) {
+            } else if (checkedId == R.id.pickDateChip) {
                 showDatePickerDialog();
             }
         });

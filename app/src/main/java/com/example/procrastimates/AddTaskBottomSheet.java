@@ -26,7 +26,7 @@ import java.util.Calendar;
 public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
     private EditText taskEditText;
-    private Button saveButton;
+    private Button saveButton, cancelButton; // Adăugat cancelButton
     private TaskViewModel taskViewModel;
     private OnTaskAddedListener onTaskAddedListener;
     private ChipGroup dateChipGroup;
@@ -48,6 +48,7 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
 
         taskEditText = view.findViewById(R.id.newTaskText);
         saveButton = view.findViewById(R.id.saveButton);
+        cancelButton = view.findViewById(R.id.cancelButton); // Inițializare cancelButton
         dateChipGroup = view.findViewById(R.id.dateChipGroup);
         todayChip = view.findViewById(R.id.todayChip);
         tomorrowChip = view.findViewById(R.id.tomorrowChip);
@@ -57,6 +58,9 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         taskViewModel = new ViewModelProvider(requireActivity()).get(TaskViewModel.class);
 
         saveButton.setOnClickListener(v -> saveTask());
+
+        // Adăugat listener pentru Cancel button
+        cancelButton.setOnClickListener(v -> dismiss());
 
         dateChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.todayChip) {
