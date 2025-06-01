@@ -14,11 +14,58 @@
     <color name="primary">#1976D2</color>
     <color name="light_gray">#EEEEEE</color>
     <color name="background_light">#F8F9FA</color>
-    <color name="text_primary">#1F2937</color>
-    <color name="text_secondary">#6B7280</color>
-    <color name="text_tertiary">#9CA3AF</color>
     <color name="card_background">#FFFFFF</color>
     <color name="accent_light">#F0F0FF</color>
     <color name="success_light">#F0FFF0</color>
+    <color name="primary_color">#6366F1</color>
+    <color name="primary_variant">#4F46E5</color>
+    <color name="primary_light">#A5B4FC</color>
+    <color name="primary_dark">#3730A3</color>
+
+    <!-- Secondary Colors -->
+    <color name="secondary_color">#EC4899</color>
+    <color name="secondary_variant">#DB2777</color>
+    <color name="secondary_light">#F9A8D4</color>
+
+    <!-- Background Colors -->
+    <color name="background_primary">#FAFAFC</color>
+    <color name="background_secondary">#F8FAFC</color>
+    <color name="surface_color">#FFFFFF</color>
+    <color name="surface_variant">#F1F5F9</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#0F172A</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_tertiary">#94A3B8</color>
+    <color name="text_disabled">#CBD5E1</color>
+
+    <!-- Stroke & Border Colors -->
+    <color name="stroke_color">#E2E8F0</color>
+    <color name="divider_color">#F1F5F9</color>
+
+    <!-- Priority Colors -->
+    <color name="priority_high">#EF4444</color>
+    <color name="priority_medium">#F59E0B</color>
+    <color name="priority_low">#10B981</color>
+
+    <!-- Semantic Colors -->
+    <color name="success_color">#10B981</color>
+    <color name="warning_color">#F59E0B</color>
+    <color name="error_color">#EF4444</color>
+    <color name="info_color">#3B82F6</color>
+
+    <!-- Track Colors -->
+    <color name="track_color">#E2E8F0</color>
+
+    <!-- Calendar Specific Colors -->
+    <color name="calendar_selected">#5D6366F1</color>
+    <color name="calendar_today">#EC4899</color>
+    <color name="calendar_other_month">#CBD5E1</color>
+    <color name="calendar_weekend">#64748B</color>
+
+    <!-- Task Status Colors -->
+    <color name="task_completed">#10B981</color>
+    <color name="task_overdue">#EF4444</color>
+    <color name="task_pending">#F59E0B</color>
 
 </resources>

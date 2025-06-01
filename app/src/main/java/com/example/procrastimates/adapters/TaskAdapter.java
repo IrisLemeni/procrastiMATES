@@ -1,13 +1,18 @@
 package com.example.procrastimates.adapters;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.procrastimates.Priority;
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
 import com.google.android.material.button.MaterialButton;
@@ -21,14 +26,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private List<Task> taskList;
     private OnEditTaskListener onEditTaskListener;
     private OnTaskCheckedChangeListener onTaskCheckedChangeListener;
-    private boolean isCompletedTasksAdapter; // Flag pentru a distingue între active și completate
+    private OnTaskDeleteListener onTaskDeleteListener;
+    private boolean isCompletedTasksAdapter;
 
     public TaskAdapter(List<Task> taskList) {
         this.taskList = taskList != null ? taskList : new ArrayList<>();
-        this.isCompletedTasksAdapter = false; // Default pentru task-uri active
+        this.isCompletedTasksAdapter = false;
     }
 
-    // Constructor pentru a specifica tipul de adapter
     public TaskAdapter(List<Task> taskList, boolean isCompletedTasksAdapter) {
         this.taskList = taskList != null ? taskList : new ArrayList<>();
         this.isCompletedTasksAdapter = isCompletedTasksAdapter;
@@ -42,6 +47,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         void onTaskChecked(Task task, boolean isChecked);
     }
 
+    public interface OnTaskDeleteListener {
+        void onTaskDelete(Task task);
+    }
+
     public void setOnEditTaskListener(OnEditTaskListener listener) {
         this.onEditTaskListener = listener;
     }
@@ -50,9 +59,12 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         this.onTaskCheckedChangeListener = listener;
     }
 
+    public void setOnTaskDeleteListener(OnTaskDeleteListener listener) {
+        this.onTaskDeleteListener = listener;
+    }
+
     @Override
     public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // Folosește layout-uri diferite în funcție de tipul de task-uri
         int layoutId = isCompletedTasksAdapter ? R.layout.completed_task_layout : R.layout.task_layout;
         View view = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
         return new TaskViewHolder(view, isCompletedTasksAdapter);
@@ -60,56 +72,52 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
-        if (position < 0 || position >= taskList.size()) {
-            Log.e(TAG, "Invalid position: " + position + ", taskList size: " + taskList.size());
-            return;
-        }
+        if (position < 0 || position >= taskList.size()) return;
 
         Task task = taskList.get(position);
-        if (task == null) {
-            Log.e(TAG, "Task at position " + position + " is null");
-            return;
-        }
+        if (task == null) return;
 
-        // Clear previous listeners to avoid conflicts
         holder.checkBox.setOnCheckedChangeListener(null);
-        if (holder.editTask != null) {
-            holder.editTask.setOnClickListener(null);
-        }
+        if (holder.editButton != null) holder.editButton.setOnClickListener(null);
+        if (holder.deleteButton != null) holder.deleteButton.setOnClickListener(null);
 
-        // Bind data
         holder.titleTextView.setText(task.getTitle() != null ? task.getTitle() : "Untitled Task");
         holder.checkBox.setChecked(task.isCompleted());
 
-        // Set visibility
+        if (!isCompletedTasksAdapter) {
+            holder.setPriorityIndicator(task.getPriority());
+            holder.setPriorityChip(task.getPriority());
+        }
+
         holder.titleTextView.setVisibility(View.VISIBLE);
         holder.checkBox.setVisibility(View.VISIBLE);
 
-        // Set listeners
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (onTaskCheckedChangeListener != null) {
                 onTaskCheckedChangeListener.onTaskChecked(task, isChecked);
             }
         });
 
-        // Set edit listener only for active tasks (completed tasks don't have edit button)
-        if (!isCompletedTasksAdapter && holder.editTask != null) {
-            holder.editTask.setOnClickListener(v -> {
+        if (!isCompletedTasksAdapter && holder.editButton != null) {
+            holder.editButton.setOnClickListener(v -> {
                 if (onEditTaskListener != null) {
                     onEditTaskListener.onEditTask(task);
                 }
             });
         }
 
-        Log.d(TAG, "Bound task: " + task.getTitle() + " at position " + position +
-                " (completed adapter: " + isCompletedTasksAdapter + ")");
+        if (!isCompletedTasksAdapter && holder.deleteButton != null) {
+            holder.deleteButton.setOnClickListener(v -> {
+                if (onTaskDeleteListener != null) {
+                    onTaskDeleteListener.onTaskDelete(task);
+                }
+            });
+        }
     }
 
     @Override
     public int getItemCount() {
-        int count = taskList != null ? taskList.size() : 0;
-        Log.d(TAG, "getItemCount: " + count + " (completed adapter: " + isCompletedTasksAdapter + ")");
-        return count;
+        return taskList != null ? taskList.size() : 0;
     }
 
     public void removeTask(int position) {
@@ -117,29 +125,22 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             taskList.remove(position);
             notifyItemRemoved(position);
             notifyItemRangeChanged(position, taskList.size());
-            Log.d(TAG, "Task removed at position: " + position);
         }
     }
 
     public Task getTaskAt(int position) {
-        if (position >= 0 && position < taskList.size()) {
-            return taskList.get(position);
-        }
-        return null;
+        return (position >= 0 && position < taskList.size()) ? taskList.get(position) : null;
     }
 
     public void setTasks(List<Task> newTaskList) {
         this.taskList = newTaskList != null ? newTaskList : new ArrayList<>();
         notifyDataSetChanged();
-        Log.d(TAG, "Tasks updated. New count: " + this.taskList.size() +
-                " (completed adapter: " + isCompletedTasksAdapter + ")");
     }
 
     public void addTask(Task task) {
         if (task != null) {
             taskList.add(task);
             notifyItemInserted(taskList.size() - 1);
-            Log.d(TAG, "Task added: " + task.getTitle());
         }
     }
 
@@ -147,7 +148,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         if (position >= 0 && position < taskList.size() && updatedTask != null) {
             taskList.set(position, updatedTask);
             notifyItemChanged(position);
-            Log.d(TAG, "Task updated at position: " + position);
         }
     }
 
@@ -158,34 +158,78 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
         CheckBox checkBox;
-        MaterialButton editTask; // Poate fi null pentru completed tasks
+        MaterialButton editButton;
+        MaterialButton deleteButton;
+        View priorityIndicator;
+        TextView priorityChip;
 
         public TaskViewHolder(View itemView, boolean isCompletedTask) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.taskTitle);
             checkBox = itemView.findViewById(R.id.todoCheckBox);
 
-            // Edit button există doar în layout-ul pentru task-uri active
             if (!isCompletedTask) {
-                editTask = itemView.findViewById(R.id.editTask);
-                if (editTask == null) {
-                    Log.e("TaskViewHolder", "editTask not found in active task layout - check R.id.editTask");
-                }
-            } else {
-                editTask = null; // Explicitly set to null for completed tasks
-                Log.d("TaskViewHolder", "Edit button not initialized for completed task (as expected)");
+                editButton = itemView.findViewById(R.id.editTask);
+                deleteButton = itemView.findViewById(R.id.delete);
+                priorityIndicator = itemView.findViewById(R.id.priorityIndicator);
+                priorityChip = itemView.findViewById(R.id.taskPriority);
+            }
+        }
+
+        private void setPriorityIndicator(Priority priority) {
+            if (priorityIndicator == null) return;
+            int color;
+            switch (priority) {
+                case HIGH:
+                    color = ContextCompat.getColor(itemView.getContext(), R.color.priority_high);
+                    break;
+                case MEDIUM:
+                    color = ContextCompat.getColor(itemView.getContext(), R.color.priority_medium);
+                    break;
+                case LOW:
+                    color = ContextCompat.getColor(itemView.getContext(), R.color.priority_low);
+                    break;
+                default:
+                    color = ContextCompat.getColor(itemView.getContext(), R.color.text_tertiary);
+                    break;
+            }
+            priorityIndicator.setBackgroundTintList(ColorStateList.valueOf(color));
+        }
+
+        private void setPriorityChip(Priority priority) {
+            if (priorityChip == null) return;
+            String priorityText;
+            int textColor;
+            int backgroundColor;
+
+            switch (priority) {
+                case HIGH:
+                    priorityText = "High";
+                    textColor = ContextCompat.getColor(itemView.getContext(), R.color.priority_high);
+                    backgroundColor = ContextCompat.getColor(itemView.getContext(), R.color.priority_high);
+                    break;
+                case MEDIUM:
+                    priorityText = "Medium";
+                    textColor = ContextCompat.getColor(itemView.getContext(), R.color.priority_medium);
+                    backgroundColor = ContextCompat.getColor(itemView.getContext(), R.color.priority_medium);
+                    break;
+                case LOW:
+                    priorityText = "Low";
+                    textColor = ContextCompat.getColor(itemView.getContext(), R.color.priority_low);
+                    backgroundColor = ContextCompat.getColor(itemView.getContext(), R.color.priority_low);
+                    break;
+                default:
+                    priorityText = "Normal";
+                    textColor = ContextCompat.getColor(itemView.getContext(), R.color.text_secondary);
+                    backgroundColor = ContextCompat.getColor(itemView.getContext(), R.color.surface_variant);
+                    break;
             }
 
-            // Check if required views are properly found
-            if (titleTextView == null) {
-                Log.e("TaskViewHolder", "titleTextView not found - check R.id.taskTitle");
-            }
-            if (checkBox == null) {
-                Log.e("TaskViewHolder", "checkBox not found - check R.id.todoCheckBox");
-            }
-
-            Log.d("TaskViewHolder", "TaskViewHolder created for " +
-                    (isCompletedTask ? "completed" : "active") + " task");
+            priorityChip.setText(priorityText);
+            priorityChip.setTextColor(textColor);
+            int alpha = 0x20;
+            int chipBackgroundColor = (backgroundColor & 0x00FFFFFF) | (alpha << 24);
+            priorityChip.setBackgroundTintList(ColorStateList.valueOf(chipBackgroundColor));
         }
     }
 }

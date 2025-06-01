@@ -4,10 +4,64 @@
         <item name="android:textSize">10sp</item>
         <item name="android:textColor">@android:color/black</item>
     </style>
-    <style name="CalendarDateText" parent="TextAppearance.AppCompat.Medium">
-        <!-- Personalizează stilul textului -->
-        <item name="android:textColor">@android:color/black</item>
-        <item name="android:textSize">16sp</item>
+    <!-- Calendar Styles -->
+    <style name="CalendarDateText" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="CalendarWeekDayText" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="CalendarHeaderText" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+
+    <!-- Button Styles -->
+    <style name="ModernIconButton" parent="Widget.Material3.Button.IconButton">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="iconSize">24dp</item>
+        <item name="backgroundTint">@color/surface_variant</item>
+        <item name="iconTint">@color/primary_color</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+
+    <style name="ModernExtendedFAB" parent="Widget.Material3.ExtendedFloatingActionButton.Primary">
+        <item name="backgroundTint">@color/primary_color</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="iconTint">@android:color/white</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="elevation">8dp</item>
+    </style>
+
+    <!-- Card Styles -->
+    <style name="ModernCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/stroke_color</item>
+        <item name="cardBackgroundColor">@color/surface_color</item>
+    </style>
+
+    <style name="TaskCard" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/stroke_color</item>
+        <item name="cardBackgroundColor">@color/surface_color</item>
     </style>
 
 </resources>
