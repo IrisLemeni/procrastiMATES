@@ -12,6 +12,7 @@ import com.example.procrastimates.AchievementDialogHelper;
 import com.example.procrastimates.AchievementManager;
 import com.example.procrastimates.adapters.AchievementsAdapter;
 import com.example.procrastimates.R;
+import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,13 @@ public class AchievementsActivity extends AppCompatActivity implements Achieveme
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_achievements);
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbarAchievements);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         recyclerViewAchievements = findViewById(R.id.recyclerViewAchievements);
         recyclerViewAchievements.setLayoutManager(new GridLayoutManager(this, 2));

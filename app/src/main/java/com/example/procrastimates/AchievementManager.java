@@ -45,25 +45,25 @@ public class AchievementManager {
 
     private void initializeAchievements() {
         allAchievements = Arrays.asList(
-                // Achievement-uri pentru sesiuni de pomodoro complete
-                new Achievement("session_starter", "Session Starter", "Completează prima sesiune pomodoro", "icons/launcher.png", 1),
-                new Achievement("focus_apprentice", "Focus Apprentice", "Completează 5 sesiuni pomodoro", "icons/apprentice.png", 5),
-                new Achievement("focus_master", "Focus Master", "Completează 25 sesiuni pomodoro", "icons/master.png", 25),
-                new Achievement("focus_wizard", "Focus Wizard", "Completează 100 sesiuni pomodoro", "icons/wizard.png", 100),
+                // Pomodoro session achievements
+                new Achievement("session_starter", "Session Starter", "Complete your first Pomodoro session", "icons/launcher.png", 1),
+                new Achievement("focus_apprentice", "Focus Apprentice", "Complete 5 Pomodoro sessions", "icons/apprentice.png", 5),
+                new Achievement("focus_master", "Focus Master", "Complete 25 Pomodoro sessions", "icons/master.png", 25),
+                new Achievement("focus_wizard", "Focus Wizard", "Complete 100 Pomodoro sessions", "icons/wizard.png", 100),
 
-                // Achievement-uri pentru scor de focus ridicat
-                new Achievement("laser_focus", "Laser Focus", "Menține un scor de focus de 100 într-o sesiune", "icons/laser.png", 1),
-                new Achievement("undistracted", "Undistracted", "Completează 5 sesiuni cu scor de focus peste 90", "icons/focus.png", 5),
-                new Achievement("concentration_guru", "Concentration Guru", "Completează 15 sesiuni cu scor de focus peste 95", "icons/guru.png", 15),
+                // High focus score achievements
+                new Achievement("laser_focus", "Laser Focus", "Maintain a focus score of 100 in one session", "icons/laser.png", 1),
+                new Achievement("undistracted", "Undistracted", "Complete 5 sessions with focus score above 90", "icons/focus.png", 5),
+                new Achievement("concentration_guru", "Concentration Guru", "Complete 15 sessions with focus score above 95", "icons/guru.png", 15),
 
-                // Achievement-uri pentru sesiuni consecutive
-                new Achievement("daily_streak", "Daily Streak", "Completează sesiuni pomodoro 3 zile consecutiv", "icons/fire.png", 3),
-                new Achievement("weekly_focus", "Weekly Focus", "Completează sesiuni pomodoro 7 zile consecutiv", "icons/timetable.png", 7),
-                new Achievement("focus_warrior", "Focus Warrior", "Completează sesiuni pomodoro 14 zile consecutiv", "icons/swordsman.png", 14),
+                // Consecutive session achievements
+                new Achievement("daily_streak", "Daily Streak", "Complete Pomodoro sessions 3 days in a row", "icons/fire.png", 3),
+                new Achievement("weekly_focus", "Weekly Focus", "Complete Pomodoro sessions 7 consecutive days", "icons/timetable.png", 7),
+                new Achievement("focus_warrior", "Focus Warrior", "Complete Pomodoro sessions 14 consecutive days", "icons/swordsman.png", 14),
 
-                // Achievement-uri pentru sesiuni de lungă durată
-                new Achievement("marathon_focus", "Marathon Focus", "Completează o sesiune pomodoro de 50 minute", "icons/winner.png", 1),
-                new Achievement("endurance_master", "Endurance Master", "Completează 10 sesiuni pomodoro de 50 minute", "icons/persistence.png", 10)
+                // Long session achievements
+                new Achievement("marathon_focus", "Marathon Focus", "Complete one 50-minute Pomodoro session", "icons/winner.png", 1),
+                new Achievement("endurance_master", "Endurance Master", "Complete 10 Pomodoro sessions of 50 minutes", "icons/persistence.png", 10)
         );
     }
 
