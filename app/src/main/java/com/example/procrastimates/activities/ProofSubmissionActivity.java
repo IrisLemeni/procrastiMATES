@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -69,7 +70,7 @@ public class ProofSubmissionActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Selectează imagine"), 1);
+        startActivityForResult(Intent.createChooser(intent, "Select image"), 1);
     }
 
     @Override
@@ -79,6 +80,7 @@ public class ProofSubmissionActivity extends AppCompatActivity {
         if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
             proofImageView.setImageURI(imageUri);
+            findViewById(R.id.empty_state_overlay).setVisibility(View.GONE);
             submitButton.setEnabled(true);
         }
     }
@@ -87,7 +89,7 @@ public class ProofSubmissionActivity extends AppCompatActivity {
         if (imageUri != null) {
             // Afișează un dialog de încărcare
             ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setTitle("Se încarcă dovada...");
+            progressDialog.setTitle("Loading proof...");
             progressDialog.show();
 
             // Creează o referință unică pentru imagine
@@ -135,7 +137,7 @@ public class ProofSubmissionActivity extends AppCompatActivity {
 
                                                                     progressDialog.dismiss();
                                                                     Toast.makeText(ProofSubmissionActivity.this,
-                                                                            "Dovadă încărcată cu succes!", Toast.LENGTH_SHORT).show();
+                                                                            "Proof uploaded successfully!", Toast.LENGTH_SHORT).show();
                                                                     finish();
                                                                 }
                                                             });
@@ -144,14 +146,14 @@ public class ProofSubmissionActivity extends AppCompatActivity {
                                     .addOnFailureListener(e -> {
                                         progressDialog.dismiss();
                                         Toast.makeText(ProofSubmissionActivity.this,
-                                                "Eroare la salvarea dovezii: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                "Error saving proof: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                     });
                         });
                     })
                     .addOnFailureListener(e -> {
                         progressDialog.dismiss();
                         Toast.makeText(ProofSubmissionActivity.this,
-                                "Eroare la încărcarea imaginii: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                "Error loading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         }
     }
