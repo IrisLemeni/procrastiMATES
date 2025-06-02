@@ -7,9 +7,8 @@ public class Invitation {
     private String to;
     private String status;
     private Timestamp timestamp;
-    private String senderName; // Acest câmp este adăugat manual
+    private String senderName;
 
-    // Getteri și setteri
 
     public String getInvitationId() {
         return invitationId;

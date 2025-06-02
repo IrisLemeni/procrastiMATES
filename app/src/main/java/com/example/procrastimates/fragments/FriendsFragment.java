@@ -15,9 +15,9 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.procrastimates.activities.InvitationsActivity;
 import com.example.procrastimates.models.Circle;
 import com.example.procrastimates.models.Friend;
 import com.example.procrastimates.adapters.FriendsAdapter;
@@ -25,7 +25,6 @@ import com.example.procrastimates.adapters.LeaderboardAdapter;
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
 import com.example.procrastimates.activities.CircleChatActivity;
-import com.example.procrastimates.activities.NotificationsActivity;
 import com.example.procrastimates.activities.SearchFriendsActivity;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,7 +33,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -343,7 +341,7 @@ public class FriendsFragment extends Fragment {
     }
 
     private void showNotifications() {
-        startActivity(new Intent(getActivity(), NotificationsActivity.class));
+        startActivity(new Intent(getActivity(), InvitationsActivity.class));
     }
 
     private void loadUserData(String userId) {

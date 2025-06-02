@@ -51,7 +51,7 @@
             android:name=".activities.SearchFriendsActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.NotificationsActivity"
+            android:name=".activities.InvitationsActivity"
             android:exported="false" />
         <activity
             android:name=".activities.SplashActivity"
