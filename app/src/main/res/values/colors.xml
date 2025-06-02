@@ -155,4 +155,10 @@
     <color name="on_surface_dark">#E0E0E0</color>
     <color name="background_dark">#121212</color>
 
+    <color name="info_background">#F0F9FF</color>
+    <color name="info_text">#0369A1</color>
+    <color name="ripple_light">#E0E7FF</color>
+    <color name="text_hint">#9CA3AF</color>
+    <color name="border_light">#E5E7EB</color>
+
 </resources>
