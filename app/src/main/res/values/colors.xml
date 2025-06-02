@@ -161,4 +161,13 @@
     <color name="text_hint">#9CA3AF</color>
     <color name="border_light">#E5E7EB</color>
 
+    <color name="card_shadow">#E0E7FF</color>
+    <color name="image_placeholder_bg">#F3F4F6</color>
+    <color name="button_secondary">#F8FAFC</color>
+    <color name="button_neutral">#FFFFFF</color>
+    <color name="ripple_neutral">#F1F5F9</color>
+    <color name="tips_background">#FFFBEB</color>
+    <color name="tips_accent">#D97706</color>
+    <color name="tips_text">#92400E</color>
+
 </resources>

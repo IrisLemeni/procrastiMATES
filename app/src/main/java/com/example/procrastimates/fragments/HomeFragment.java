@@ -368,7 +368,7 @@ public class HomeFragment extends Fragment {
                         // Setează textul de bun venit
                         String username = documentSnapshot.getString("username");
                         if (username != null) {
-                            welcomeText.setText("Bun venit, " + username + "!");
+                            welcomeText.setText("Welcome, " + username + "!");
                         }
 
                         // Încarcă imaginea de profil
