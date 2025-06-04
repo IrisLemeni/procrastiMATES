@@ -1,12 +1,20 @@
 package com.example.procrastimates.fragments;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,6 +51,8 @@ import java.util.Map;
 
 public class PomodoroFragment extends Fragment implements AchievementManager.AchievementListener{
 
+    private boolean isServiceBound = false;
+    private FocusLockService boundService;
     private static final String KEY_IS_SESSION_RUNNING = "isSessionRunning";
     private static final String KEY_SESSION_DURATION = "sessionDuration";
     private static final String KEY_BREAK_DURATION = "breakDuration";
@@ -171,7 +181,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
 
         // Duration selection listeners
         selectDurationButton25.setOnClickListener(v -> {
-            sessionDuration = 25 * 60 * 1000; // 25 minutes
+            sessionDuration = 1 * 60 * 1000; // 25 minutes
             breakDuration = 5 * 60 * 1000; // 5 minutes
             totalSessionTime = sessionDuration; // Store total for progress calculation
             linearLayoutDuration.setVisibility(View.GONE);
@@ -199,15 +209,28 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     }
 
     private void setupBroadcastReceiver() {
-        // Register broadcast receiver for focus interruptions
         focusInterruptionReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                Log.d("PomodoroFragment", "Broadcast received: " + intent.getAction());
+
                 if (FocusLockService.ACTION_INTERRUPTION.equals(intent.getAction())) {
-                    handleFocusInterruption(
-                            intent.getStringExtra("app_name"),
-                            intent.getLongExtra("time_outside", 0)
-                    );
+                    String appName = intent.getStringExtra("app_name");
+                    int interruptionCount = intent.getIntExtra("interruption_count", 0);
+                    long timeElapsed = intent.getLongExtra("time_elapsed", 0);
+
+                    Log.d("PomodoroFragment", "Processing interruption: app=" + appName +
+                            ", count=" + interruptionCount + ", time=" + timeElapsed);
+
+                    // FIX: Verifică că datele sunt valide înainte de procesare
+                    if (appName != null && !appName.isEmpty() && interruptionCount > 0) {
+                        // Procesează pe main thread
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            handleFocusInterruption(appName, interruptionCount, timeElapsed);
+                        });
+                    } else {
+                        Log.w("PomodoroFragment", "Invalid interruption data received");
+                    }
                 }
             }
         };
@@ -322,17 +345,56 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     @Override
     public void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(
-                focusInterruptionReceiver,
-                new IntentFilter(FocusLockService.ACTION_INTERRUPTION)
-        );
+        // Înregistrez receiver-ul pentru întreruperi
+        LocalBroadcastManager.getInstance(requireContext())
+                .registerReceiver(focusInterruptionReceiver,
+                        new IntentFilter(FocusLockService.ACTION_INTERRUPTION));
+
+        // Dacă sesiunea e pornită, atunci apelez bindService
+        if (isSessionRunning) {
+            Intent serviceIntent = new Intent(requireContext(), FocusLockService.class);
+            requireContext().bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(focusInterruptionReceiver);
+        // Dezînregistrăm receiver-ul
+        try {
+            LocalBroadcastManager.getInstance(requireContext())
+                    .unregisterReceiver(focusInterruptionReceiver);
+        } catch (Exception e) {
+            Log.e("PomodoroFragment", "Error unregistering receiver: " + e.getMessage());
+        }
+
+        // Facem unbindService DOAR dacă serviciul chiar era bound
+        if (isServiceBound) {
+            requireContext().unbindService(serviceConnection);
+            isServiceBound = false;
+        }
     }
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            FocusLockService.LocalBinder localBinder = (FocusLockService.LocalBinder) binder;
+            boundService = localBinder.getService();
+            isServiceBound = true;
+
+            // Citește datele curente din serviciu
+            interruptionCount = boundService.getTotalInterruptions();
+            focusScore = boundService.getCurrentFocusScore();
+            updateSessionStats();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isServiceBound = false;
+            boundService = null;
+        }
+    };
+
 
     @Override
     public void onDestroy() {
@@ -416,9 +478,22 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         updateSessionStats();
 
         // Start the focus lock service
-        Intent lockIntent = new Intent(requireContext(), FocusLockService.class);
-        lockIntent.putExtra(FocusLockService.EXTRA_LOCK_ACTIVE, true);
-        requireContext().startService(lockIntent);
+        try {
+            Intent lockIntent = new Intent(requireContext(), FocusLockService.class);
+            lockIntent.putExtra(FocusLockService.EXTRA_LOCK_ACTIVE, true);
+
+            // Use startForegroundService for Android 8.0+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                requireContext().startForegroundService(lockIntent);
+            } else {
+                requireContext().startService(lockIntent);
+            }
+
+            Log.d("PomodoroFragment", "Focus lock service started successfully");
+        } catch (Exception e) {
+            Log.e("PomodoroFragment", "Error starting focus lock service: " + e.getMessage());
+            Toast.makeText(requireContext(), "Focus lock may not work properly", Toast.LENGTH_SHORT).show();
+        }
 
         if (focusLockListener != null) {
             focusLockListener.setBottomNavEnabled(false);
@@ -452,9 +527,16 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         }
 
         // Stop the focus lock service
-        Intent lockIntent = new Intent(requireContext(), FocusLockService.class);
-        lockIntent.putExtra(FocusLockService.EXTRA_LOCK_ACTIVE, false);
-        requireContext().startService(lockIntent);
+        try {
+            Intent lockIntent = new Intent(requireContext(), FocusLockService.class);
+            lockIntent.putExtra(FocusLockService.EXTRA_LOCK_ACTIVE, false);
+            requireContext().startService(lockIntent);
+
+            // Also stop the service completely
+            requireContext().stopService(new Intent(requireContext(), FocusLockService.class));
+        } catch (Exception e) {
+            Log.e("PomodoroFragment", "Error stopping focus lock service: " + e.getMessage());
+        }
 
         // Reset to duration selection view
         linearLayoutTimer.setVisibility(View.GONE);
@@ -463,6 +545,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         linearLayoutDuration.setVisibility(View.VISIBLE);
         currentViewState = "duration";
     }
+
 
     private void updateTimerButtonText(String text) {
         // Find the TextView inside the CardView and update its text
@@ -625,31 +708,96 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     }
 
     // Handle focus interruption from another app
-    private void handleFocusInterruption(String appName, long timeOutside) {
-        interruptionCount++;
-        timeOutsideApp = timeOutside;
+    private void handleFocusInterruption(String appName, int interruptionCount, long timeElapsed) {
+        Log.d("PomodoroFragment", "Handling focus interruption: " + appName + ", count: " + interruptionCount);
 
-        // Decrease focus score based on interruption (min 0)
-        focusScore = Math.max(0, focusScore - 5);
+        // Update interruption count
+        this.interruptionCount = interruptionCount;
 
-        // Update UI
-        updateSessionStats();
+        // Calculate focus score based on interruptions
+        focusScore = Math.max(0, 100 - (interruptionCount * 10));
 
-        // Show brief toast
-        Toast.makeText(requireContext(),
-                "Focus interrupted! Returning to session...",
-                Toast.LENGTH_SHORT).show();
+        // Update time outside app (convert to seconds for display)
+        timeOutsideApp = timeElapsed / 1000;
+
+        // FIX: Asigură-te că UI se actualizează pe main thread
+        if (getActivity() != null && isAdded()) {
+            getActivity().runOnUiThread(() -> {
+                try {
+                    updateSessionStats();
+
+                    // Show brief feedback to user
+                    Toast.makeText(requireContext(),
+                            "Focus interrupted by " + getAppDisplayName(appName) +
+                                    "! Score: " + focusScore + " (-" + (interruptionCount * 10) + " points)",
+                            Toast.LENGTH_LONG).show(); // Schimbat la LONG pentru feedback mai clar
+
+                    Log.d("PomodoroFragment", "UI updated - Score: " + focusScore + ", Interruptions: " + interruptionCount);
+                } catch (Exception e) {
+                    Log.e("PomodoroFragment", "Error updating UI: " + e.getMessage());
+                }
+            });
+        }
+    }
+
+
+    private String getAppDisplayName(String packageName) {
+        try {
+            PackageManager pm = requireContext().getPackageManager();
+            ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+            return pm.getApplicationLabel(appInfo).toString();
+        } catch (Exception e) {
+            // If we can't get the app name, return a simplified package name
+            String[] parts = packageName.split("\\.");
+            return parts.length > 0 ? parts[parts.length - 1] : packageName;
+        }
     }
 
     // Update focus stats UI
     private void updateSessionStats() {
-        if (isAdded() && focusScoreText != null) {
-            focusScoreText.setText("Focus Score: " + focusScore);
-            interruptionCountText.setText("Interruptions: " + interruptionCount);
+        try {
+            // Verifică că suntem pe main thread
+            if (Looper.myLooper() != Looper.getMainLooper()) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::updateSessionStats);
+                }
+                return;
+            }
+
+            if (!isAdded() || getContext() == null) {
+                Log.w("PomodoroFragment", "Fragment not attached, skipping UI update");
+                return;
+            }
+
+            // FIX: Verifică că toate view-urile există înainte de actualizare
+            if (focusScoreText != null) {
+                String scoreText = "Focus Score: " + focusScore;
+                focusScoreText.setText(scoreText);
+                Log.d("PomodoroFragment", "Updated focus score text: " + scoreText);
+            } else {
+                Log.w("PomodoroFragment", "focusScoreText is null");
+            }
+
+            if (interruptionCountText != null) {
+                String interruptionText = "Interruptions: " + interruptionCount;
+                interruptionCountText.setText(interruptionText);
+                Log.d("PomodoroFragment", "Updated interruption text: " + interruptionText);
+            } else {
+                Log.w("PomodoroFragment", "interruptionCountText is null");
+            }
 
             if (focusProgressBar != null) {
                 focusProgressBar.setProgress(focusScore);
+                Log.d("PomodoroFragment", "Updated progress bar: " + focusScore);
+            } else {
+                Log.w("PomodoroFragment", "focusProgressBar is null");
             }
+
+            Log.d("PomodoroFragment", "Session stats updated successfully - Score: " + focusScore +
+                    ", Interruptions: " + interruptionCount);
+
+        } catch (Exception e) {
+            Log.e("PomodoroFragment", "Error updating session stats: " + e.getMessage(), e);
         }
     }
 }
