@@ -38,6 +38,13 @@ public class AchievementsActivity extends AppCompatActivity implements Achieveme
 
         recyclerViewAchievements = findViewById(R.id.recyclerViewAchievements);
         recyclerViewAchievements.setLayoutManager(new GridLayoutManager(this, 2));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        AchievementManager.getInstance().resetAllAchievementsLocked();
 
         allAchievements = AchievementManager.getInstance().getAllAchievements();
         achievementsAdapter = new AchievementsAdapter(this, allAchievements);
@@ -45,8 +52,13 @@ public class AchievementsActivity extends AppCompatActivity implements Achieveme
 
         loadUnlockedAchievements();
 
-        // Register as achievement listener
         AchievementManager.getInstance().addAchievementListener(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        AchievementManager.getInstance().removeAchievementListener(this);
     }
 
     @Override

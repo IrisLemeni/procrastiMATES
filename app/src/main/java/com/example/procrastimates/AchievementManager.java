@@ -281,6 +281,13 @@ public class AchievementManager {
         }
     }
 
+    public void resetAllAchievementsLocked() {
+        if (allAchievements == null) return;
+        for (Achievement a : allAchievements) {
+            a.setUnlocked(false);
+        }
+    }
+
     public interface AchievementsCallback {
         void onAchievementsLoaded(List<Achievement> achievements);
         void onAchievementsLoadFailed(Exception exception);
