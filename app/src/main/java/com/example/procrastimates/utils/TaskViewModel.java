@@ -13,7 +13,7 @@ import com.example.procrastimates.enums.Priority;
 import com.example.procrastimates.models.Message;
 import com.example.procrastimates.models.Task;
 import com.example.procrastimates.repositories.TaskRepository;
-import com.example.procrastimates.service.TaskService;
+import com.example.procrastimates.services.TaskService;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 

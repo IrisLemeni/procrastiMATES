@@ -1,4 +1,4 @@
-package com.example.procrastimates.service;
+package com.example.procrastimates.services;
 
 import com.example.procrastimates.models.Task;
 import com.example.procrastimates.repositories.TaskRepository;

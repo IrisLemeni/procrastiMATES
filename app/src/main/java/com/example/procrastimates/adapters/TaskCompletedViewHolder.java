@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.procrastimates.models.Message;
 import com.example.procrastimates.enums.MessageType;
 import com.example.procrastimates.models.Notification;
-import com.example.procrastimates.service.NotificationSender;
+import com.example.procrastimates.services.NotificationSender;
 import com.example.procrastimates.enums.NotificationType;
 import com.example.procrastimates.models.Objection;
 import com.example.procrastimates.enums.ObjectionStatus;

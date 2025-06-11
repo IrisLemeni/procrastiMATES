@@ -1,4 +1,4 @@
-package com.example.procrastimates.service;
+package com.example.procrastimates.services;
 
 import androidx.annotation.NonNull;
 

@@ -17,7 +17,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.example.procrastimates.service.NotificationSender;
+import com.example.procrastimates.services.NotificationSender;
 import com.example.procrastimates.enums.NotificationType;
 import com.example.procrastimates.R;
 import com.example.procrastimates.fragments.FriendsFragment;

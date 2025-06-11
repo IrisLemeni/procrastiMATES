@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.models.Achievement;
 import com.example.procrastimates.components.AchievementDialogHelper;
-import com.example.procrastimates.service.AchievementManager;
+import com.example.procrastimates.services.AchievementManager;
 import com.example.procrastimates.adapters.AchievementsAdapter;
 import com.example.procrastimates.R;
 import com.google.android.material.appbar.MaterialToolbar;

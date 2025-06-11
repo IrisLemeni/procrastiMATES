@@ -11,7 +11,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.procrastimates.service.AchievementManager;
+import com.example.procrastimates.services.AchievementManager;
 import com.example.procrastimates.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

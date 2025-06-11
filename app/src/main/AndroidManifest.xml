@@ -38,12 +38,12 @@
             android:exported="false" />
 
         <service
-            android:name=".service.FocusLockService"
+            android:name=".services.FocusLockService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
         <service
-            android:name=".service.MyFirebaseMessagingService"
+            android:name=".services.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
