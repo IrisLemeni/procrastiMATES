@@ -1,6 +1,5 @@
 package com.example.procrastimates.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -13,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.models.Circle;
 import com.example.procrastimates.models.Invitation;
-import com.example.procrastimates.InvitationAdapter;
+import com.example.procrastimates.adapters.InvitationAdapter;
 import com.example.procrastimates.R;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;

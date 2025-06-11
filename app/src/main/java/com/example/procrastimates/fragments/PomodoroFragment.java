@@ -34,9 +34,9 @@ import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.procrastimates.models.Achievement;
-import com.example.procrastimates.AchievementDialogHelper;
+import com.example.procrastimates.components.AchievementDialogHelper;
 import com.example.procrastimates.R;
-import com.example.procrastimates.AchievementManager;
+import com.example.procrastimates.service.AchievementManager;
 import com.example.procrastimates.service.FocusLockService;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;

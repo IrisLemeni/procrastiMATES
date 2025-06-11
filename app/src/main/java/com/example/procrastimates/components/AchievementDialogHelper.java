@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.components;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.procrastimates.R;
 import com.example.procrastimates.activities.AchievementsActivity;
 import com.example.procrastimates.models.Achievement;
 import com.squareup.picasso.Picasso;

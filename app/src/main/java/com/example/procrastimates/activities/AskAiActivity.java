@@ -46,15 +46,11 @@ public class AskAiActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ask_ai);
-
-        // Initialize Firebase if not already initialized
         FirebaseApp.initializeApp(this);
         db = FirebaseFirestore.getInstance();
-
         // Initialize the Cloud Function client
         aiServiceClient = new AiServiceClient(this);
 
-        // UI references
         questionInput = findViewById(R.id.questionInput);
         sendButton = findViewById(R.id.sendButton);
         responseText = findViewById(R.id.responseText);
@@ -66,12 +62,9 @@ public class AskAiActivity extends AppCompatActivity {
         responseContainer = findViewById(R.id.responseContainer);
         toolbar = findViewById(R.id.toolbar);
 
-        // Find the history container (the MaterialCardView that contains the RecyclerView)
         historyContainer = (View) historyRecyclerView.getParent().getParent();
 
         markwon = Markwon.create(this);
-
-        // Set up RecyclerView for conversation history
         setupHistoryRecyclerView();
 
         setSupportActionBar(toolbar);

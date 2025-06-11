@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.enums;
 
 public enum Priority {
     LOW(0), MEDIUM(1), HIGH(2);

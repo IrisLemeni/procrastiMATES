@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +7,7 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.procrastimates.R;
 import com.example.procrastimates.activities.InvitationsActivity;
 import com.example.procrastimates.models.Invitation;
 import com.google.android.material.button.MaterialButton;

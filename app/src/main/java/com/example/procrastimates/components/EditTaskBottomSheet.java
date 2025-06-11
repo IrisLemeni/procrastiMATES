@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.components;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
@@ -13,6 +13,8 @@ import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.procrastimates.enums.Priority;
+import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.chip.Chip;

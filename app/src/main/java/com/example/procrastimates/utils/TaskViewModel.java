@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.utils;
 
 import android.app.Application;
 import android.util.Log;
@@ -8,6 +8,8 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.procrastimates.enums.MessageType;
+import com.example.procrastimates.enums.Priority;
 import com.example.procrastimates.models.Message;
 import com.example.procrastimates.models.Task;
 import com.example.procrastimates.repositories.TaskRepository;

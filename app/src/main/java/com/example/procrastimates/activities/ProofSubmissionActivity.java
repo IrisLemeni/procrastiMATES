@@ -12,10 +12,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.procrastimates.models.Message;
-import com.example.procrastimates.MessageType;
+import com.example.procrastimates.enums.MessageType;
 import com.example.procrastimates.models.Notification;
-import com.example.procrastimates.NotificationSender;
-import com.example.procrastimates.NotificationType;
+import com.example.procrastimates.service.NotificationSender;
+import com.example.procrastimates.enums.NotificationType;
 import com.example.procrastimates.models.Objection;
 import com.example.procrastimates.models.Proof;
 import com.example.procrastimates.R;

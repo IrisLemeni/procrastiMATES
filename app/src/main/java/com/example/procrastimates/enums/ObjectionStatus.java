@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.enums;
 
 // Enum for objection status
 public enum ObjectionStatus {

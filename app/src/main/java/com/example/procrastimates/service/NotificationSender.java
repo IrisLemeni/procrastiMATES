@@ -1,22 +1,22 @@
-package com.example.procrastimates;
+package com.example.procrastimates.service;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.procrastimates.NotificationHelper;
+import com.example.procrastimates.MyApplication;
+import com.example.procrastimates.R;
+import com.example.procrastimates.enums.NotificationType;
+import com.example.procrastimates.utils.NotificationHelper;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONException;

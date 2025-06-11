@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.utils;
 
 import android.Manifest;
 import android.app.NotificationChannel;

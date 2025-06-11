@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.models.Message;
-import com.example.procrastimates.MessageType;
+import com.example.procrastimates.enums.MessageType;
 import com.example.procrastimates.R;
 import com.example.procrastimates.adapters.MessageAdapter;
 import com.google.firebase.Timestamp;

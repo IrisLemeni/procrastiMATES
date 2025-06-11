@@ -1,9 +1,6 @@
 package com.example.procrastimates.adapters;
 
-import android.content.Context;
 import android.content.res.ColorStateList;
-import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +9,7 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.procrastimates.Priority;
+import com.example.procrastimates.enums.Priority;
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
 import com.google.android.material.button.MaterialButton;

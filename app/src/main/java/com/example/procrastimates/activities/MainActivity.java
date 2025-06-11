@@ -17,14 +17,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import com.example.procrastimates.NotificationSender;
-import com.example.procrastimates.NotificationType;
+import com.example.procrastimates.service.NotificationSender;
+import com.example.procrastimates.enums.NotificationType;
 import com.example.procrastimates.R;
 import com.example.procrastimates.fragments.FriendsFragment;
 import com.example.procrastimates.fragments.HomeFragment;
 import com.example.procrastimates.fragments.PomodoroFragment;
 import com.example.procrastimates.fragments.TasksFragment;
-import com.example.procrastimates.NotificationHelper;
+import com.example.procrastimates.utils.NotificationHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;

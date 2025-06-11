@@ -14,7 +14,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.procrastimates.R;
 import com.example.procrastimates.adapters.TaskAdapter;
-import com.example.procrastimates.TaskViewModel;
+import com.example.procrastimates.utils.TaskViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;

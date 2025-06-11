@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="procrastiMATES">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-06-02T09:52:06.845367800Z">
+        <DropdownSelection timestamp="2025-06-04T09:26:42.903369200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Iris\.android\avd\Medium_Phone.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CRA1RKFGX" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,12 +15,12 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Iris\.android\avd\Medium_Phone.avd" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CRA1RKFGX" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Iris\.android\avd\Medium_Phone_API_35_2.avd" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Iris\.android\avd\Medium_Phone.avd" />
               </handle>
             </Target>
           </targets>

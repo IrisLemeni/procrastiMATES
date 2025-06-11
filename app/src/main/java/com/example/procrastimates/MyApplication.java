@@ -9,7 +9,7 @@ import android.Manifest;
 
 import androidx.core.content.ContextCompat;
 
-import com.example.procrastimates.fragments.PollScheduler;
+import com.example.procrastimates.utils.NotificationHelper;
 
 public class MyApplication extends Application {
     private static final String TAG = "ProcrastimatesApp";

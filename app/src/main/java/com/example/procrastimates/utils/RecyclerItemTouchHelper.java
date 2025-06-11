@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.utils;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.procrastimates.R;
 import com.example.procrastimates.adapters.TaskAdapter;
 import com.example.procrastimates.repositories.TaskRepository;
 import com.example.procrastimates.models.Task;

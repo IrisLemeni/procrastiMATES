@@ -1,6 +1,6 @@
 package com.example.procrastimates.models;
 
-import com.example.procrastimates.ObjectionStatus;
+import com.example.procrastimates.enums.ObjectionStatus;
 import com.google.firebase.Timestamp;
 
 public class Objection {

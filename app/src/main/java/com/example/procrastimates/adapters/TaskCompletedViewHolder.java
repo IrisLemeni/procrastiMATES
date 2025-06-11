@@ -8,12 +8,12 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.models.Message;
-import com.example.procrastimates.MessageType;
+import com.example.procrastimates.enums.MessageType;
 import com.example.procrastimates.models.Notification;
-import com.example.procrastimates.NotificationSender;
-import com.example.procrastimates.NotificationType;
+import com.example.procrastimates.service.NotificationSender;
+import com.example.procrastimates.enums.NotificationType;
 import com.example.procrastimates.models.Objection;
-import com.example.procrastimates.ObjectionStatus;
+import com.example.procrastimates.enums.ObjectionStatus;
 import com.example.procrastimates.R;
 import com.example.procrastimates.models.Task;
 import com.google.firebase.Timestamp;

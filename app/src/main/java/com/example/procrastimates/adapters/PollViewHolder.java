@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.models.Message;
 import com.example.procrastimates.models.Poll;
-import com.example.procrastimates.PollStatus;
+import com.example.procrastimates.enums.PollStatus;
 import com.example.procrastimates.R;
 import com.google.firebase.firestore.FirebaseFirestore;
 

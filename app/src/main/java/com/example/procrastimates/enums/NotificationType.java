@@ -1,4 +1,4 @@
-package com.example.procrastimates;
+package com.example.procrastimates.enums;
 
 public enum NotificationType {
     TASK_COMPLETED,        // When a user completes a task

@@ -1,6 +1,6 @@
 package com.example.procrastimates.models;
 
-import com.example.procrastimates.Priority;
+import com.example.procrastimates.enums.Priority;
 import com.google.firebase.Timestamp;
 
 

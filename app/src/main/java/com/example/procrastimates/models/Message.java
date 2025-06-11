@@ -1,6 +1,6 @@
 package com.example.procrastimates.models;
 
-import com.example.procrastimates.MessageType;
+import com.example.procrastimates.enums.MessageType;
 import com.google.firebase.Timestamp;
 
 import java.util.UUID;

@@ -1,6 +1,6 @@
 package com.example.procrastimates.models;
 
-import com.example.procrastimates.PollStatus;
+import com.example.procrastimates.enums.PollStatus;
 import com.google.firebase.Timestamp;
 
 import java.util.Calendar;
