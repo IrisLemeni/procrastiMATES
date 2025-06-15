@@ -9,6 +9,7 @@ import android.Manifest;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.procrastimates.services.PollScheduler;
 import com.example.procrastimates.utils.NotificationHelper;
 
 public class MyApplication extends Application {
@@ -30,6 +31,7 @@ public class MyApplication extends Application {
             Log.d(TAG, "Notification permission status: " +
                     (hasPermission ? "GRANTED" : "NOT GRANTED"));
         }
+        PollScheduler.schedulePollChecks(this);
 
         // Log that app has started
         Log.d(TAG, "Application started");

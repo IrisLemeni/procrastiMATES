@@ -21,16 +21,10 @@ import com.example.procrastimates.activities.MainActivity;
 
 public class NotificationHelper {
     private static final String TAG = "NotificationHelper";
-
-    // Use a consistent channel ID throughout the app
     public static final String CHANNEL_ID = "procrastimates_notifications";
     public static final String CHANNEL_NAME = "Procrastimates Notifications";
-    public static final String CHANNEL_DESC = "Notificări pentru task-uri și obiecții";
+    public static final String CHANNEL_DESC = "Notifications for tasks and objections";
 
-    /**
-     * Creates the notification channel for Android O and above
-     * Call this in Application.onCreate() or when your service starts
-     */
     public static void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(

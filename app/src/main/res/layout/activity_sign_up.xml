@@ -16,9 +16,9 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="300dp"
-            android:layout_height="117dp"
-            android:src="@drawable/procrastimate" />
+            android:layout_width="200dp"
+            android:layout_height="110dp"
+            android:src="@drawable/procrastimates" />
 
         <TextView
             android:layout_width="wrap_content"

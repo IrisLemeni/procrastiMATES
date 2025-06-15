@@ -67,14 +67,12 @@ public class TaskRepository {
 
     public void completeTask(String taskId, String userId, String circleId, OnTaskActionListener listener) {
         DocumentReference taskRef = db.collection("tasks").document(taskId);
-
         taskRef.get()
                 .addOnSuccessListener(documentSnapshot -> {
                     Task task = documentSnapshot.toObject(Task.class);
                     if (task != null) {
                         task.setCompleted(true);
                         task.setCompletedAt(new Timestamp(new Date()));
-
                         taskRef.set(task)
                                 .addOnSuccessListener(aVoid -> {
                                     // Notify circle members about the completed task

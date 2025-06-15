@@ -18,6 +18,8 @@ import com.github.mikephil.charting.utils.ColorTemplate;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +33,7 @@ public class FocusChartAdapter {
         private int focusScore;
         private int interruptionCount;
         private int timeOutsideApp;
-        private int duration; // in minutes
+        private int duration;
 
         public PomodoroSession(Date timestamp, int focusScore, int interruptionCount, int timeOutsideApp, int duration) {
             this.timestamp = timestamp;
@@ -63,29 +65,33 @@ public class FocusChartAdapter {
     }
 
     public static void setupFocusLineChart(LineChart lineChart, List<PomodoroSession> sessions) {
-        // Configure chart appearance first
+        // Configure chart appearance
         configureFocusLineChart(lineChart);
-
-        if (sessions == null || sessions.isEmpty()) {
-            // Set empty chart
-            LineData lineData = new LineData();
-            lineChart.setData(lineData);
-            lineChart.invalidate();
-            return;
-        }
 
         ArrayList<Entry> entries = new ArrayList<>();
 
-        // Convert sessions to chart entries
-        for (PomodoroSession session : sessions) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(session.getTimestamp());
-
-            // X-axis: hour of day with decimal for minutes (e.g., 14.5 for 2:30 PM)
-            float hourOfDay = calendar.get(Calendar.HOUR_OF_DAY) +
-                    calendar.get(Calendar.MINUTE) / 60.0f;
-
-            entries.add(new Entry(hourOfDay, session.getFocusScore()));
+        if (sessions != null && !sessions.isEmpty()) {
+            // Create entries for each session
+            for (PomodoroSession session : sessions) {
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(session.getTimestamp());
+                float hourOfDay = cal.get(Calendar.HOUR_OF_DAY) + cal.get(Calendar.MINUTE) / 60f;
+                entries.add(new Entry(hourOfDay, session.getFocusScore()));
+            }
+            // Sort by X value
+            Collections.sort(entries, Comparator.comparing(Entry::getX));
+            // Add base point at start if needed
+            if (entries.get(0).getX() > 0f) {
+                entries.add(0, new Entry(0f, 0f));
+            }
+            // Add base point at end if needed
+            if (entries.get(entries.size() - 1).getX() < 24f) {
+                entries.add(new Entry(24f, 0f));
+            }
+        } else {
+            // No sessions: flat line at 0
+            entries.add(new Entry(0f, 0f));
+            entries.add(new Entry(24f, 0f));
         }
 
         LineDataSet dataSet = new LineDataSet(entries, "Focus Score");
@@ -95,18 +101,16 @@ public class FocusChartAdapter {
         dataSet.setCircleRadius(4f);
         dataSet.setValueTextSize(10f);
         dataSet.setDrawValues(false);
-        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
-
-        // Add gradient under the line
+        // Straight lines between points
+        dataSet.setMode(LineDataSet.Mode.LINEAR);
+        // Optional fill
         dataSet.setDrawFilled(true);
-        dataSet.setFillColor(Color.parseColor("#804CAF50")); // Semi-transparent green
+        dataSet.setFillColor(Color.parseColor("#804CAF50"));
 
         LineData lineData = new LineData(dataSet);
         lineChart.setData(lineData);
-
-        // Add animation
         lineChart.animateX(1000);
-        lineChart.invalidate(); // Refresh chart
+        lineChart.invalidate();
     }
 
     private static void configureFocusLineChart(LineChart lineChart) {
@@ -117,24 +121,23 @@ public class FocusChartAdapter {
         lineChart.setPinchZoom(true);
         lineChart.setDrawGridBackground(false);
 
-        // Configure X-axis (hours)
         XAxis xAxis = lineChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f); // 1 hour interval
-        xAxis.setLabelCount(12);
+        xAxis.setGranularity(4f);
+        xAxis.setLabelCount(6, true);
         xAxis.setDrawGridLines(false);
+        xAxis.setAxisMinimum(0f);
+        xAxis.setAxisMaximum(24f);
+        xAxis.setAvoidFirstLastClipping(true);
         xAxis.setValueFormatter((value, axis) -> {
-            // Format hour values (0-23) to AM/PM format
             int hour = (int) value;
             if (hour < 0 || hour > 23) return "";
-
             if (hour == 0) return "12 AM";
             if (hour < 12) return hour + " AM";
             if (hour == 12) return "12 PM";
             return (hour - 12) + " PM";
         });
 
-        // Configure Y-axis (focus score percentage)
         YAxis leftAxis = lineChart.getAxisLeft();
         leftAxis.setAxisMinimum(0f);
         leftAxis.setAxisMaximum(100f);
@@ -152,59 +155,45 @@ public class FocusChartAdapter {
         int maxDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         SimpleDateFormat dayFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-        // Inițializează toate zilele cu 0 sesiuni
+        // Initialize all days with zero sessions
         for (int i = 1; i <= maxDays; i++) {
             entries.add(new BarEntry(i, 0));
         }
 
-        // Dacă există înregistrări daily_sessions, actualizează valorile
         if (dailySessions != null && !dailySessions.isEmpty()) {
-            for (com.google.firebase.firestore.QueryDocumentSnapshot document : dailySessions) {
+            for (com.google.firebase.firestore.QueryDocumentSnapshot doc : dailySessions) {
                 try {
-                    // Extrage ziua din ID-ul documentului (format "yyyy-MM-dd")
-                    String documentId = document.getId();
-                    Date date = dayFormat.parse(documentId);
+                    String id = doc.getId();
+                    Date date = dayFormat.parse(id);
                     calendar.setTime(date);
-
-                    int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-                    long sessionCount = document.getLong("sessionCount");
-
-                    // Actualizează intrarea pentru ziua respectivă
-                    if (dayOfMonth >= 1 && dayOfMonth <= maxDays) {
-                        entries.get(dayOfMonth - 1).setY(sessionCount);
+                    int day = calendar.get(Calendar.DAY_OF_MONTH);
+                    long count = doc.getLong("sessionCount");
+                    if (day >= 1 && day <= maxDays) {
+                        entries.get(day - 1).setY(count);
                     }
                 } catch (Exception e) {
-                    System.err.println("Error parsing date from document ID");
+                    e.printStackTrace();
                 }
             }
         }
-
-        // Configure bar chart appearance and data
         configureMonthlyBarChart(barChart, entries);
     }
 
     private static void configureMonthlyBarChart(BarChart barChart, ArrayList<BarEntry> entries) {
-        // Crează setul de date
         BarDataSet dataSet = new BarDataSet(entries, "Pomodoro Sessions");
         dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
         dataSet.setValueTextSize(12f);
-        dataSet.setValueTextColor(Color.BLACK);
 
         BarData barData = new BarData(dataSet);
         barData.setBarWidth(0.9f);
         barChart.setData(barData);
 
-        // Configurare grafic
         String monthYear = new SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(new Date());
-
-        Description description = new Description();
-        description.setText(monthYear);
-        description.setTextSize(20f);
-        description.setTextColor(Color.BLACK);
-        description.setPosition(250f, 50f);
-
-        barChart.setDescription(description);
-
+        Description desc = new Description();
+        desc.setText(monthYear);
+        desc.setTextSize(20f);
+        desc.setPosition(250f, 50f);
+        barChart.setDescription(desc);
 
         barChart.setDrawGridBackground(false);
         barChart.setDragEnabled(true);
@@ -217,162 +206,93 @@ public class FocusChartAdapter {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setGranularity(1f);
         xAxis.setLabelCount(7);
-        xAxis.setTextSize(14f);
         xAxis.setDrawGridLines(false);
         xAxis.setValueFormatter((value, axis) -> {
             int day = (int) value;
-            return (day > 0 && day <= 31) ? String.valueOf(day) : "";
+            return (day > 0 && day <= entries.size()) ? String.valueOf(day) : "";
         });
 
         YAxis leftAxis = barChart.getAxisLeft();
         leftAxis.setAxisMinimum(0f);
         leftAxis.setGranularity(1f);
-        leftAxis.setTextSize(14f);
         leftAxis.setDrawGridLines(true);
 
         barChart.getAxisRight().setEnabled(false);
         barChart.setFitBars(true);
 
-        // Centrare pe ziua curentă
         int currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH);
         barChart.moveViewToX(currentDay - 4);
-
         barChart.animateY(1000);
         barChart.invalidate();
     }
 
     public static int calculateAverageFocusScore(List<PomodoroSession> sessions) {
         if (sessions == null || sessions.isEmpty()) return 0;
-
-        int totalFocusScore = 0;
-        int totalDuration = 0;
-
-        // Weight focus score by session duration
-        for (PomodoroSession session : sessions) {
-            totalFocusScore += session.getFocusScore() * session.getDuration();
-            totalDuration += session.getDuration();
+        int totalScore = 0, totalDur = 0;
+        for (PomodoroSession s : sessions) {
+            totalScore += s.getFocusScore() * s.getDuration();
+            totalDur += s.getDuration();
         }
-
-        return totalDuration > 0 ? totalFocusScore / totalDuration : 0;
+        return totalDur > 0 ? totalScore / totalDur : 0;
     }
 
     public static int calculateTotalInterruptions(List<PomodoroSession> sessions) {
         if (sessions == null || sessions.isEmpty()) return 0;
-
         int total = 0;
-        for (PomodoroSession session : sessions) {
-            total += session.getInterruptionCount();
-        }
+        for (PomodoroSession s : sessions) total += s.getInterruptionCount();
         return total;
     }
 
     public static int calculateTotalTimeOutside(List<PomodoroSession> sessions) {
         if (sessions == null || sessions.isEmpty()) return 0;
-
         int total = 0;
-        for (PomodoroSession session : sessions) {
-            total += session.getTimeOutsideApp();
-        }
-        return total / 10000;
+        for (PomodoroSession s : sessions) total += s.getTimeOutsideApp();
+        return total / 10000; // ajustat dacă e nevoie
     }
 
     public static String determineBestFocusTime(List<PomodoroSession> sessions) {
         if (sessions == null || sessions.isEmpty()) return "No data available";
-
-        // Group sessions by hour of day
-        Map<Integer, List<PomodoroSession>> sessionsByHour = new HashMap<>();
-
-        for (PomodoroSession session : sessions) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(session.getTimestamp());
-            int hour = calendar.get(Calendar.HOUR_OF_DAY);
-
-            if (!sessionsByHour.containsKey(hour)) {
-                sessionsByHour.put(hour, new ArrayList<>());
-            }
-
-            sessionsByHour.get(hour).add(session);
+        Map<Integer, List<PomodoroSession>> byHour = new HashMap<>();
+        for (PomodoroSession s : sessions) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(s.getTimestamp());
+            int hour = cal.get(Calendar.HOUR_OF_DAY);
+            byHour.computeIfAbsent(hour, k -> new ArrayList<>()).add(s);
         }
-
-        // Find hour with highest average focus
-        int bestHour = -1;
-        float bestAverage = -1;
-
-        for (Map.Entry<Integer, List<PomodoroSession>> entry : sessionsByHour.entrySet()) {
-            int hour = entry.getKey();
-            List<PomodoroSession> hourSessions = entry.getValue();
-
-            int totalScore = 0;
-            int totalDuration = 0;
-
-            for (PomodoroSession session : hourSessions) {
-                totalScore += session.getFocusScore() * session.getDuration();
-                totalDuration += session.getDuration();
+        int bestHour = -1; float bestAvg = -1;
+        for (Map.Entry<Integer, List<PomodoroSession>> e : byHour.entrySet()) {
+            int hour = e.getKey(); int sum=0, dur=0;
+            for (PomodoroSession s : e.getValue()) {
+                sum += s.getFocusScore() * s.getDuration();
+                dur += s.getDuration();
             }
-
-            float averageScore = totalDuration > 0 ? (float) totalScore / totalDuration : 0;
-
-            if (averageScore > bestAverage) {
-                bestAverage = averageScore;
-                bestHour = hour;
-            }
+            float avg = dur>0?(float)sum/dur:0;
+            if (avg>bestAvg) { bestAvg=avg; bestHour=hour; }
         }
-
-        if (bestHour == -1) return "No data available";
-
-        // Format hour range (e.g., "10:00 AM - 11:00 AM")
-        SimpleDateFormat hourFormat = new SimpleDateFormat("h:00 a", Locale.getDefault());
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, bestHour);
-        calendar.set(Calendar.MINUTE, 0);
-
-        String startTime = hourFormat.format(calendar.getTime());
-
-        calendar.add(Calendar.HOUR_OF_DAY, 1);
-        String endTime = hourFormat.format(calendar.getTime());
-
-        return startTime + " - " + endTime;
+        if (bestHour<0) return "No data available";
+        SimpleDateFormat fmt = new SimpleDateFormat("h:00 a", Locale.getDefault());
+        Calendar cal = Calendar.getInstance(); cal.set(Calendar.HOUR_OF_DAY, bestHour); cal.set(Calendar.MINUTE, 0);
+        String start = fmt.format(cal.getTime()); cal.add(Calendar.HOUR_OF_DAY, 1);
+        String end = fmt.format(cal.getTime());
+        return start + " - " + end;
     }
 
     public static Map<String, Integer> findProductivityPatterns(List<PomodoroSession> sessions) {
         Map<String, Integer> patterns = new HashMap<>();
-
-        if (sessions == null || sessions.isEmpty()) {
-            return patterns;
+        if (sessions == null || sessions.isEmpty()) return patterns;
+        List<PomodoroSession> morning = new ArrayList<>();
+        List<PomodoroSession> afternoon = new ArrayList<>();
+        List<PomodoroSession> evening = new ArrayList<>();
+        for (PomodoroSession s : sessions) {
+            Calendar cal = Calendar.getInstance(); cal.setTime(s.getTimestamp());
+            int h = cal.get(Calendar.HOUR_OF_DAY);
+            if (h>=5 && h<12) morning.add(s);
+            else if (h>=12 && h<17) afternoon.add(s);
+            else if (h>=17 && h<24) evening.add(s);
         }
-
-        // Group into morning, afternoon, evening
-        List<PomodoroSession> morning = new ArrayList<>();   // 5:00 - 11:59
-        List<PomodoroSession> afternoon = new ArrayList<>(); // 12:00 - 16:59
-        List<PomodoroSession> evening = new ArrayList<>();   // 17:00 - 23:59
-
-        for (PomodoroSession session : sessions) {
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(session.getTimestamp());
-            int hour = cal.get(Calendar.HOUR_OF_DAY);
-
-            if (hour >= 5 && hour < 12) {
-                morning.add(session);
-            } else if (hour >= 12 && hour < 17) {
-                afternoon.add(session);
-            } else if (hour >= 17 && hour < 24) {
-                evening.add(session);
-            }
-        }
-
-        // Calculate average focus score for each period
-        if (!morning.isEmpty()) {
-            patterns.put("Morning", calculateAverageFocusScore(morning));
-        }
-
-        if (!afternoon.isEmpty()) {
-            patterns.put("Afternoon", calculateAverageFocusScore(afternoon));
-        }
-
-        if (!evening.isEmpty()) {
-            patterns.put("Evening", calculateAverageFocusScore(evening));
-        }
-
+        if (!morning.isEmpty()) patterns.put("Morning", calculateAverageFocusScore(morning));
+        if (!afternoon.isEmpty()) patterns.put("Afternoon", calculateAverageFocusScore(afternoon));
+        if (!evening.isEmpty()) patterns.put("Evening", calculateAverageFocusScore(evening));
         return patterns;
     }
 }

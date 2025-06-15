@@ -18,9 +18,9 @@
         <ImageView
             android:id="@+id/app_logo"
             android:transitionName="appLogo"
-            android:layout_width="300dp"
-            android:layout_height="117dp"
-            android:src="@drawable/procrastimate" />
+            android:layout_width="200dp"
+            android:layout_height="110dp"
+            android:src="@drawable/procrastimates" />
 
         <ImageView
             android:layout_width="105dp"

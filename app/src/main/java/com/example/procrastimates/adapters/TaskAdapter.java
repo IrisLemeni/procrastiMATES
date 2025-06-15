@@ -173,28 +173,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             }
         }
 
-        /*
-        private void setPriorityIndicator(Priority priority) {
-            if (priorityIndicator == null) return;
-            int color;
-            switch (priority) {
-                case HIGH:
-                    color = ContextCompat.getColor(itemView.getContext(), R.color.priority_high);
-                    break;
-                case MEDIUM:
-                    color = ContextCompat.getColor(itemView.getContext(), R.color.priority_medium);
-                    break;
-                case LOW:
-                    color = ContextCompat.getColor(itemView.getContext(), R.color.priority_low);
-                    break;
-                default:
-                    color = ContextCompat.getColor(itemView.getContext(), R.color.text_tertiary);
-                    break;
-            }
-            priorityIndicator.setBackgroundTintList(ColorStateList.valueOf(color));
-        }
-         */
-
         private void setPriorityChip(Priority priority) {
             if (priorityChip == null) return;
             String priorityText;

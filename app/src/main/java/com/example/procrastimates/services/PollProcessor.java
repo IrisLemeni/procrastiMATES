@@ -1,12 +1,14 @@
 package com.example.procrastimates.services;
 
+import com.example.procrastimates.enums.ObjectionStatus;
+import com.example.procrastimates.enums.PollStatus;
+import com.example.procrastimates.enums.NotificationType;
 import com.example.procrastimates.models.Circle;
 import com.example.procrastimates.models.Notification;
-import com.example.procrastimates.enums.NotificationType;
-import com.example.procrastimates.enums.ObjectionStatus;
 import com.example.procrastimates.models.Poll;
-import com.example.procrastimates.enums.PollStatus;
 import com.example.procrastimates.models.Task;
+import com.example.procrastimates.services.NotificationSender;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -15,130 +17,128 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class PollProcessor {
-    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private static final long TIMEOUT = 30;
 
-    // Find all active polls
-    public void findActivePolls(Consumer<List<Poll>> callback) {
-        db.collection("polls")
-                .whereEqualTo("status", PollStatus.ACTIVE)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Poll> polls = new ArrayList<>();
-                    for (DocumentSnapshot document : queryDocumentSnapshots) {
-                        Poll poll = document.toObject(Poll.class);
-                        if (poll != null) {
-                            polls.add(poll);
-                        }
-                    }
-                    callback.accept(polls);
-                });
+    // --- synchronous methods for Worker ---
+
+    public List<Poll> findActivePollsSync()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        return Tasks.await(
+                db.collection("polls")
+                        .whereEqualTo("status", PollStatus.ACTIVE)
+                        .get(),
+                TIMEOUT, TimeUnit.SECONDS
+        ).toObjects(Poll.class);
     }
 
-    // Get circle members for a given circle
-    public void getCircleMembers(String circleId, Consumer<List<String>> callback) {
-        db.collection("circles").document(circleId)
-                .get()
-                .addOnSuccessListener(circleDoc -> {
-                    List<String> members = new ArrayList<>();
-                    if (circleDoc.exists()) {
-                        Circle circle = circleDoc.toObject(Circle.class);
-                        if (circle != null && circle.getMembers() != null) {
-                            members.addAll(circle.getMembers());
-                        }
-                    }
-                    callback.accept(members);
-                });
-    }
-
-    // Close a poll and process its result
-    public void closePoll(Poll poll) {
-        db.collection("polls").document(poll.getPollId())
-                .update("status", PollStatus.CLOSED)
-                .addOnSuccessListener(aVoid -> {
-                    processPollResult(poll);
-                });
-    }
-
-    // Process the result of a closed poll
-    private void processPollResult(Poll poll) {
-        // Calculate the result
-        int acceptVotes = 0;
-        int rejectVotes = 0;
-
-        if (poll.getVotes() != null) {
-            for (Boolean vote : poll.getVotes().values()) {
-                if (vote) {
-                    acceptVotes++;
-                } else {
-                    rejectVotes++;
-                }
+    public List<String> getCircleMembersSync(String circleId)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        DocumentSnapshot doc = Tasks.await(
+                db.collection("circles").document(circleId)
+                        .get(),
+                TIMEOUT, TimeUnit.SECONDS
+        );
+        List<String> members = new ArrayList<>();
+        if (doc.exists()) {
+            Circle circle = doc.toObject(Circle.class);
+            if (circle != null && circle.getMembers() != null) {
+                members.addAll(circle.getMembers());
             }
         }
-
-        final boolean isAccepted = acceptVotes > rejectVotes;
-
-        // Update the task based on the result
-        db.collection("tasks").document(poll.getTaskId())
-                .get()
-                .addOnSuccessListener(taskDoc -> {
-                    if (taskDoc.exists()) {
-                        Task task = taskDoc.toObject(Task.class);
-                        if (task != null) {
-                            // Update task status
-                            if (!isAccepted) {
-                                db.collection("tasks").document(poll.getTaskId())
-                                        .update("completed", false, "completedAt", null)
-                                        .addOnSuccessListener(aVoid -> {
-                                            // Send notification to the user who completed the task
-                                            sendTaskRejectedNotification(task);
-                                        });
-                            } else {
-                                // Resolve the objection as accepted
-                                db.collection("objections")
-                                        .whereEqualTo("taskId", task.getTaskId())
-                                        .get()
-                                        .addOnSuccessListener(objectionSnapshots -> {
-                                            if (!objectionSnapshots.isEmpty()) {
-                                                String objectionId = objectionSnapshots.getDocuments().get(0).getId();
-                                                db.collection("objections").document(objectionId)
-                                                        .update("status", ObjectionStatus.RESOLVED);
-                                            }
-                                        });
-                            }
-                        }
-                    }
-                });
+        return members;
     }
 
-    // Send notification when a task is rejected
-    private void sendTaskRejectedNotification(Task task) {
-        Notification notification = new Notification();
-        notification.setNotificationId(UUID.randomUUID().toString());
-        notification.setUserId(task.getUserId());
-        notification.setTitle("Task respins");
-        notification.setBody("Dovada pentru task-ul \"" + task.getTitle() + "\" a fost respinsă de grup.");
-        notification.setCircleId(task.getCircleId());
-        notification.setTaskId(task.getTaskId());
-        notification.setType(NotificationType.TASK_REJECTED);
-        notification.setRead(false);
-        notification.setCreatedAt(new Timestamp(new Date()));
+    public void closePollSync(Poll poll)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        // Mark poll closed
+        Tasks.await(
+                db.collection("polls").document(poll.getPollId())
+                        .update("status", PollStatus.CLOSED),
+                TIMEOUT, TimeUnit.SECONDS
+        );
+        // Process result
+        processPollResultSync(poll);
+    }
 
-        db.collection("notifications").document(notification.getNotificationId())
-                .set(notification)
-                .addOnSuccessListener(aVoid -> {
-                    // Send push notification
-                    NotificationSender.sendPushNotification(
-                            task.getUserId(),
-                            "Task respins",
-                            "Dovada pentru task-ul \"" + task.getTitle() + "\" a fost respinsă de grup.",
-                            task.getTaskId(),
-                            task.getCircleId(),
-                            NotificationType.TASK_REJECTED
-                    );
+    private void processPollResultSync(Poll poll)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        int accept = 0, reject = 0;
+        if (poll.getVotes() != null) {
+            for (Boolean v : poll.getVotes().values()) {
+                if (v) accept++; else reject++;
+            }
+        }
+        boolean accepted = accept > reject;
 
-                });
+        // Fetch task
+        DocumentSnapshot taskDoc = Tasks.await(
+                db.collection("tasks").document(poll.getTaskId())
+                        .get(),
+                TIMEOUT, TimeUnit.SECONDS
+        );
+        if (!taskDoc.exists()) return;
+
+        Task task = taskDoc.toObject(Task.class);
+        if (task == null) return;
+
+        if (!accepted) {
+            // Revert completion
+            Tasks.await(
+                    db.collection("tasks").document(task.getTaskId())
+                            .update("completed", false, "completedAt", null),
+                    TIMEOUT, TimeUnit.SECONDS
+            );
+            sendRejectedNotificationSync(task);
+        } else {
+            // Resolve objection
+            List<DocumentSnapshot> objs = Tasks.await(
+                    db.collection("objections")
+                            .whereEqualTo("taskId", task.getTaskId())
+                            .get(),
+                    TIMEOUT, TimeUnit.SECONDS
+            ).getDocuments();
+            if (!objs.isEmpty()) {
+                String objId = objs.get(0).getId();
+                Tasks.await(
+                        db.collection("objections").document(objId)
+                                .update("status", ObjectionStatus.RESOLVED),
+                        TIMEOUT, TimeUnit.SECONDS
+                );
+            }
+        }
+    }
+
+    private void sendRejectedNotificationSync(Task task)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        Notification notif = new Notification();
+        notif.setNotificationId(UUID.randomUUID().toString());
+        notif.setUserId(task.getUserId());
+        notif.setTitle("Task respins");
+        notif.setBody("Dovada pentru task-ul \"" + task.getTitle() + "\" a fost respinsă de grup.");
+        notif.setCircleId(task.getCircleId());
+        notif.setTaskId(task.getTaskId());
+        notif.setType(NotificationType.TASK_REJECTED);
+        notif.setRead(false);
+        notif.setCreatedAt(new Timestamp(new Date()));
+
+        Tasks.await(
+                db.collection("notifications").document(notif.getNotificationId())
+                        .set(notif),
+                TIMEOUT, TimeUnit.SECONDS
+        );
+        NotificationSender.sendPushNotification(
+                task.getUserId(),
+                "Task respins",
+                notif.getBody(),
+                task.getTaskId(),
+                task.getCircleId(),
+                NotificationType.TASK_REJECTED
+        );
     }
 }
