@@ -56,7 +56,7 @@ public class AiServiceClient {
                 },
                 error -> {
                     error.printStackTrace();
-                    callback.onError("Eroare la server: " + error.toString());
+                    callback.onError("Server error, please try again.");
                 }
         );
 

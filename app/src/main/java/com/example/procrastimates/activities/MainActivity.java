@@ -249,8 +249,6 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
                 Snackbar.LENGTH_LONG);
 
         snackbar.setAction("Send Test", v -> {
-            // Use our notification helper to send a direct notification
-            NotificationHelper.sendTestNotification(this);
 
             // Also send through the FCM system
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();

@@ -104,17 +104,4 @@ public class NotificationHelper {
         }
     }
 
-    /**
-     * Debug method to send a test notification immediately
-     */
-    public static void sendTestNotification(Context context) {
-        Log.d(TAG, "Sending test notification");
-        showNotification(
-                context,
-                "Test Notification",
-                "This is a test notification from Procrastimates",
-                null,
-                null
-        );
-    }
 }

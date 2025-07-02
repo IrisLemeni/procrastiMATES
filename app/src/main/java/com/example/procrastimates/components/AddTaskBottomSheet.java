@@ -119,9 +119,6 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
             String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             task.setUserId(userId);
 
-            // Nu mai apelăm taskViewModel direct aici
-            // taskViewModel.addTask(task, userId); <- Elimină această linie
-
             if (onTaskAddedListener != null) {
                 onTaskAddedListener.onTaskAdded(task);
             }

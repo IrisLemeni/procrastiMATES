@@ -88,8 +88,6 @@ public class TaskRepository {
     }
 
     private void notifyCircleMembers(String userId, String circleId, Task task) {
-        // This method would typically send Firebase Cloud Messages to circle members
-        // For simplicity, I'm just adding notifications to their Firestore collection
 
         db.collection("circles").document(circleId).get()
                 .addOnSuccessListener(documentSnapshot -> {

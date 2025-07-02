@@ -653,7 +653,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         timeOutsideApp = timeOutside;
 
         // Decrease focus score based on interruption (min 0)
-        focusScore = Math.max(0, focusScore - 5);
+        focusScore = Math.max(0, focusScore - 15);
 
         // Update UI
         updateSessionStats();
@@ -662,19 +662,6 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         Toast.makeText(requireContext(),
                 "Focus interrupted! Returning to session...",
                 Toast.LENGTH_SHORT).show();
-    }
-
-
-    private String getAppDisplayName(String packageName) {
-        try {
-            PackageManager pm = requireContext().getPackageManager();
-            ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
-            return pm.getApplicationLabel(appInfo).toString();
-        } catch (Exception e) {
-            // If we can't get the app name, return a simplified package name
-            String[] parts = packageName.split("\\.");
-            return parts.length > 0 ? parts[parts.length - 1] : packageName;
-        }
     }
 
     // Update focus stats UI
