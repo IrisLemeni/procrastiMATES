@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
-    id("org.sonarqube")
-    id("jacoco")
 }
 
 android {
@@ -41,34 +39,6 @@ android {
     buildFeatures {
         viewBinding = true
     }
-}
-
-// JaCoCo configuration for code coverage
-jacoco {
-    version = "0.8.10"
-}
-
-// Task to generate JaCoCo coverage report
-tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn("testDebugUnitTest")
-    reports {
-        xml.required.set(true)
-        csv.required.set(false)
-        html.required.set(true)
-        html.outputLocation.set(file("${buildDir}/jacoco/index.html"))
-    }
-
-    fileTree(file("${buildDir}/intermediates/classes/debug")).apply {
-        exclude(
-            "**/R.class",
-            "**/R$*.class",
-            "**/BuildConfig.*",
-            "**/Manifest*.*"
-        )
-    }.let { classDirectories.setFrom(it) }
-
-    sourceDirectories.setFrom(file("src/main/java"))
-    executionData.setFrom(fileTree(buildDir).include("outputs/coverage/*.ec", "outputs/unit_test_code_coverage/debugUnitTest/coverage.ec"))
 }
 
 dependencies {
