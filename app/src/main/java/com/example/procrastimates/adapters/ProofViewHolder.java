@@ -42,9 +42,6 @@ class ProofViewHolder extends RecyclerView.ViewHolder {
     private final FirebaseFirestore db;
     private String currentImageUrl; // Store current image URL for full screen view
 
-    private static final String FIELD_TASK_ID = "taskId";
-    private static final String COLLECTION_POLLS = "polls";
-
     ProofViewHolder(View itemView, Context context, String currentUserId, FirebaseFirestore db) {
         super(itemView);
         this.context = context;
@@ -66,65 +63,54 @@ class ProofViewHolder extends RecyclerView.ViewHolder {
         proofText.setText("Provided proof for task completion");
 
         if (message.getTaskId() != null) {
-            loadProof(message.getTaskId());
-            checkPollStatus(message.getTaskId());
-        }
-
-        loadSenderName(message.getSenderId());
-
-        // Format timestamp
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm, dd MMM", Locale.getDefault());
-        timestamp.setText(sdf.format(message.getTimestamp().toDate()));
-    }
-
-    private void loadProof(String taskId) {
-        db.collection("proofs")
-                .whereEqualTo(FIELD_TASK_ID, taskId)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        Proof proof = queryDocumentSnapshots.getDocuments().get(0).toObject(Proof.class);
-                        if (proof != null && proof.getImageUrl() != null) {
-                            currentImageUrl = proof.getImageUrl();
-                            Glide.with(context)
-                                    .load(proof.getImageUrl())
-                                    .into(proofImage);
+            // Load the proof
+            db.collection("proofs")
+                    .whereEqualTo("taskId", message.getTaskId())
+                    .get()
+                    .addOnSuccessListener(queryDocumentSnapshots -> {
+                        if (!queryDocumentSnapshots.isEmpty()) {
+                            Proof proof = queryDocumentSnapshots.getDocuments().get(0).toObject(Proof.class);
+                            if (proof != null && proof.getImageUrl() != null) {
+                                currentImageUrl = proof.getImageUrl(); // Store for full screen view
+                                // Load proof image
+                                Glide.with(context)
+                                        .load(proof.getImageUrl())
+                                        .into(proofImage);
+                            }
                         }
-                    }
-                });
-    }
+                    });
 
-    private void checkPollStatus(String taskId) {
-        db.collection(COLLECTION_POLLS)
-                .whereEqualTo(FIELD_TASK_ID, taskId)
-                .get()
-                .addOnSuccessListener(pollSnapshots -> {
-                    if (pollSnapshots.isEmpty()) {
-                        pollContainer.setVisibility(View.VISIBLE);
-                        setupVoteButtons(taskId);
-                    } else {
-                        handleExistingPoll(pollSnapshots.getDocuments().get(0).toObject(Poll.class), taskId);
-                    }
-                });
-    }
-
-    private void handleExistingPoll(Poll poll, String taskId) {
-        if (poll == null) return;
-
-        if (hasUserVoted(poll) || poll.getStatus() == PollStatus.CLOSED) {
-            pollContainer.setVisibility(View.GONE);
-        } else {
-            pollContainer.setVisibility(View.VISIBLE);
-            setupVoteButtons(taskId);
+            // Check if poll already exists for this task
+            db.collection("polls")
+                    .whereEqualTo("taskId", message.getTaskId())
+                    .get()
+                    .addOnSuccessListener(pollSnapshots -> {
+                        if (pollSnapshots.isEmpty()) {
+                            // No poll exists, show voting buttons
+                            pollContainer.setVisibility(View.VISIBLE);
+                            setupVoteButtons(message.getTaskId());
+                        } else {
+                            // Poll exists, check if user has already voted
+                            Poll poll = pollSnapshots.getDocuments().get(0).toObject(Poll.class);
+                            if (poll != null) {
+                                if (poll.getVotes() != null && poll.getVotes().containsKey(currentUserId)) {
+                                    // User has already voted
+                                    pollContainer.setVisibility(View.GONE);
+                                } else if (poll.getStatus() == PollStatus.CLOSED) {
+                                    // Poll is closed
+                                    pollContainer.setVisibility(View.GONE);
+                                } else {
+                                    // User can vote
+                                    pollContainer.setVisibility(View.VISIBLE);
+                                    setupVoteButtons(message.getTaskId());
+                                }
+                            }
+                        }
+                    });
         }
-    }
 
-    private boolean hasUserVoted(Poll poll) {
-        return poll.getVotes() != null && poll.getVotes().containsKey(currentUserId);
-    }
-
-    private void loadSenderName(String senderId) {
-        db.collection("users").document(senderId)
+        // Load sender's name
+        db.collection("users").document(message.getSenderId())
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
@@ -132,6 +118,10 @@ class ProofViewHolder extends RecyclerView.ViewHolder {
                         submittedBy.setText(name != null ? name : "Unknown User");
                     }
                 });
+
+        // Format timestamp
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm, dd MMM", Locale.getDefault());
+        timestamp.setText(sdf.format(message.getTimestamp().toDate()));
     }
 
     private void openImageInFullScreen() {
@@ -152,80 +142,77 @@ class ProofViewHolder extends RecyclerView.ViewHolder {
     }
 
     private void submitVote(String taskId, boolean isAccepted) {
-        db.collection(COLLECTION_POLLS)
-                .whereEqualTo(FIELD_TASK_ID, taskId)
+        // Check if poll already exists
+        db.collection("polls")
+                .whereEqualTo("taskId", taskId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    Poll poll;
+                    String pollId;
+
                     if (queryDocumentSnapshots.isEmpty()) {
-                        createNewPoll(taskId, isAccepted);
+                        // Create new poll
+                        poll = new Poll();
+                        pollId = UUID.randomUUID().toString();
+                        poll.setPollId(pollId);
+                        poll.setTaskId(taskId);
+
+                        // Get circleId from task
+                        db.collection("tasks").document(taskId)
+                                .get()
+                                .addOnSuccessListener(taskDoc -> {
+                                    if (taskDoc.exists()) {
+                                        Task task = taskDoc.toObject(Task.class);
+                                        if (task != null) {
+                                            poll.setCircleId(task.getCircleId());
+
+                                            // Calculate end time (12 hours from now)
+                                            Calendar calendar = Calendar.getInstance();
+                                            calendar.add(Calendar.HOUR_OF_DAY, 12);
+                                            poll.setEndTime(new Timestamp(calendar.getTime()));
+
+                                            // Initialize votes
+                                            Map<String, Boolean> votes = new HashMap<>();
+                                            votes.put(currentUserId, isAccepted);
+                                            poll.setVotes(votes);
+                                            poll.setStatus(PollStatus.ACTIVE);
+
+                                            // Save poll
+                                            db.collection("polls").document(pollId)
+                                                    .set(poll)
+                                                    .addOnSuccessListener(aVoid -> {
+                                                        // Create poll message
+                                                        createPollMessage(task);
+                                                        Toast.makeText(context, "Vote recorded!", Toast.LENGTH_SHORT).show();
+                                                        pollContainer.setVisibility(View.GONE);
+                                                    });
+                                        }
+                                    }
+                                });
                     } else {
-                        updateExistingPoll(queryDocumentSnapshots.getDocuments().get(0), isAccepted);
-                    }
-                });
-    }
+                        // Update existing poll
+                        DocumentSnapshot pollDoc = queryDocumentSnapshots.getDocuments().get(0);
+                        poll = pollDoc.toObject(Poll.class);
+                        pollId = pollDoc.getId();
 
-    private void createNewPoll(String taskId, boolean isAccepted) {
-        Poll poll = new Poll();
-        String pollId = UUID.randomUUID().toString();
-        poll.setPollId(pollId);
-        poll.setTaskId(taskId);
+                        if (poll != null) {
+                            Map<String, Boolean> votes = poll.getVotes();
+                            if (votes == null) {
+                                votes = new HashMap<>();
+                            }
+                            votes.put(currentUserId, isAccepted);
+                            poll.setVotes(votes);
 
-        db.collection("tasks").document(taskId)
-                .get()
-                .addOnSuccessListener(taskDoc -> {
-                    if (taskDoc.exists()) {
-                        Task task = taskDoc.toObject(Task.class);
-                        if (task != null) {
-                            setupPollDetails(poll, task, isAccepted);
-                            savePoll(poll, pollId, task);
+                            // Save update
+                            db.collection("polls").document(pollId)
+                                    .update("votes", votes)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Toast.makeText(context, "Vote recorded!", Toast.LENGTH_SHORT).show();
+                                        pollContainer.setVisibility(View.GONE);
+                                    });
                         }
                     }
                 });
-    }
-
-    private void setupPollDetails(Poll poll, Task task, boolean isAccepted) {
-        poll.setCircleId(task.getCircleId());
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR_OF_DAY, 12);
-        poll.setEndTime(new Timestamp(calendar.getTime()));
-
-        Map<String, Boolean> votes = new HashMap<>();
-        votes.put(currentUserId, isAccepted);
-        poll.setVotes(votes);
-        poll.setStatus(PollStatus.ACTIVE);
-    }
-
-    private void savePoll(Poll poll, String pollId, Task task) {
-        db.collection(COLLECTION_POLLS).document(pollId)
-                .set(poll)
-                .addOnSuccessListener(aVoid -> {
-                    createPollMessage(task);
-                    showVoteRecordedMessage();
-                });
-    }
-
-    private void updateExistingPoll(DocumentSnapshot pollDoc, boolean isAccepted) {
-        Poll poll = pollDoc.toObject(Poll.class);
-        String pollId = pollDoc.getId();
-
-        if (poll != null) {
-            Map<String, Boolean> votes = poll.getVotes();
-            if (votes == null) {
-                votes = new HashMap<>();
-            }
-            votes.put(currentUserId, isAccepted);
-            poll.setVotes(votes);
-
-            db.collection(COLLECTION_POLLS).document(pollId)
-                    .update("votes", votes)
-                    .addOnSuccessListener(aVoid -> showVoteRecordedMessage());
-        }
-    }
-
-    private void showVoteRecordedMessage() {
-        Toast.makeText(context, "Vote recorded!", Toast.LENGTH_SHORT).show();
-        pollContainer.setVisibility(View.GONE);
     }
 
     private void createPollMessage(Task task) {

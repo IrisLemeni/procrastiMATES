@@ -161,11 +161,13 @@ public class TodayTasksFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
+                        String circleId = queryDocumentSnapshots.getDocuments().get(0).getId();
+
                         // Update task status
                         task.setCompleted(false);
                         taskViewModel.updateTask(task.getTaskId(), task);
 
-                        Snackbar.make(completedTasksRecyclerView, "Task moved back to active", com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_SHORT).show();
+                        Snackbar.make(completedTasksRecyclerView, "Task moved back to active", Snackbar.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(getContext(), "Nu ești într-un cerc.", Toast.LENGTH_SHORT).show();
                     }
@@ -219,7 +221,7 @@ public class TodayTasksFragment extends Fragment {
 
                         taskViewModel.completeTask(task, circleId);
 
-                        Snackbar.make(tasksRecyclerView, "Task marked as completed", com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_LONG)
+                        Snackbar.make(tasksRecyclerView, "Task marked as completed", Snackbar.LENGTH_LONG)
                                 .setAction("Undo", v -> taskViewModel.undoCompleteTask())
                                 .show();
                     } else {

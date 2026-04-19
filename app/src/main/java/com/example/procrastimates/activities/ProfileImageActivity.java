@@ -1,18 +1,16 @@
 package com.example.procrastimates.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.CircleCrop;
@@ -26,14 +24,13 @@ import com.google.firebase.storage.StorageReference;
 
 public class ProfileImageActivity extends AppCompatActivity {
 
+    private static final int PICK_IMAGE_REQUEST = 1;
     private ImageView profileImageView;
     private Button selectImageButton;
     private Button saveImageButton;
     private Button cancelButton;
     private Uri imageUri;
     private ImageButton backButton;
-
-    private ActivityResultLauncher<Intent> imagePickerLauncher;
 
     private FirebaseFirestore db;
     private FirebaseStorage storage;
@@ -63,30 +60,6 @@ public class ProfileImageActivity extends AppCompatActivity {
 
         initializeViews();
         setupButtons();
-
-        imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    imageUri = result.getData().getData();
-
-                    // Afișează imaginea selectată în ImageView folosind Glide cu opțiuni îmbunătățite
-                    RequestOptions requestOptions = new RequestOptions()
-                            .transform(new CircleCrop())
-                            .placeholder(R.drawable.ic_person)
-                            .error(R.drawable.ic_person);
-
-                    Glide.with(this)
-                            .load(imageUri)
-                            .apply(requestOptions)
-                            .into(profileImageView);
-
-                    // Activează butonul de salvare
-                    saveImageButton.setEnabled(true);
-                }
-            }
-        );
-
         loadCurrentProfileImage();
     }
 
@@ -118,7 +91,31 @@ public class ProfileImageActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        imagePickerLauncher.launch(Intent.createChooser(intent, "Select profile picture"));
+        startActivityForResult(Intent.createChooser(intent, "Select profile picture"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                && data != null && data.getData() != null) {
+            imageUri = data.getData();
+
+            // Afișează imaginea selectată în ImageView folosind Glide cu opțiuni îmbunătățite
+            RequestOptions requestOptions = new RequestOptions()
+                    .transform(new CircleCrop())
+                    .placeholder(R.drawable.ic_person)
+                    .error(R.drawable.ic_person);
+
+            Glide.with(this)
+                    .load(imageUri)
+                    .apply(requestOptions)
+                    .into(profileImageView);
+
+            // Activează butonul de salvare
+            saveImageButton.setEnabled(true);
+        }
     }
 
     private void loadCurrentProfileImage() {
@@ -158,12 +155,9 @@ public class ProfileImageActivity extends AppCompatActivity {
         }
 
         // Afișează dialog de progres
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Loading profile picture...")
-                .setView(new ProgressBar(this))
-                .setCancelable(false)
-                .create();
-        dialog.show();
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Loading profile picture...");
+        progressDialog.show();
 
         // Creează o referință unică pentru imagine în storage
         StorageReference fileReference = storageReference.child("profile_images/" + currentUserId + ".jpg");
@@ -176,22 +170,22 @@ public class ProfileImageActivity extends AppCompatActivity {
                         String imageUrl = uri.toString();
 
                         // Actualizează URL-ul imaginii în baza de date
-                        updateProfileImageUrl(currentUserId, imageUrl, dialog);
+                        updateProfileImageUrl(currentUserId, imageUrl, progressDialog);
                     });
                 })
                 .addOnFailureListener(e -> {
-                    dialog.dismiss();
+                    progressDialog.dismiss();
                     Toast.makeText(ProfileImageActivity.this,
                             "Upload failed: " + e.getMessage(),
                             Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void updateProfileImageUrl(String userId, String imageUrl, AlertDialog dialog) {
+    private void updateProfileImageUrl(String userId, String imageUrl, ProgressDialog progressDialog) {
         db.collection("users").document(userId)
                 .update("profileImageUrl", imageUrl)
                 .addOnSuccessListener(aVoid -> {
-                    dialog.dismiss();
+                    progressDialog.dismiss();
                     Toast.makeText(ProfileImageActivity.this,
                             "Profile picture has been updated successfully!",
                             Toast.LENGTH_SHORT).show();
@@ -199,7 +193,7 @@ public class ProfileImageActivity extends AppCompatActivity {
                     finish();
                 })
                 .addOnFailureListener(e -> {
-                    dialog.dismiss();
+                    progressDialog.dismiss();
                     Toast.makeText(ProfileImageActivity.this,
                             "Error updating profile picture:" + e.getMessage(),
                             Toast.LENGTH_SHORT).show();

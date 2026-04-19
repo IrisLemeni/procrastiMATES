@@ -21,8 +21,12 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 public class TasksFragment extends Fragment {
 
+    private RecyclerView tasksRecyclerView;
+    private TaskAdapter taskAdapter;
+    private TaskViewModel taskViewModel;
+    private FloatingActionButton fabAddTask, fabSortTasks;
+
     public TasksFragment() {
-        // Default constructor for Fragment
     }
 
     @Override

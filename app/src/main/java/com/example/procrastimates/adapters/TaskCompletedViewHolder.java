@@ -32,13 +32,6 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
     private final Context context;
     private final FirebaseFirestore db;
 
-    private static final String COLLECTION_USERS = "users";
-    private static final String FIELD_USERNAME = "username";
-    private static final String COLLECTION_OBJECTIONS = "objections";
-    private static final String COLLECTION_TASKS = "tasks";
-    private static final String COLLECTION_MESSAGES = "messages";
-    private static final String COLLECTION_NOTIFICATIONS = "notifications";
-
     TaskCompletedViewHolder(View itemView, Context context, String currentUserId, FirebaseFirestore db) {
         super(itemView);
         this.context = context;
@@ -53,7 +46,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
     void bind(Message message) {
         // Load task details
         if (message.getTaskId() != null) {
-            db.collection(COLLECTION_TASKS).document(message.getTaskId())
+            db.collection("tasks").document(message.getTaskId())
                     .get()
                     .addOnSuccessListener(document -> {
                         if (document.exists()) {
@@ -62,18 +55,18 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                                 taskTitle.setText(task.getTitle());
 
                                 // Check if user can raise objection
-                                checkObjectionEligibility(task);
+                                checkObjectionEligibility(task, message);
                             }
                         }
                     });
         }
 
         // Load sender's name
-        db.collection(COLLECTION_USERS).document(message.getSenderId())
+        db.collection("users").document(message.getSenderId())
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
-                        String name = document.getString(FIELD_USERNAME);
+                        String name = document.getString("username");
                         completedBy.setText(name != null ? name : "Unknown user");
                     }
                 });
@@ -83,7 +76,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         timestamp.setText(sdf.format(message.getTimestamp().toDate()));
     }
 
-    private void checkObjectionEligibility(Task task) {
+    private void checkObjectionEligibility(Task task, Message message) {
         if (task.getCompletedAt() == null) {
             objectButton.setVisibility(View.GONE);
             return;
@@ -93,7 +86,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         boolean isWithin10Minutes = timeDifference <= 10 * 60 * 1000;
 
         // Check if there's already an objection for this task
-        db.collection(COLLECTION_OBJECTIONS)
+        db.collection("objections")
                 .whereEqualTo("taskId", task.getTaskId())
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -106,7 +99,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                     calendar.set(Calendar.SECOND, 0);
                     Timestamp startOfDay = new Timestamp(calendar.getTime());
 
-                    db.collection(COLLECTION_OBJECTIONS)
+                    db.collection("objections")
                             .whereEqualTo("objectorUserId", currentUserId)
                             .whereGreaterThanOrEqualTo("createdAt", startOfDay)
                             .get()
@@ -135,14 +128,14 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         objection.setCircleId(task.getCircleId());
 
         // Save objection to Firebase
-        db.collection(COLLECTION_OBJECTIONS).document(objection.getObjectionId())
+        db.collection("objections").document(objection.getObjectionId())
                 .set(objection)
                 .addOnSuccessListener(aVoid -> {
                     // Create objection message
                     sendObjectionMessage(task, objection);
 
                     // Send notification to user who completed the task
-                    sendObjectionNotification(task);
+                    sendObjectionNotification(task, objection);
                 });
     }
 
@@ -156,22 +149,24 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
         objectionMessage.setTaskId(task.getTaskId());
         objectionMessage.setTimestamp(new Timestamp(new Date()));
 
-        db.collection(COLLECTION_MESSAGES).document(objectionMessage.getMessageId())
+        db.collection("messages").document(objectionMessage.getMessageId())
                 .set(objectionMessage);
     }
 
-    private void sendObjectionNotification(Task task) {
+    private void sendObjectionNotification(Task task, Objection objection) {
         // Find user who completed the task
-        db.collection(COLLECTION_USERS).document(task.getUserId())
+        db.collection("users").document(task.getUserId())
                 .get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
+                        String targetUserName = document.getString("username");
+
                         // Find name of the objector
-                        db.collection(COLLECTION_USERS).document(currentUserId)
+                        db.collection("users").document(currentUserId)
                                 .get()
                                 .addOnSuccessListener(objectorDoc -> {
                                     if (objectorDoc.exists()) {
-                                        String objectorName = objectorDoc.getString(FIELD_USERNAME);
+                                        String objectorName = objectorDoc.getString("username");
 
                                         // Create notification
                                         Notification notification = new Notification();
@@ -186,7 +181,7 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                                         notification.setCreatedAt(new Timestamp(new Date()));
 
                                         // Save notification
-                                        db.collection(COLLECTION_NOTIFICATIONS).document(notification.getNotificationId())
+                                        db.collection("notifications").document(notification.getNotificationId())
                                                 .set(notification)
                                                 .addOnSuccessListener(aVoid -> {
                                                     // Send push notification
@@ -205,4 +200,3 @@ class TaskCompletedViewHolder extends RecyclerView.ViewHolder {
                 });
     }
 }
-

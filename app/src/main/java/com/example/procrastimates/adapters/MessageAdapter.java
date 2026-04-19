@@ -119,9 +119,6 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             case VIEW_TYPE_POLL:
                 ((PollViewHolder) holder).bind(message);
                 break;
-            default:
-                // Unknown view type, do nothing
-                break;
         }
     }
 

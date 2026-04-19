@@ -55,7 +55,6 @@ public class CalendarFragment extends Fragment {
     String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     public CalendarFragment() {
-        // Default constructor for Fragment
     }
 
     @Override
@@ -190,7 +189,9 @@ public class CalendarFragment extends Fragment {
 
         // Update tasks for the selected day
         if (selectedDay != null) {
-            new android.os.Handler().postDelayed(() -> getTasksForDay(selectedDay), 100);
+            new android.os.Handler().postDelayed(() -> {
+                getTasksForDay(selectedDay);
+            }, 100);
         }
     }
 
@@ -206,9 +207,9 @@ public class CalendarFragment extends Fragment {
 
         CalendarDay today = CalendarDay.today();
         if (selectedDay.equals(today)) {
-            tasksTitle.setText(getString(R.string.tasks_for_today));
+            tasksTitle.setText("Tasks for Today");
         } else {
-            tasksTitle.setText(getString(R.string.tasks_for_date, dateFormat.format(calendar.getTime())));
+            tasksTitle.setText("Tasks for " + dateFormat.format(calendar.getTime()));
         }
     }
 

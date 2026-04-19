@@ -62,9 +62,6 @@ public class HomeFragment extends Fragment {
     private FirebaseStorage storage;
     private StorageReference storageReference;
 
-    private static final String TAG = "HomeFragment";
-    private static final String FIELD_TIMESTAMP = "timestamp";
-
 
     public HomeFragment() {
     }
@@ -180,9 +177,9 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onSuccess(Object result) {
                     List<Task> tasks = (List<Task>) result;
-                    Log.d(TAG, "Fetched " + tasks.size() + " tasks");
+                    Log.d("fetchTaskProgress", "Fetched " + tasks.size() + " tasks");
                     if (tasks.isEmpty()) {
-                        Log.d(TAG, "No tasks found for today");
+                        Log.d("fetchTaskProgress", "No tasks found for today");
                     }
                     int totalTasks = tasks.size();
                     int completedTasks = (int) tasks.stream().filter(Task::isCompleted).count();
@@ -191,8 +188,8 @@ public class HomeFragment extends Fragment {
 
                 @Override
                 public void onFailure(Exception e) {
-                    Log.e(TAG, "Error fetching tasks: " + e.getMessage(), e);
-                    progressText.setText(getString(R.string.error_loading_tasks));
+                    Log.e("fetchTaskProgress", "Error fetching tasks: " + e.getMessage(), e);
+                    progressText.setText("Error loading tasks");
                 }
             });
 
@@ -227,7 +224,7 @@ public class HomeFragment extends Fragment {
         String currentMonth = monthFormat.format(new Date());
 
         // Log pentru debugging
-        Log.d(TAG, "Fetching daily sessions for month: " + currentMonth);
+        Log.d("HomeFragment", "Fetching daily sessions for month: " + currentMonth);
 
         // Interoghează daily_sessions pentru luna curentă
         db.collection("daily_sessions")
@@ -241,7 +238,7 @@ public class HomeFragment extends Fragment {
                         // Use the adapter to update the chart
                         FocusChartAdapter.setupMonthlySessionsBarChart(barChart, task.getResult());
                     } else {
-                        Log.w(TAG, "Error getting daily sessions.", task.getException());
+                        Log.w("HomeFragment", "Error getting daily sessions.", task.getException());
                         FocusChartAdapter.setupMonthlySessionsBarChart(barChart, null);
                     }
                 });
@@ -268,38 +265,38 @@ public class HomeFragment extends Fragment {
         Date endOfDay = calendar.getTime();
 
         // Add debug logging
-        Log.d(TAG, "Fetching focus metrics from " + startOfDay + " to " + endOfDay);
+        Log.d("HomeFragment", "Fetching focus metrics from " + startOfDay + " to " + endOfDay);
 
         // Query today's Pomodoro sessions
-        FirebaseFirestore firestoreDb = FirebaseFirestore.getInstance();
-        firestoreDb.collection("pomodoro_sessions")
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("pomodoro_sessions")
                 .whereEqualTo("userId", userId)
                 .whereEqualTo("type", "work") // Only work sessions have focus metrics
-                .whereGreaterThanOrEqualTo(FIELD_TIMESTAMP, new Timestamp(startOfDay))
-                .whereLessThanOrEqualTo(FIELD_TIMESTAMP, new Timestamp(endOfDay))
-                .orderBy(FIELD_TIMESTAMP, com.google.firebase.firestore.Query.Direction.ASCENDING)
+                .whereGreaterThanOrEqualTo("timestamp", new Timestamp(startOfDay))
+                .whereLessThanOrEqualTo("timestamp", new Timestamp(endOfDay))
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    Log.d(TAG, "Retrieved " + queryDocumentSnapshots.size() + " focus sessions");
+                    Log.d("HomeFragment", "Retrieved " + queryDocumentSnapshots.size() + " focus sessions");
 
                     todaySessions.clear();
 
                     if (queryDocumentSnapshots.isEmpty()) {
-                        Log.d(TAG, "No focus sessions found for today");
+                        Log.d("HomeFragment", "No focus sessions found for today");
                         updateFocusUI();
                         return;
                     }
 
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                         // Extract session data
-                        Timestamp timestamp = document.getTimestamp(FIELD_TIMESTAMP);
+                        Timestamp timestamp = document.getTimestamp("timestamp");
                         Long focusScore = document.getLong("focusScore");
                         Long interruptionCount = document.getLong("interruptionCount");
                         Long timeOutsideApp = document.getLong("timeOutsideApp");
                         Long duration = document.getLong("duration");
 
                         // Debug log for each document
-                        Log.d(TAG, "Processing document: " + document.getId() +
+                        Log.d("HomeFragment", "Processing document: " + document.getId() +
                                 " timestamp: " + timestamp +
                                 " focusScore: " + focusScore);
 
@@ -315,17 +312,17 @@ public class HomeFragment extends Fragment {
                             );
 
                             todaySessions.add(session);
-                            Log.d(TAG, "Added session with focus score: " + focusScore);
+                            Log.d("HomeFragment", "Added session with focus score: " + focusScore);
                         } else {
-                            Log.w(TAG, "Skipping document with missing data: " + document.getId());
+                            Log.w("HomeFragment", "Skipping document with missing data: " + document.getId());
                         }
                     }
 
-                    Log.d(TAG, "Total sessions to display: " + todaySessions.size());
+                    Log.d("HomeFragment", "Total sessions to display: " + todaySessions.size());
                     updateFocusUI();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error fetching focus metrics", e);
+                    Log.e("HomeFragment", "Error fetching focus metrics", e);
                     todaySessions.clear();
                     updateFocusUI();
                 });
@@ -333,7 +330,7 @@ public class HomeFragment extends Fragment {
 
     private void updateFocusUI() {
         // First log the state
-        Log.d(TAG, "Updating UI with " + todaySessions.size() + " sessions");
+        Log.d("HomeFragment", "Updating UI with " + todaySessions.size() + " sessions");
 
         // Use the adapter to calculate and update UI components
         int averageFocusScore = FocusChartAdapter.calculateAverageFocusScore(todaySessions);
@@ -341,7 +338,7 @@ public class HomeFragment extends Fragment {
         int totalTimeOutside = FocusChartAdapter.calculateTotalTimeOutside(todaySessions);
         String bestFocusTime = FocusChartAdapter.determineBestFocusTime(todaySessions);
 
-        Log.d(TAG, "Calculated metrics - average: " + averageFocusScore +
+        Log.d("HomeFragment", "Calculated metrics - average: " + averageFocusScore +
                 ", interruptions: " + totalInterruptions);
 
         // Update focus score indicator

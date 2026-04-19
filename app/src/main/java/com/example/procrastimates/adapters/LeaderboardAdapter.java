@@ -69,7 +69,7 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             podiumHolder.friendName.setText(friend.getName());
 
             // Show both completed and total tasks for better synchronization
-            String taskText = holder.itemView.getContext().getString(R.string.tasks_completed, friend.getCompletedTasks(), friend.getTotalTasks());
+            String taskText = friend.getCompletedTasks() + "/" + friend.getTotalTasks();
             podiumHolder.completedTasks.setText(taskText);
 
             // Load profile image if available
@@ -85,9 +85,9 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         } else if (holder instanceof NormalViewHolder) {
             NormalViewHolder normalHolder = (NormalViewHolder) holder;
-            normalHolder.name.setText(holder.itemView.getContext().getString(R.string.friend_ranking, position + 4, friend.getName()));
-            normalHolder.completedTasks.setText(holder.itemView.getContext().getString(R.string.completed_tasks_text, friend.getCompletedTasks()));
-            normalHolder.totalTasks.setText(holder.itemView.getContext().getString(R.string.total_tasks_text, friend.getTotalTasks()));
+            normalHolder.name.setText((position + 4) + ". " + friend.getName());
+            normalHolder.completedTasks.setText("Completed Tasks: " + friend.getCompletedTasks());
+            normalHolder.totalTasks.setText("Total Tasks: " + friend.getTotalTasks());
         }
     }
 

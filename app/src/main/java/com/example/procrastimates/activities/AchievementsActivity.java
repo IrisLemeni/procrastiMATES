@@ -34,7 +34,7 @@ public class AchievementsActivity extends AppCompatActivity implements Achieveme
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-        toolbar.setNavigationOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         recyclerViewAchievements = findViewById(R.id.recyclerViewAchievements);
         recyclerViewAchievements.setLayoutManager(new GridLayoutManager(this, 2));
@@ -73,17 +73,16 @@ public class AchievementsActivity extends AppCompatActivity implements Achieveme
             public void onAchievementsLoaded(List<Achievement> achievements) {
                 unlockedAchievements = achievements;
 
-                // Update specific achievements instead of full refresh
-                for (int i = 0; i < allAchievements.size(); i++) {
-                    Achievement achievement = allAchievements.get(i);
+                for (Achievement achievement : allAchievements) {
                     for (Achievement unlockedAchievement : unlockedAchievements) {
                         if (achievement.getId().equals(unlockedAchievement.getId())) {
                             achievement.setUnlocked(true);
-                            achievementsAdapter.notifyItemChanged(i);
                             break;
                         }
                     }
                 }
+
+                achievementsAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -98,12 +97,10 @@ public class AchievementsActivity extends AppCompatActivity implements Achieveme
     @Override
     public void onAchievementUnlocked(Achievement achievement) {
         runOnUiThread(() -> {
-            // Find the specific achievement and update only that item
-            for (int i = 0; i < allAchievements.size(); i++) {
-                Achievement a = allAchievements.get(i);
+            for (Achievement a : allAchievements) {
                 if (a.getId().equals(achievement.getId())) {
                     a.setUnlocked(true);
-                    achievementsAdapter.notifyItemChanged(i);
+                    achievementsAdapter.notifyDataSetChanged();
 
                     // Show achievement dialog
                     AchievementDialogHelper.showAchievementUnlockedDialog(this, achievement);

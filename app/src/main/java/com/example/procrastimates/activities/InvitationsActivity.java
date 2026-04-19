@@ -24,13 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InvitationsActivity extends AppCompatActivity {
-    private static final String TAG = "InvitationsActivity";
-    private static final String COLLECTION_CIRCLES = "circles";
     private FirebaseFirestore db;
     private FirebaseAuth auth;
     private RecyclerView recyclerView;
     private List<Invitation> invitationList;
     private InvitationAdapter adapter;
+    private MaterialToolbar toolbar;
     private LinearLayout emptyStateLayout;
 
     @Override
@@ -40,7 +39,7 @@ public class InvitationsActivity extends AppCompatActivity {
 
         // Initialize views
         recyclerView = findViewById(R.id.recyclerViewNotifications);
-        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         emptyStateLayout = findViewById(R.id.emptyStateLayout);
 
         // Set up toolbar
@@ -76,61 +75,52 @@ public class InvitationsActivity extends AppCompatActivity {
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        handleSuccessfulInvitationLoad(task.getResult());
+                        QuerySnapshot value = task.getResult();
+                        if (value != null && !value.isEmpty()) {
+                            invitationList.clear();
+                            int totalInvitations = value.getDocuments().size();
+                            int processedInvitations = 0;
+
+                            for (DocumentSnapshot doc : value.getDocuments()) {
+                                Invitation invitation = doc.toObject(Invitation.class);
+                                if (invitation != null) {
+                                    invitation.setInvitationId(doc.getId());
+
+                                    // Get sender username
+                                    String senderId = invitation.getFrom();
+                                    db.collection("users").document(senderId).get()
+                                            .addOnSuccessListener(userDoc -> {
+                                                String senderUsername = userDoc.getString("username");
+                                                if (senderUsername == null || senderUsername.trim().isEmpty()) {
+                                                    senderUsername = "Unknown User";
+                                                }
+                                                invitation.setSenderName(senderUsername);
+
+                                                // Add to list and notify adapter
+                                                invitationList.add(invitation);
+                                                adapter.notifyDataSetChanged();
+
+                                                // Update UI visibility
+                                                updateEmptyState();
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("InvitationsActivity", "Failed to get sender username", e);
+                                                invitation.setSenderName("Unknown User");
+                                                invitationList.add(invitation);
+                                                adapter.notifyDataSetChanged();
+                                                updateEmptyState();
+                                            });
+                                }
+                            }
+                        } else {
+                            Log.d("InvitationsActivity", "No invitations found.");
+                            updateEmptyState();
+                        }
                     } else {
-                        Log.e(TAG, "Error loading invitations", task.getException());
+                        Log.e("InvitationsActivity", "Error loading invitations", task.getException());
                         updateEmptyState();
                     }
                 });
-    }
-
-    private void handleSuccessfulInvitationLoad(QuerySnapshot querySnapshot) {
-        if (querySnapshot != null && !querySnapshot.isEmpty()) {
-            invitationList.clear();
-            for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                processInvitationDocument(doc);
-            }
-        } else {
-            Log.d(TAG, "No invitations found.");
-            updateEmptyState();
-        }
-    }
-
-    private void processInvitationDocument(DocumentSnapshot doc) {
-        Invitation invitation = doc.toObject(Invitation.class);
-        if (invitation != null) {
-            invitation.setInvitationId(doc.getId());
-            loadSenderUsername(invitation);
-        }
-    }
-
-    private void loadSenderUsername(Invitation invitation) {
-        String senderId = invitation.getFrom();
-        db.collection("users").document(senderId).get()
-                .addOnSuccessListener(userDoc -> {
-                    String senderUsername = getSenderUsername(userDoc);
-                    invitation.setSenderName(senderUsername);
-                    addInvitationToList(invitation);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to get sender username", e);
-                    invitation.setSenderName("Unknown User");
-                    addInvitationToList(invitation);
-                });
-    }
-
-    private String getSenderUsername(DocumentSnapshot userDoc) {
-        String senderUsername = userDoc.getString("username");
-        if (senderUsername == null || senderUsername.trim().isEmpty()) {
-            return "Unknown User";
-        }
-        return senderUsername;
-    }
-
-    private void addInvitationToList(Invitation invitation) {
-        invitationList.add(invitation);
-        adapter.notifyItemInserted(invitationList.size() - 1);
-        updateEmptyState();
     }
 
     private void updateEmptyState() {
@@ -147,7 +137,7 @@ public class InvitationsActivity extends AppCompatActivity {
         String currentUserId = auth.getCurrentUser().getUid();
 
         // Check if user is already in a circle
-        db.collection(COLLECTION_CIRCLES)
+        db.collection("circles")
                 .whereArrayContains("members", currentUserId)
                 .get()
                 .addOnSuccessListener(userCircleQuerySnapshot -> {
@@ -157,7 +147,7 @@ public class InvitationsActivity extends AppCompatActivity {
                         deleteInvitation(invitation);
                     } else {
                         // Find the circle belonging to the invitation sender
-                        db.collection(COLLECTION_CIRCLES)
+                        db.collection("circles")
                                 .whereEqualTo("userId", invitation.getFrom())
                                 .get()
                                 .addOnSuccessListener(queryDocumentSnapshots -> {
@@ -193,7 +183,7 @@ public class InvitationsActivity extends AppCompatActivity {
             }
 
             // Update circle in database
-            db.collection(COLLECTION_CIRCLES)
+            db.collection("circles")
                     .document(circleId)
                     .update("members", circle.getMembers())
                     .addOnSuccessListener(aVoid -> {
@@ -215,12 +205,12 @@ public class InvitationsActivity extends AppCompatActivity {
         members.add(currentUserId);
         newCircle.setMembers(members);
 
-        db.collection(COLLECTION_CIRCLES)
+        db.collection("circles")
                 .add(newCircle)
                 .addOnSuccessListener(documentReference -> {
                     newCircle.setCircleId(documentReference.getId());
 
-                    db.collection(COLLECTION_CIRCLES)
+                    db.collection("circles")
                             .document(documentReference.getId())
                             .update("circleId", newCircle.getCircleId())
                             .addOnSuccessListener(aVoid -> {
@@ -232,7 +222,9 @@ public class InvitationsActivity extends AppCompatActivity {
                                 Toast.makeText(InvitationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
                             });
                 })
-                .addOnFailureListener(e -> Toast.makeText(InvitationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(InvitationsActivity.this, "Failed to create circle", Toast.LENGTH_SHORT).show();
+                });
     }
 
     public void declineInvitation(Invitation invitation) {
@@ -246,11 +238,8 @@ public class InvitationsActivity extends AppCompatActivity {
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     // Remove from local list and update UI
-                    int position = invitationList.indexOf(invitation);
                     invitationList.remove(invitation);
-                    if (position != -1) {
-                        adapter.notifyItemRemoved(position);
-                    }
+                    adapter.notifyDataSetChanged();
                     updateEmptyState();
                 })
                 .addOnFailureListener(e -> {
@@ -261,5 +250,11 @@ public class InvitationsActivity extends AppCompatActivity {
     private void refreshActivity() {
         // Simply reload the invitations instead of restarting the activity
         loadInvitations();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
     }
 }

@@ -12,16 +12,14 @@ import androidx.core.content.ContextCompat;
 import com.example.procrastimates.services.PollScheduler;
 import com.example.procrastimates.utils.NotificationHelper;
 
-import java.lang.ref.WeakReference;
-
 public class MyApplication extends Application {
     private static final String TAG = "ProcrastimatesApp";
-    private static WeakReference<Context> contextRef;
+    private static Context context;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        contextRef = new WeakReference<>(getApplicationContext());
+        context = getApplicationContext();
 
         // Create notification channel early in app lifecycle
         NotificationHelper.createNotificationChannel(this);
@@ -40,6 +38,6 @@ public class MyApplication extends Application {
     }
 
     public static Context getAppContext() {
-        return contextRef != null ? contextRef.get() : null;
+        return context;
     }
 }

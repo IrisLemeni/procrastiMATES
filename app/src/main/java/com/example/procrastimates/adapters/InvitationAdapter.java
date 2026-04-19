@@ -90,7 +90,7 @@ public class InvitationAdapter extends RecyclerView.Adapter<InvitationAdapter.Vi
             }
         }
 
-        return initials.toString().toUpperCase(Locale.ROOT);
+        return initials.toString().toUpperCase();
     }
 
     /**
@@ -111,42 +111,19 @@ public class InvitationAdapter extends RecyclerView.Adapter<InvitationAdapter.Vi
             return "Just now";
         }
 
-        // Try different time units
-        String result = formatTimeUnit(diff, TimeUnit.HOURS.toMillis(1), "minute", "minutes");
-        if (result != null) return result;
-
-        result = formatTimeUnit(diff, TimeUnit.DAYS.toMillis(1), "hour", "hours");
-        if (result != null) return result;
-
-        result = formatDays(diff);
-        if (result != null) return result;
-
-        result = formatTimeUnit(diff, TimeUnit.DAYS.toMillis(30), "week", "weeks");
-        if (result != null) return result;
-
-        // More than a month ago - show actual date
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-        return sdf.format(date);
-    }
-
-    private String formatTimeUnit(long diff, long unitMillis, String singular, String plural) {
-        if (diff < unitMillis) {
-            long units;
-            if (unitMillis == TimeUnit.HOURS.toMillis(1)) {
-                units = TimeUnit.MILLISECONDS.toMinutes(diff);
-            } else if (unitMillis == TimeUnit.DAYS.toMillis(1)) {
-                units = TimeUnit.MILLISECONDS.toHours(diff);
-            } else if (unitMillis == TimeUnit.DAYS.toMillis(30)) {
-                units = TimeUnit.MILLISECONDS.toDays(diff) / 7;
-            } else {
-                return null;
-            }
-            return units + (units == 1 ? " " + singular + " ago" : " " + plural + " ago");
+        // Minutes ago
+        if (diff < TimeUnit.HOURS.toMillis(1)) {
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(diff);
+            return minutes + (minutes == 1 ? " minute ago" : " minutes ago");
         }
-        return null;
-    }
 
-    private String formatDays(long diff) {
+        // Hours ago
+        if (diff < TimeUnit.DAYS.toMillis(1)) {
+            long hours = TimeUnit.MILLISECONDS.toHours(diff);
+            return hours + (hours == 1 ? " hour ago" : " hours ago");
+        }
+
+        // Days ago
         if (diff < TimeUnit.DAYS.toMillis(7)) {
             long days = TimeUnit.MILLISECONDS.toDays(diff);
             if (days == 1) {
@@ -155,7 +132,16 @@ public class InvitationAdapter extends RecyclerView.Adapter<InvitationAdapter.Vi
                 return days + " days ago";
             }
         }
-        return null;
+
+        // Weeks ago
+        if (diff < TimeUnit.DAYS.toMillis(30)) {
+            long weeks = TimeUnit.MILLISECONDS.toDays(diff) / 7;
+            return weeks + (weeks == 1 ? " week ago" : " weeks ago");
+        }
+
+        // More than a month ago - show actual date
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+        return sdf.format(date);
     }
 
     public void updateInvitations(List<Invitation> newInvitations) {

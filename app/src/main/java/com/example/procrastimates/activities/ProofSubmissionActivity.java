@@ -1,5 +1,6 @@
 package com.example.procrastimates.activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,8 +9,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.procrastimates.models.Message;
@@ -31,13 +30,6 @@ import java.util.Date;
 import java.util.UUID;
 
 public class ProofSubmissionActivity extends AppCompatActivity {
-    private static final String EXTRA_TASK_ID = "taskId";
-    private static final String COLLECTION_PROOFS = "proofs";
-    private static final String COLLECTION_OBJECTIONS = "objections";
-    private static final String COLLECTION_TASKS = "tasks";
-    private static final String COLLECTION_MESSAGES = "messages";
-    private static final String COLLECTION_NOTIFICATIONS = "notifications";
-
     private ImageView proofImageView;
     private Button uploadButton, submitButton;
     private String taskId;
@@ -47,24 +39,12 @@ public class ProofSubmissionActivity extends AppCompatActivity {
     private StorageReference storageRef;
     private String currentUserId;
 
-    private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null && result.getData().getData() != null) {
-                    imageUri = result.getData().getData();
-                    proofImageView.setImageURI(imageUri);
-                    findViewById(R.id.empty_state_overlay).setVisibility(View.GONE);
-                    submitButton.setEnabled(true);
-                }
-            }
-    );
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_proof_submission);
 
-        taskId = getIntent().getStringExtra(EXTRA_TASK_ID);
+        taskId = getIntent().getStringExtra("taskId");
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
@@ -90,12 +70,27 @@ public class ProofSubmissionActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
-        imagePickerLauncher.launch(Intent.createChooser(intent, "Select image"));
+        startActivityForResult(Intent.createChooser(intent, "Select image"), 1);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1 && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            imageUri = data.getData();
+            proofImageView.setImageURI(imageUri);
+            findViewById(R.id.empty_state_overlay).setVisibility(View.GONE);
+            submitButton.setEnabled(true);
+        }
     }
 
     private void uploadProof() {
         if (imageUri != null) {
-            Toast.makeText(this, "Uploading proof...", Toast.LENGTH_SHORT).show();
+            // Afișează un dialog de încărcare
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle("Loading proof...");
+            progressDialog.show();
 
             // Creează o referință unică pentru imagine
             String imageName = "proofs/" + taskId + "_" + System.currentTimeMillis() + ".jpg";
@@ -114,32 +109,33 @@ public class ProofSubmissionActivity extends AppCompatActivity {
                             proof.setImageUrl(uri.toString());
                             proof.setCreatedAt(new Timestamp(new Date()));
 
-                            db.collection(COLLECTION_PROOFS).document(proof.getProofId())
+                            db.collection("proofs").document(proof.getProofId())
                                     .set(proof)
                                     .addOnSuccessListener(aVoid -> {
                                         // Actualizează starea obiecției
-                                        db.collection(COLLECTION_OBJECTIONS)
+                                        db.collection("objections")
                                                 .whereEqualTo("taskId", taskId)
                                                 .get()
                                                 .addOnSuccessListener(queryDocumentSnapshots -> {
                                                     if (!queryDocumentSnapshots.isEmpty()) {
                                                         String objectionId = queryDocumentSnapshots.getDocuments().get(0).getId();
-                                                        db.collection(COLLECTION_OBJECTIONS).document(objectionId)
+                                                        db.collection("objections").document(objectionId)
                                                                 .update("proofImageUrl", uri.toString());
                                                     }
 
                                                     // Obține detaliile task-ului pentru a crea mesajul
-                                                    db.collection(COLLECTION_TASKS).document(taskId)
+                                                    db.collection("tasks").document(taskId)
                                                             .get()
                                                             .addOnSuccessListener(taskDoc -> {
                                                                 Task task = taskDoc.toObject(Task.class);
                                                                 if (task != null) {
                                                                     // Creează un mesaj de dovadă în chat
-                                                                    sendProofMessage(task);
+                                                                    sendProofMessage(task, uri.toString());
 
                                                                     // Notifică utilizatorul care a făcut obiecția
-                                                                    notifyObjector(task);
+                                                                    notifyObjector(task, uri.toString());
 
+                                                                    progressDialog.dismiss();
                                                                     Toast.makeText(ProofSubmissionActivity.this,
                                                                             "Proof uploaded successfully!", Toast.LENGTH_SHORT).show();
                                                                     finish();
@@ -148,19 +144,21 @@ public class ProofSubmissionActivity extends AppCompatActivity {
                                                 });
                                     })
                                     .addOnFailureListener(e -> {
+                                        progressDialog.dismiss();
                                         Toast.makeText(ProofSubmissionActivity.this,
                                                 "Error saving proof: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                     });
                         });
                     })
                     .addOnFailureListener(e -> {
+                        progressDialog.dismiss();
                         Toast.makeText(ProofSubmissionActivity.this,
                                 "Error loading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
         }
     }
 
-    private void sendProofMessage(Task task) {
+    private void sendProofMessage(Task task, String imageUrl) {
         Message proofMessage = new Message();
         proofMessage.setMessageId(UUID.randomUUID().toString());
         proofMessage.setCircleId(task.getCircleId());
@@ -170,13 +168,13 @@ public class ProofSubmissionActivity extends AppCompatActivity {
         proofMessage.setTaskId(task.getTaskId());
         proofMessage.setTimestamp(new Timestamp(new Date()));
 
-        db.collection(COLLECTION_MESSAGES).document(proofMessage.getMessageId())
+        db.collection("messages").document(proofMessage.getMessageId())
                 .set(proofMessage);
     }
 
-    private void notifyObjector(Task task) {
+    private void notifyObjector(Task task, String imageUrl) {
         // Găsește cine a făcut obiecția
-        db.collection(COLLECTION_OBJECTIONS)
+        db.collection("objections")
                 .whereEqualTo("taskId", task.getTaskId())
                 .get()
                 .addOnSuccessListener(objectionSnapshots -> {
@@ -196,7 +194,7 @@ public class ProofSubmissionActivity extends AppCompatActivity {
                             notification.setCreatedAt(new Timestamp(new Date()));
 
                             // Salvează notificarea
-                            db.collection(COLLECTION_NOTIFICATIONS).document(notification.getNotificationId())
+                            db.collection("notifications").document(notification.getNotificationId())
                                     .set(notification)
                                     .addOnSuccessListener(aVoid -> {
                                         // Trimite notificarea push

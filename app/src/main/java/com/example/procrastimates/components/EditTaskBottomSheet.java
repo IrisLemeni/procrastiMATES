@@ -23,7 +23,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 
 import java.util.Calendar;
-import java.util.Locale;
 
 public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
@@ -85,8 +84,8 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
 
             // Set priority
             if (task.getPriority() != null) {
-                String priorityString = task.getPriority().toString().substring(0, 1).toUpperCase(Locale.ROOT)
-                        + task.getPriority().toString().substring(1).toLowerCase(Locale.ROOT);
+                String priorityString = task.getPriority().toString().substring(0, 1).toUpperCase()
+                        + task.getPriority().toString().substring(1).toLowerCase();
                 prioritySpinner.setText(priorityString, false);
             }
         } else {
@@ -107,12 +106,12 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
         cancelButton.setOnClickListener(v -> dismiss());
 
         // FIXED: Setup chip group listener - folosim OnCheckedChangeListener în loc de OnCheckedStateChangeListener
-        dateChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.contains(R.id.todayChip)) {
+        dateChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.todayChip) {
                 selectedDate = getTodayTimestamp();
-            } else if (checkedIds.contains(R.id.tomorrowChip)) {
+            } else if (checkedId == R.id.tomorrowChip) {
                 selectedDate = getTomorrowTimestamp();
-            } else if (checkedIds.contains(R.id.pickDateChip)) {
+            } else if (checkedId == R.id.pickDateChip) {
                 showDatePickerDialog();
             }
         });
@@ -211,7 +210,7 @@ public class EditTaskBottomSheet extends BottomSheetDialogFragment {
         String selectedPriority = prioritySpinner.getText().toString();
         try {
             if (!TextUtils.isEmpty(selectedPriority)) {
-                task.setPriority(Priority.valueOf(selectedPriority.toUpperCase(Locale.ROOT)));
+                task.setPriority(Priority.valueOf(selectedPriority.toUpperCase()));
             } else {
                 task.setPriority(Priority.LOW); // Default priority
             }

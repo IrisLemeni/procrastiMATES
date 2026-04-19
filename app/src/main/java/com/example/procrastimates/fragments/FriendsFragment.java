@@ -48,15 +48,6 @@ public class FriendsFragment extends Fragment {
     private LeaderboardAdapter top3Adapter, othersAdapter;
     private ImageView userProfileImage;
 
-    private static final String COLLECTION_CIRCLES = "circles";
-    private static final String FIELD_MEMBERS = "members";
-    private static final String COLLECTION_USERS = "users";
-    private static final String FIELD_USERNAME = "username";
-    private static final String FIELD_PROFILE_IMAGE_URL = "profileImageUrl";
-    private static final String FIELD_DUE_DATE = "dueDate";
-    private static final String COLLECTION_TASKS = "tasks";
-    private static final String FIELD_USER_ID = "userId";
-
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
@@ -102,8 +93,8 @@ public class FriendsFragment extends Fragment {
     }
 
     private void launchCircleChatActivity() {
-        db.collection(COLLECTION_CIRCLES)
-                .whereArrayContains(FIELD_MEMBERS, currentUserId)
+        db.collection("circles")
+                .whereArrayContains("members", currentUserId)
                 .get()
                 .addOnSuccessListener(query -> {
                     if (!query.isEmpty()) {
@@ -132,8 +123,8 @@ public class FriendsFragment extends Fragment {
         Timestamp startTimestamp = new Timestamp(startOfDay / 1000, 0);
         Timestamp endTimestamp = new Timestamp(endOfDay / 1000, 0);
 
-        db.collection(COLLECTION_CIRCLES)
-                .whereArrayContains(FIELD_MEMBERS, currentUserId)
+        db.collection("circles")
+                .whereArrayContains("members", currentUserId)
                 .get()
                 .addOnSuccessListener(query -> {
                     if (!query.isEmpty()) {
@@ -150,82 +141,70 @@ public class FriendsFragment extends Fragment {
     private void loadDailyProgressForMembers(List<String> members, Timestamp startTimestamp, Timestamp endTimestamp) {
         List<Friend> dailyFriendsList = new ArrayList<>();
         AtomicInteger completedRequests = new AtomicInteger(0);
-        int totalMembers = members.size();
 
         for (String friendId : members) {
-            loadFriendData(friendId, dailyFriendsList, completedRequests, totalMembers, startTimestamp, endTimestamp, true);
+            db.collection("users").document(friendId).get()
+                    .addOnSuccessListener(userDoc -> {
+                        if (userDoc.exists()) {
+                            String friendName = userDoc.getString("username");
+                            String profileImageUrl = userDoc.getString("profileImageUrl");
+
+                            db.collection("tasks")
+                                    .whereEqualTo("userId", friendId)
+                                    .whereGreaterThanOrEqualTo("dueDate", startTimestamp)
+                                    .whereLessThanOrEqualTo("dueDate", endTimestamp)
+                                    .get()
+                                    .addOnSuccessListener(tasks -> {
+                                        int completed = 0;
+                                        int total = tasks.size();
+
+                                        for (DocumentSnapshot doc : tasks.getDocuments()) {
+                                            Task task = doc.toObject(Task.class);
+                                            if (task != null && task.isCompleted()) {
+                                                completed++;
+                                            }
+                                        }
+
+                                        dailyFriendsList.add(new Friend(friendId, friendName, completed, total, profileImageUrl));
+
+                                        // Check if all requests are completed
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            // Sort by completion rate (percentage)
+                                            dailyFriendsList.sort((f1, f2) -> {
+                                                float rate1 = f1.getTotalTasks() > 0 ? (float) f1.getCompletedTasks() / f1.getTotalTasks() : 0;
+                                                float rate2 = f2.getTotalTasks() > 0 ? (float) f2.getCompletedTasks() / f2.getTotalTasks() : 0;
+                                                return Float.compare(rate2, rate1);
+                                            });
+
+                                            friendsAdapter.setFriends(dailyFriendsList);
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        // Handle error - add friend with 0 tasks
+                                        dailyFriendsList.add(new Friend(friendId, friendName, 0, 0, profileImageUrl));
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            friendsAdapter.setFriends(dailyFriendsList);
+                                        }
+                                    });
+                        } else {
+                            // User doesn't exist, still increment counter
+                            if (completedRequests.incrementAndGet() == members.size()) {
+                                friendsAdapter.setFriends(dailyFriendsList);
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Handle error
+                        if (completedRequests.incrementAndGet() == members.size()) {
+                            friendsAdapter.setFriends(dailyFriendsList);
+                        }
+                    });
         }
-    }
-
-    private void loadFriendData(String friendId, List<Friend> friendsList, AtomicInteger completedRequests, int totalMembers, Timestamp startTimestamp, Timestamp endTimestamp, boolean isDaily) {
-        db.collection(COLLECTION_USERS).document(friendId).get()
-                .addOnSuccessListener(userDoc -> {
-                    if (userDoc.exists()) {
-                        String friendName = userDoc.getString(FIELD_USERNAME);
-                        String profileImageUrl = userDoc.getString(FIELD_PROFILE_IMAGE_URL);
-                        loadFriendTasks(friendId, friendName, profileImageUrl, friendsList, completedRequests, totalMembers, startTimestamp, endTimestamp, isDaily);
-                    } else {
-                        friendsList.add(new Friend(friendId, "Unknown", 0, 0, null));
-                        checkIfAllLoaded(friendsList, completedRequests, totalMembers, isDaily);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    friendsList.add(new Friend(friendId, "Unknown", 0, 0, null));
-                    checkIfAllLoaded(friendsList, completedRequests, totalMembers, isDaily);
-                });
-    }
-
-    private void loadFriendTasks(String friendId, String friendName, String profileImageUrl, List<Friend> friendsList, AtomicInteger completedRequests, int totalMembers, Timestamp startTimestamp, Timestamp endTimestamp, boolean isDaily) {
-        db.collection(COLLECTION_TASKS)
-                .whereEqualTo(FIELD_USER_ID, friendId)
-                .whereGreaterThanOrEqualTo(FIELD_DUE_DATE, startTimestamp)
-                .whereLessThanOrEqualTo(FIELD_DUE_DATE, endTimestamp)
-                .get()
-                .addOnSuccessListener(tasks -> {
-                    int completed = countCompletedTasks(tasks.getDocuments());
-                    int total = tasks.size();
-                    friendsList.add(new Friend(friendId, friendName, completed, total, profileImageUrl));
-                    checkIfAllLoaded(friendsList, completedRequests, totalMembers, isDaily);
-                })
-                .addOnFailureListener(e -> {
-                    friendsList.add(new Friend(friendId, friendName, 0, 0, profileImageUrl));
-                    checkIfAllLoaded(friendsList, completedRequests, totalMembers, isDaily);
-                });
-    }
-
-    private int countCompletedTasks(List<DocumentSnapshot> taskDocs) {
-        int completed = 0;
-        for (DocumentSnapshot doc : taskDocs) {
-            Task task = doc.toObject(Task.class);
-            if (task != null && task.isCompleted()) {
-                completed++;
-            }
-        }
-        return completed;
-    }
-
-    private void checkIfAllLoaded(List<Friend> friendsList, AtomicInteger completedRequests, int totalMembers, boolean isDaily) {
-        if (completedRequests.incrementAndGet() == totalMembers) {
-            if (isDaily) {
-                sortAndSetDailyFriends(friendsList);
-            } else {
-                sortAndSetMonthlyFriends(friendsList);
-            }
-        }
-    }
-
-    private void sortAndSetDailyFriends(List<Friend> friendsList) {
-        friendsList.sort((f1, f2) -> {
-            float rate1 = f1.getTotalTasks() > 0 ? (float) f1.getCompletedTasks() / f1.getTotalTasks() : 0;
-            float rate2 = f2.getTotalTasks() > 0 ? (float) f2.getCompletedTasks() / f2.getTotalTasks() : 0;
-            return Float.compare(rate2, rate1);
-        });
-        friendsAdapter.setFriends(friendsList);
     }
 
     private void loadMonthlyLeaderboard() {
-        db.collection(COLLECTION_CIRCLES)
-                .whereArrayContains(FIELD_MEMBERS, currentUserId)
+        db.collection("circles")
+                .whereArrayContains("members", currentUserId)
                 .get()
                 .addOnSuccessListener(query -> {
                     if (!query.isEmpty()) {
@@ -260,16 +239,63 @@ public class FriendsFragment extends Fragment {
 
         List<Friend> monthlyFriendsList = new ArrayList<>();
         AtomicInteger completedRequests = new AtomicInteger(0);
-        int totalMembers = members.size();
 
         for (String friendId : members) {
-            loadFriendData(friendId, monthlyFriendsList, completedRequests, totalMembers, startTimestamp, endTimestamp, false);
-        }
-    }
+            db.collection("users").document(friendId).get()
+                    .addOnSuccessListener(userDoc -> {
+                        if (userDoc.exists()) {
+                            String friendName = userDoc.getString("username");
+                            String profileImageUrl = userDoc.getString("profileImageUrl");
 
-    private void sortAndSetMonthlyFriends(List<Friend> friendsList) {
-        friendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
-        updateLeaderboard(friendsList);
+                            db.collection("tasks")
+                                    .whereEqualTo("userId", friendId)
+                                    .whereGreaterThanOrEqualTo("dueDate", startTimestamp)
+                                    .whereLessThanOrEqualTo("dueDate", endTimestamp)
+                                    .get()
+                                    .addOnSuccessListener(tasks -> {
+                                        int completed = 0;
+                                        int total = tasks.size();
+
+                                        for (DocumentSnapshot doc : tasks.getDocuments()) {
+                                            Task task = doc.toObject(Task.class);
+                                            if (task != null && task.isCompleted()) {
+                                                completed++;
+                                            }
+                                        }
+
+                                        monthlyFriendsList.add(new Friend(friendId, friendName, completed, total, profileImageUrl));
+
+                                        // Check if all requests are completed
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            // Sort by completed tasks count (descending)
+                                            monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                            updateLeaderboard(monthlyFriendsList);
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        // Handle error - add friend with 0 tasks
+                                        monthlyFriendsList.add(new Friend(friendId, friendName, 0, 0, profileImageUrl));
+                                        if (completedRequests.incrementAndGet() == members.size()) {
+                                            monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                            updateLeaderboard(monthlyFriendsList);
+                                        }
+                                    });
+                        } else {
+                            // User doesn't exist, still increment counter
+                            if (completedRequests.incrementAndGet() == members.size()) {
+                                monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                                updateLeaderboard(monthlyFriendsList);
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Handle error
+                        if (completedRequests.incrementAndGet() == members.size()) {
+                            monthlyFriendsList.sort((f1, f2) -> Integer.compare(f2.getCompletedTasks(), f1.getCompletedTasks()));
+                            updateLeaderboard(monthlyFriendsList);
+                        }
+                    });
+        }
     }
 
     private void updateLeaderboard(List<Friend> allFriends) {
@@ -299,6 +325,10 @@ public class FriendsFragment extends Fragment {
         // Update adapters
         top3Adapter.setFriends(top3);
         othersAdapter.setFriends(others);
+
+        // Notify adapters that data has changed
+        top3Adapter.notifyDataSetChanged();
+        othersAdapter.notifyDataSetChanged();
     }
 
     // Keep the old method names for compatibility but make them call the new methods
@@ -315,11 +345,11 @@ public class FriendsFragment extends Fragment {
     }
 
     private void loadUserData(String userId) {
-        db.collection(COLLECTION_USERS).document(userId).get()
+        db.collection("users").document(userId).get()
                 .addOnSuccessListener(doc -> {
                     if (doc.exists()) {
-                        userName.setText(doc.getString(FIELD_USERNAME) != null ? doc.getString(FIELD_USERNAME) : "Your username");
-                        String imageUrl = doc.getString(FIELD_PROFILE_IMAGE_URL);
+                        userName.setText(doc.getString("username") != null ? doc.getString("username") : "Your username");
+                        String imageUrl = doc.getString("profileImageUrl");
                         if (imageUrl != null && !imageUrl.isEmpty()) {
                             Glide.with(FriendsFragment.this).load(imageUrl).circleCrop().into(userProfileImage);
                         }

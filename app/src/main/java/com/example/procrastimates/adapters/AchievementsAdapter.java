@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.procrastimates.R;
@@ -49,12 +48,12 @@ public class AchievementsAdapter extends RecyclerView.Adapter<AchievementsAdapte
             loadAchievementIcon(holder.imageIcon, achievement);
             holder.imageLock.setVisibility(View.GONE);
             holder.itemView.setAlpha(1.0f);
-            holder.textTitle.setTextColor(ContextCompat.getColor(context, R.color.achievement_unlocked_text));
+            holder.textTitle.setTextColor(context.getResources().getColor(R.color.achievement_unlocked_text));
         } else {
             loadAchievementIcon(holder.imageIcon, achievement);
             holder.imageLock.setVisibility(View.VISIBLE);
             holder.itemView.setAlpha(0.5f);
-            holder.textTitle.setTextColor(ContextCompat.getColor(context, R.color.achievement_locked_text));
+            holder.textTitle.setTextColor(context.getResources().getColor(R.color.achievement_locked_text));
         }
     }
 
@@ -109,6 +108,20 @@ public class AchievementsAdapter extends RecyclerView.Adapter<AchievementsAdapte
     }
 
     private int getLocalIconResourceId(String achievementId) {
+        try {
+            int resourceId = context.getResources().getIdentifier(
+                    achievementId.replace("_", ""),
+                    "drawable",
+                    context.getPackageName()
+            );
+
+            if (resourceId != 0) {
+                Log.d(TAG, "Found dynamic resource ID: " + resourceId);
+                return resourceId;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error finding dynamic resource:", e);
+        }
 
         switch (achievementId) {
             case "session_starter":

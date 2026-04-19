@@ -14,12 +14,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.procrastimates.services.AchievementManager;
 import com.example.procrastimates.R;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText emailInput;
-    private EditText passwordInput;
+    private EditText emailInput, passwordInput;
     private Button loginButton;
     private TextView createAccountText;
     private TextView forgotPasswordText;
@@ -46,9 +46,19 @@ public class LoginActivity extends AppCompatActivity {
         createAccountText = findViewById(R.id.create_account_text);
         forgotPasswordText = findViewById(R.id.forgotPasswordText);
 
-        loginButton.setOnClickListener(v -> loginUser());
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loginUser();
+            }
+        });
 
-        createAccountText.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, SignUpActivity.class)));
+        createAccountText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, SignUpActivity.class));
+            }
+        });
 
         forgotPasswordText.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
@@ -74,6 +84,7 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
                         AchievementManager.getInstance().resetAllAchievementsLocked();
                         Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
