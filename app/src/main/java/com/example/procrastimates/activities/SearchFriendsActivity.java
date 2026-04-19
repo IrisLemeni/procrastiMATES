@@ -22,6 +22,9 @@ import java.util.Map;
 
 public class SearchFriendsActivity extends AppCompatActivity {
 
+    private static final String STATUS_PENDING = "PENDING";
+    private static final String TAG_SEND_INVITATION = "sendInvitation";
+
     private EditText emailEditText;
     private Button sendInvitationButton;
     private FirebaseFirestore db;
@@ -52,9 +55,7 @@ public class SearchFriendsActivity extends AppCompatActivity {
             sendInvitation(friendEmail);
         });
 
-        backButton.setOnClickListener(v -> {
-            finish();
-        });
+        backButton.setOnClickListener(v -> finish());
     }
 
     private void sendInvitation(String friendEmail) {
@@ -105,7 +106,7 @@ public class SearchFriendsActivity extends AppCompatActivity {
         db.collection("invitations")
                 .whereEqualTo("from", currentUserId)
                 .whereEqualTo("to", friendId)
-                .whereEqualTo("status", "PENDING")
+                .whereEqualTo("status", STATUS_PENDING)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     if (!querySnapshot.isEmpty()) {
@@ -123,7 +124,7 @@ public class SearchFriendsActivity extends AppCompatActivity {
         Map<String, Object> invitation = new HashMap<>();
         invitation.put("from", currentUserId);
         invitation.put("to", friendId);
-        invitation.put("status", "PENDING");
+        invitation.put("status", STATUS_PENDING);
         invitation.put("timestamp", FieldValue.serverTimestamp());
 
         db.collection("invitations")
@@ -146,21 +147,21 @@ public class SearchFriendsActivity extends AppCompatActivity {
                         newInvitation.setInvitationId(documentReference.getId());
                         newInvitation.setFrom(currentUserId);
                         newInvitation.setTo(friendId);
-                        newInvitation.setStatus("PENDING");
+                        newInvitation.setStatus(STATUS_PENDING);
 
                         if (timestampValue instanceof Timestamp) {
                             newInvitation.setTimestamp((Timestamp) timestampValue);
                         } else {
-                            Log.e("sendInvitation", "Timestamp is not a valid Timestamp: " + timestampValue);
+                            Log.e(TAG_SEND_INVITATION, "Timestamp is not a valid Timestamp: " + timestampValue);
                         }
 
                         Toast.makeText(this, "Invitation sent successfully", Toast.LENGTH_SHORT).show();
                     } else {
-                        Log.e("sendInvitation", "Document does not exist.");
+                        Log.e(TAG_SEND_INVITATION, "Document does not exist.");
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("sendInvitation", "Error getting document: " + e.getMessage());
+                    Log.e(TAG_SEND_INVITATION, "Error getting document: " + e.getMessage());
                 });
     }
 

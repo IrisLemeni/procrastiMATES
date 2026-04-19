@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,6 +25,7 @@ import com.example.procrastimates.fragments.PomodoroFragment;
 import com.example.procrastimates.fragments.TasksFragment;
 import com.example.procrastimates.utils.NotificationHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -48,27 +48,24 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
         // Load the default fragment
         loadFragment(new HomeFragment());
 
-        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        bottomNavigationView.setOnItemSelectedListener(item -> {
 
-                int itemId = item.getItemId();
+            int itemId = item.getItemId();
 
-                if (itemId == R.id.nav_home) {
-                    loadFragment(new HomeFragment());
+            if (itemId == R.id.nav_home) {
+                loadFragment(new HomeFragment());
 
-                } else if (itemId == R.id.nav_tasks) {
-                    loadFragment(new TasksFragment());
+            } else if (itemId == R.id.nav_tasks) {
+                loadFragment(new TasksFragment());
 
-                } else if (itemId == R.id.nav_pomodoro) {
-                    loadFragment(new PomodoroFragment());
+            } else if (itemId == R.id.nav_pomodoro) {
+                loadFragment(new PomodoroFragment());
 
-                } else if (itemId == R.id.nav_friends) {
-                    loadFragment(new FriendsFragment());
-                }
-
-                return true;
+            } else if (itemId == R.id.nav_friends) {
+                loadFragment(new FriendsFragment());
             }
+
+            return true;
         });
 
         // Setup for notification functionality
@@ -92,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
             Bundle extras = intent.getExtras();
             String taskId = extras.getString("taskId");
             String circleId = extras.getString("circleId");
-            String notificationType = extras.getString("notificationType");
 
             if (circleId != null) {
                 Log.d(TAG, "Opened from circle notification with circleId: " + circleId);
@@ -246,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements PomodoroFragment.
         Snackbar snackbar = Snackbar.make(
                 findViewById(android.R.id.content),
                 "Would you like to test notifications?",
-                Snackbar.LENGTH_LONG);
+                BaseTransientBottomBar.LENGTH_LONG);
 
         snackbar.setAction("Send Test", v -> {
 

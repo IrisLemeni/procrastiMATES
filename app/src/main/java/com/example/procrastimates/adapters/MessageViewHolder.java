@@ -24,6 +24,8 @@ class MessageViewHolder extends RecyclerView.ViewHolder {
     // Elementele pentru mesajele celorlalți
     TextView otherMessageText, otherTimestamp, senderName, avatarInitial;
 
+    private static final String UNKNOWN_USER = "Unknown";
+
     private final Context context;
     private final String currentUserId;
     private final FirebaseFirestore db;
@@ -81,18 +83,18 @@ class MessageViewHolder extends RecyclerView.ViewHolder {
                             if (name != null && !name.isEmpty()) {
                                 senderName.setText(name);
                                 // Setez prima literă pentru avatar
-                                avatarInitial.setText(String.valueOf(name.charAt(0)).toUpperCase());
+                                avatarInitial.setText(String.valueOf(name.charAt(0)).toUpperCase(Locale.ROOT));
                             } else {
-                                senderName.setText("Unknown");
+                                senderName.setText(UNKNOWN_USER);
                                 avatarInitial.setText("?");
                             }
                         } else {
-                            senderName.setText("Unknown");
+                            senderName.setText(UNKNOWN_USER);
                             avatarInitial.setText("?");
                         }
                     })
                     .addOnFailureListener(e -> {
-                        senderName.setText("Unknown");
+                        senderName.setText(UNKNOWN_USER);
                         avatarInitial.setText("?");
                     });
         }

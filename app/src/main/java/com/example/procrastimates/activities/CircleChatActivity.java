@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class CircleChatActivity extends AppCompatActivity {
+    private static final String TAG = "CircleChatActivity";
     private RecyclerView chatRecyclerView;
     private MessageAdapter messageAdapter;
     private EditText messageInput;
@@ -47,13 +48,13 @@ public class CircleChatActivity extends AppCompatActivity {
 
         circleId = getIntent().getStringExtra("circleId");
         if (circleId == null || circleId.isEmpty()) {
-            Log.e("CircleChatActivity", "No circleId provided!");
+            Log.e(TAG, "No circleId provided!");
             Toast.makeText(this, "Error: No circle ID provided", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        Log.d("CircleChatActivity", "Activity started with circleId: " + circleId);
+        Log.d(TAG, "Activity started with circleId: " + circleId);
         db = FirebaseFirestore.getInstance();
         currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -92,14 +93,14 @@ public class CircleChatActivity extends AppCompatActivity {
     }
 
     private void loadMessages() {
-        Log.d("CircleChatActivity", "Loading messages for circleId: " + circleId);
+        Log.d(TAG, "Loading messages for circleId: " + circleId);
 
         db.collection("messages")
                 .whereEqualTo("circleId", circleId)
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .addSnapshotListener((value, error) -> {
                     if (error != null) {
-                        Log.e("CircleChatActivity", "Error loading messages", error);
+                        Log.e(TAG, "Error loading messages", error);
                         return;
                     }
 
@@ -108,14 +109,14 @@ public class CircleChatActivity extends AppCompatActivity {
                         for (DocumentSnapshot doc : value.getDocuments()) {
                             Message message = doc.toObject(Message.class);
                             if (message != null) {
-                                Log.d("CircleChatActivity", "Message loaded: " + message.getMessageId()
+                                Log.d(TAG, "Message loaded: " + message.getMessageId()
                                         + ", Type: " + message.getType()
                                         + ", CircleId: " + message.getCircleId());
                                 messages.add(message);
                             }
                         }
 
-                        Log.d("CircleChatActivity", "Total messages loaded: " + messages.size());
+                        Log.d(TAG, "Total messages loaded: " + messages.size());
                         messageAdapter.setMessages(messages);
 
                         if (!messages.isEmpty()) {
@@ -156,9 +157,7 @@ public class CircleChatActivity extends AppCompatActivity {
                         }
                     }
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("CircleChatActivity", "Error loading circle info", e);
-                });
+                .addOnFailureListener(e -> Log.e(TAG, "Error loading circle info", e));
     }
 
     private void sendMessageIfNotEmpty() {
@@ -181,16 +180,10 @@ public class CircleChatActivity extends AppCompatActivity {
 
         db.collection("messages").document(message.getMessageId())
                 .set(message)
-                .addOnSuccessListener(aVoid -> Log.d("CircleChatActivity", "Message sent successfully"))
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Message sent successfully"))
                 .addOnFailureListener(e -> {
-                    Log.e("CircleChatActivity", "Error sending message", e);
+                    Log.e(TAG, "Error sending message", e);
                     Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show();
                 });
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        finish();
     }
 }

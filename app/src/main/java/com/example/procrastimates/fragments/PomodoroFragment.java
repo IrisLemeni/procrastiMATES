@@ -1,19 +1,12 @@
 package com.example.procrastimates.fragments;
 
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +22,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -51,8 +45,6 @@ import java.util.Map;
 
 public class PomodoroFragment extends Fragment implements AchievementManager.AchievementListener{
 
-    private boolean isServiceBound = false;
-    private FocusLockService boundService;
     private static final String KEY_IS_SESSION_RUNNING = "isSessionRunning";
     private static final String KEY_SESSION_DURATION = "sessionDuration";
     private static final String KEY_BREAK_DURATION = "breakDuration";
@@ -63,6 +55,11 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     private static final String KEY_FOCUS_SCORE = "focusScore";
     private static final String KEY_TIME_OUTSIDE_APP = "timeOutsideApp";
     private static final String KEY_CURRENT_VIEW_STATE = "currentViewState";
+
+    private static final String VIEW_STATE_DURATION = "duration";
+    private static final String VIEW_STATE_BACKGROUND = "background";
+    private static final String VIEW_STATE_TIMER = "timer";
+    private static final String FIELD_SESSION_COUNT = "sessionCount";
 
     // UI Elements - Updated to match new layout
     private CardView selectDurationButton25, selectDurationButton50;
@@ -85,7 +82,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     private BroadcastReceiver focusInterruptionReceiver;
     private long remainingTimeMillis = 0;
     private boolean isWorkSession = true;
-    private String currentViewState = "duration";
+    private String currentViewState = VIEW_STATE_DURATION;
     private int totalSessionTime = 0; // For progress calculation
 
     private AchievementManager achievementManager;
@@ -173,7 +170,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
                 linearLayoutBackground.setVisibility(View.GONE);
                 linearLayoutTimer.setVisibility(View.VISIBLE);
                 linearLayoutStats.setVisibility(View.VISIBLE);
-                currentViewState = "timer";
+                currentViewState = VIEW_STATE_TIMER;
             } else {
                 Toast.makeText(getContext(), "Please select a background first.", Toast.LENGTH_SHORT).show();
             }
@@ -186,7 +183,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
             totalSessionTime = sessionDuration; // Store total for progress calculation
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
-            currentViewState = "background";
+            currentViewState = VIEW_STATE_BACKGROUND;
         });
 
         selectDurationButton50.setOnClickListener(v -> {
@@ -195,7 +192,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
             totalSessionTime = sessionDuration; // Store total for progress calculation
             linearLayoutDuration.setVisibility(View.GONE);
             linearLayoutBackground.setVisibility(View.VISIBLE);
-            currentViewState = "background";
+            currentViewState = VIEW_STATE_BACKGROUND;
         });
 
         // Timer control listener
@@ -250,7 +247,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         interruptionCount = savedInstanceState.getInt(KEY_INTERRUPTION_COUNT, 0);
         focusScore = savedInstanceState.getInt(KEY_FOCUS_SCORE, 100);
         timeOutsideApp = savedInstanceState.getLong(KEY_TIME_OUTSIDE_APP, 0);
-        currentViewState = savedInstanceState.getString(KEY_CURRENT_VIEW_STATE, "duration");
+        currentViewState = savedInstanceState.getString(KEY_CURRENT_VIEW_STATE, VIEW_STATE_DURATION);
         totalSessionTime = isWorkSession ? sessionDuration : breakDuration;
 
         // Restore UI state
@@ -265,50 +262,54 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
     private void restoreUiState() {
         // Restore the proper view visibility based on saved state
         switch (currentViewState) {
-            case "background":
+            case VIEW_STATE_BACKGROUND:
                 linearLayoutDuration.setVisibility(View.GONE);
                 linearLayoutBackground.setVisibility(View.VISIBLE);
                 linearLayoutTimer.setVisibility(View.GONE);
                 linearLayoutStats.setVisibility(View.GONE);
                 break;
-            case "timer":
-                linearLayoutDuration.setVisibility(View.GONE);
-                linearLayoutBackground.setVisibility(View.GONE);
-                linearLayoutTimer.setVisibility(View.VISIBLE);
-                linearLayoutStats.setVisibility(View.VISIBLE);
-
-                // Update timer button text
-                TextView buttonText = startTimerButton.findViewById(android.R.id.text1);
-                if (buttonText == null) {
-                    // If no specific TextView found, look for any TextView in the CardView
-                    View child = startTimerButton.getChildAt(0);
-                    if (child instanceof TextView) {
-                        buttonText = (TextView) child;
-                    }
-                }
-                if (buttonText != null) {
-                    buttonText.setText(isSessionRunning ? "⏹ Stop Session" : "▶ Start Session");
-                }
-
-                // Show correct session type label
-                workingTime.setVisibility(isWorkSession ? View.VISIBLE : View.GONE);
-                breakTime.setVisibility(isWorkSession ? View.GONE : View.VISIBLE);
-
-                // Update stats
-                updateSessionStats();
-
-                // Restore background
-                if (selectedBackground != -1) {
-                    selectBackground(selectedBackground);
-                }
+            case VIEW_STATE_TIMER:
+                setupTimerView();
                 break;
-            case "duration":
+            case VIEW_STATE_DURATION:
             default:
                 linearLayoutDuration.setVisibility(View.VISIBLE);
                 linearLayoutBackground.setVisibility(View.GONE);
                 linearLayoutTimer.setVisibility(View.GONE);
                 linearLayoutStats.setVisibility(View.GONE);
                 break;
+        }
+    }
+
+    private void setupTimerView() {
+        linearLayoutDuration.setVisibility(View.GONE);
+        linearLayoutBackground.setVisibility(View.GONE);
+        linearLayoutTimer.setVisibility(View.VISIBLE);
+        linearLayoutStats.setVisibility(View.VISIBLE);
+
+        // Update timer button text
+        TextView buttonText = startTimerButton.findViewById(android.R.id.text1);
+        if (buttonText == null) {
+            // If no specific TextView found, look for any TextView in the CardView
+            View child = startTimerButton.getChildAt(0);
+            if (child instanceof TextView) {
+                buttonText = (TextView) child;
+            }
+        }
+        if (buttonText != null) {
+            buttonText.setText(isSessionRunning ? "⏹ Stop Session" : "▶ Start Session");
+        }
+
+        // Show correct session type label
+        workingTime.setVisibility(isWorkSession ? View.VISIBLE : View.GONE);
+        breakTime.setVisibility(isWorkSession ? View.GONE : View.VISIBLE);
+
+        // Update stats
+        updateSessionStats();
+
+        // Restore background
+        if (selectedBackground != -1) {
+            selectBackground(selectedBackground);
         }
     }
 
@@ -345,6 +346,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
 
         // Save remaining time if timer is running
         if (countDownTimer != null && isSessionRunning) {
+            // Remaining time is already saved in onSaveInstanceState
         }
     }
 
@@ -483,7 +485,7 @@ public class PomodoroFragment extends Fragment implements AchievementManager.Ach
         linearLayoutBackground.setVisibility(View.GONE);
         linearLayoutStats.setVisibility(View.GONE);
         linearLayoutDuration.setVisibility(View.VISIBLE);
-        currentViewState = "duration";
+        currentViewState = VIEW_STATE_DURATION;
     }
 
 

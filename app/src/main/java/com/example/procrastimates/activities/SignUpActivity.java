@@ -39,20 +39,12 @@ public class SignUpActivity extends AppCompatActivity {
         alreadyHaveAccountText = findViewById(R.id.already_have_account_text);
 
         // Buton Sign Up
-        signUpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createUser();
-            }
-        });
+        signUpButton.setOnClickListener(v -> createUser());
 
         // Text pentru redirecționare la Login
-        alreadyHaveAccountText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
-                finish();
-            }
+        alreadyHaveAccountText.setOnClickListener(v -> {
+            startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
+            finish();
         });
     }
 

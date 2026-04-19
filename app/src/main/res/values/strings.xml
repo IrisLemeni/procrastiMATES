@@ -5,9 +5,28 @@
     <string name="achievement_icon_desc">Achievement icon</string>
     <string name="locked_achievement_desc">Locked achievement</string>
     <string name="grey_600">#757575</string>
+    <string name="ai_assistant_title">AI Assistant</string>
+    <string name="enter_question_prompt">Please enter a question!</string>
+    <string name="show_history">Show History</string>
+    <string name="hide_history">Hide History</string>
+    <string name="login_to_view_history">Please login to view history</string>
+    <string name="generating_response">Generating response…</string>
+    <string name="question_cannot_be_empty">Question cannot be empty</string>
+    <string name="error_prefix">Error: %s</string>
+    <string name="could_not_get_response">Could not get response. Please try again.</string>
+    <string name="must_be_authenticated">You must be authenticated.</string>
+    <string name="error_loading_history">Error loading history</string>
+    <string name="error_loading_tasks">Error loading tasks</string>
+    <string name="tasks_completed">%1$d/%2$d tasks completed</string>
+    <string name="friend_ranking">%1$d. %2$s</string>
+    <string name="completed_tasks_text">Completed Tasks: %1$d</string>
+    <string name="total_tasks_text">Total Tasks: %1$d</string>
+    <string name="unknown_user">Unknown user</string>
     <string-array name="priority_options">
         <item>Low</item>
         <item>Medium</item>
         <item>High</item>
     </string-array>
+    <string name="tasks_for_today">Tasks for Today</string>
+    <string name="tasks_for_date">Tasks for %s</string>
 </resources>

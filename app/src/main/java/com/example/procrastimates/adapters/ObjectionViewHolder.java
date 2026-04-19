@@ -61,7 +61,7 @@ class ObjectionViewHolder extends RecyclerView.ViewHolder {
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         String name = document.getString("username");
-                        objectorName.setText(name != null ? name : "Unknown user");
+                        objectorName.setText(name != null ? name : context.getString(R.string.unknown_user));
                     }
                 });
 

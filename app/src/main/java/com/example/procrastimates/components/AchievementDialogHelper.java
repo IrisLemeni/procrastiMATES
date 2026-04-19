@@ -18,6 +18,10 @@ import com.squareup.picasso.Picasso;
 
 public class AchievementDialogHelper {
 
+    private AchievementDialogHelper() {
+        // Private constructor to hide implicit public one
+    }
+
     public static void showAchievementUnlockedDialog(Activity activity, Achievement achievement) {
         // Create custom dialog
         final Dialog dialog = new Dialog(activity);
@@ -46,18 +50,8 @@ public class AchievementDialogHelper {
 
         // Load achievement icon
         if (achievement.getIconUrl().startsWith("icons/")) {
-            // For local drawables, we need to get the resource ID
-            String iconName = achievement.getIconUrl().replace("icons/", "");
-            iconName = iconName.replace(".png", "");
-            int resourceId = activity.getResources().getIdentifier(
-                    iconName, "drawable", activity.getPackageName());
-
-            if (resourceId != 0) {
-                iconImageView.setImageResource(resourceId);
-            } else {
-                // Fallback to a default icon
-                iconImageView.setImageResource(R.drawable.ic_achievement_default);
-            }
+            // For local drawables, use default icon since getIdentifier is discouraged
+            iconImageView.setImageResource(R.drawable.ic_achievement_default);
         } else {
             // For remote URLs, load with Picasso
             Picasso.get()

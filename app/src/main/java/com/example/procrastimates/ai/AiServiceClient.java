@@ -1,6 +1,7 @@
 package com.example.procrastimates.ai;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -17,8 +18,8 @@ import java.util.Map;
 
 public class AiServiceClient {
 
+    private static final String baseUrl = "https://ai-server-qask.onrender.com/ask";
     private final RequestQueue requestQueue;
-    private final String BASE_URL = "https://ai-server-qask.onrender.com/ask";
     private final FirebaseFirestore db;
 
     public interface AiCallback {
@@ -43,7 +44,7 @@ public class AiServiceClient {
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.POST,
-                BASE_URL,
+                baseUrl,
                 body,
                 response -> {
                     try {
@@ -73,10 +74,10 @@ public class AiServiceClient {
                 .collection("messages")
                 .add(conversationData)
                 .addOnSuccessListener(documentReference -> {
-                    System.out.println("Conversation saved with ID: " + documentReference.getId());
+                    Log.d("AiServiceClient", "Conversation saved with ID: " + documentReference.getId());
                 })
                 .addOnFailureListener(e -> {
-                    System.err.println("Error saving conversation: " + e.getMessage());
+                    Log.e("AiServiceClient", "Error saving conversation: " + e.getMessage());
                 });
     }
 }

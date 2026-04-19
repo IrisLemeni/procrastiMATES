@@ -28,6 +28,10 @@ import java.util.Map;
 
 public class FocusChartAdapter {
 
+    private FocusChartAdapter() {
+        // Private constructor to hide implicit public one
+    }
+
     public static class PomodoroSession {
         private Date timestamp;
         private int focusScore;

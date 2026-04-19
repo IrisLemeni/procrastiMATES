@@ -19,7 +19,6 @@ import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
 
-    private static final String TAG = "TaskAdapter";
     private List<Task> taskList;
     private OnEditTaskListener onEditTaskListener;
     private OnTaskCheckedChangeListener onTaskCheckedChangeListener;
@@ -69,26 +68,33 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
-        if (position < 0 || position >= taskList.size()) return;
-
-        Task task = taskList.get(position);
+        Task task = getTaskAt(position);
         if (task == null) return;
 
+        clearListeners(holder);
+        bindTaskData(holder, task);
+        setupListeners(holder, task);
+    }
+
+    private void clearListeners(TaskViewHolder holder) {
         holder.checkBox.setOnCheckedChangeListener(null);
         if (holder.editButton != null) holder.editButton.setOnClickListener(null);
         if (holder.deleteButton != null) holder.deleteButton.setOnClickListener(null);
+    }
 
+    private void bindTaskData(TaskViewHolder holder, Task task) {
         holder.titleTextView.setText(task.getTitle() != null ? task.getTitle() : "Untitled Task");
         holder.checkBox.setChecked(task.isCompleted());
 
         if (!isCompletedTasksAdapter) {
-            //holder.setPriorityIndicator(task.getPriority());
             holder.setPriorityChip(task.getPriority());
         }
 
         holder.titleTextView.setVisibility(View.VISIBLE);
         holder.checkBox.setVisibility(View.VISIBLE);
+    }
 
+    private void setupListeners(TaskViewHolder holder, Task task) {
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (onTaskCheckedChangeListener != null) {
                 onTaskCheckedChangeListener.onTaskChecked(task, isChecked);
@@ -168,7 +174,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             if (!isCompletedTask) {
                 editButton = itemView.findViewById(R.id.editTask);
                 deleteButton = itemView.findViewById(R.id.delete);
-                //priorityIndicator = itemView.findViewById(R.id.priorityIndicator);
                 priorityChip = itemView.findViewById(R.id.taskPriority);
             }
         }

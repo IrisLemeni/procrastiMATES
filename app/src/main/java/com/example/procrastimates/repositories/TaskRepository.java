@@ -16,6 +16,10 @@ import java.util.Date;
 import java.util.List;
 
 public class TaskRepository {
+
+    private static final String TASKS_COLLECTION = "tasks";
+    private static final String TAG = "TaskRepository";
+
     private static TaskRepository instance;
     private FirebaseFirestore db;
 
@@ -36,7 +40,7 @@ public class TaskRepository {
             return;
         }
 
-        CollectionReference tasksRef = db.collection("tasks");
+        CollectionReference tasksRef = db.collection(TASKS_COLLECTION);
 
         DocumentReference newTaskRef = tasksRef.document();
         task.setTaskId(newTaskRef.getId());
@@ -44,14 +48,9 @@ public class TaskRepository {
         task.setCreatedAt(new Timestamp(new Date()));
 
         newTaskRef.set(task)
-                .addOnSuccessListener(aVoid -> {
-                    listener.onSuccess(task);
-                })
-                .addOnFailureListener(e -> {
-                    listener.onFailure(e);
-                });
+                .addOnSuccessListener(aVoid -> listener.onSuccess(task))
+                .addOnFailureListener(listener::onFailure);
     }
-
     public void updateTask(String taskId, Task task, OnTaskActionListener listener) {
         if (taskId == null || task == null) {
             listener.onFailure(new IllegalArgumentException("Invalid task or taskId"));

@@ -63,12 +63,12 @@ public class AddTaskBottomSheet extends BottomSheetDialogFragment {
         // Adăugat listener pentru Cancel button
         cancelButton.setOnClickListener(v -> dismiss());
 
-        dateChipGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.todayChip) {
+        dateChipGroup.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.contains(R.id.todayChip)) {
                 selectedTimestamp = getTodayTimestamp();
-            } else if (checkedId == R.id.tomorrowChip) {
+            } else if (checkedIds.contains(R.id.tomorrowChip)) {
                 selectedTimestamp = getTomorrowTimestamp();
-            } else if (checkedId == R.id.pickDateChip) {
+            } else if (checkedIds.contains(R.id.pickDateChip)) {
                 showDatePickerDialog();
             }
         });

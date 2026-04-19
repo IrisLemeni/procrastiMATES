@@ -43,7 +43,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendVi
         holder.friendName.setText(friend.getName());
 
         // Set progress text
-        holder.progressText.setText(friend.getCompletedTasks() + "/" + friend.getTotalTasks() + " tasks completed");
+        holder.progressText.setText(holder.itemView.getContext().getString(R.string.tasks_completed, friend.getCompletedTasks(), friend.getTotalTasks()));
 
         // Calculate and set progress percentage
         int progressPercentage = 0;
